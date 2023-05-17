@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react"
 import "./styles.css"
 import { ToDoListElement } from "./types";
-import { ToDoForm } from "./TodoForm";
+import { ToDoForm } from "./ToDoForm";
 import { ToDoList } from "./ToDoList";
-import {Route, Routes} from "react-router-dom"
+import {Route, Routes} from "react-router-dom";
 
 
 export default function App(){
