@@ -1,25 +1,34 @@
 import { useState } from "react"
 import "./styles.css"
 
-export default function App(){
-  const [newItem, setNewItem] = useState("");
-  const [todos, setTodos] = useState([]);
 
-  function handleSubmit(e){
+interface ToDoListElement{
+  id: string,
+  title: string,
+  completed: boolean
+}
+
+export default function App(){
+  const [newItem, setNewItem] = useState<string>("");
+  const [todos, setTodos] = useState<ToDoListElement[]>([]);
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>): void{
     e.preventDefault();
     if(newItem === "") return;
 
     setTodos((currentTodos) => {
-      return [...currentTodos, {id: crypto.randomUUID(), title: newItem, completed: false},]
+      return [...currentTodos, {id: crypto.randomUUID(), title: newItem, completed: false}]
     })
     setNewItem("");
   }
-  function deleteTodo(id){
+
+  function deleteTodo(id: string): void{
     setTodos(currentTodos => {
       return currentTodos.filter(todo => todo.id !== id);
     });
   }
-  function toggleTodo(id, completed){
+
+  function toggleTodo(id:string, completed:boolean){
     setTodos((currentTodos) => {
       return currentTodos.map(todo => {
         if(todo.id === id){
