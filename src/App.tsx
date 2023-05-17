@@ -3,6 +3,7 @@ import "./styles.css"
 import { ToDoListElement } from "./types";
 import { ToDoForm } from "./TodoForm";
 import { ToDoList } from "./ToDoList";
+import {Route, Routes} from "react-router-dom"
 
 
 export default function App(){
@@ -40,13 +41,18 @@ export default function App(){
     })
   }
 
-  return <>
-  <ToDoForm addToDo={addToDo}/>
-  <h1>Todo List</h1>
-  <ToDoList
-  todos={todos}
-  deleteTodo={deleteTodo}
-  toggleTodo={toggleTodo}
-  />
-  </>
+  return <Routes>
+    <Route
+    path="/"
+    element={<>
+      <ToDoForm addToDo={addToDo}/>
+      <h1>Todo List</h1>
+      <ToDoList
+      todos={todos}
+      deleteTodo={deleteTodo}
+      toggleTodo={toggleTodo}
+      />
+    </>}
+    />
+  </Routes>
 }
