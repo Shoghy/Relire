@@ -1,0 +1,83 @@
+{
+    "uid-db":{
+        "author": "Email del creador de la base de datos",
+        "db-name": "Nombre de la base de datos",
+        "collaborators":{
+            "auth.id":{
+                "added-date": "fecha en la que fue añadido",
+                "who-added": "Quien lo añadió",
+                "admin": "true/false",
+                "top": "número entero para definir la jerarquia de los colaboradores"
+            }
+        },
+        "permisos":{
+            "read": {
+                "table-name":{
+                    "auth.id": 0 //De existir el id del usuario este tendrá permiso el persmiso
+                }
+            },
+            "write": { //Para poder escribir en una tabla también se deberá poder leerla
+                "table-name":{
+                    "auth.id": 0 //De existir el id del usuario este tendrá el permiso
+                }
+            },
+            "add-collaborators": {
+                "auth.id": 0 //De existir el id del usuario este tendrá el permiso
+            },
+            "remove-collaborators": {
+                "auth.id": 0 //De existir el id del usuario este tendrá el permiso
+            }
+        },
+        "tables":{
+            "table-name":{
+                "column":{
+                    "type": "Tipo de valor que puede almacenar",
+                    "not-null": "true/false",
+
+                    //Las siguientes columnas no siempre están presentes
+
+                    "default": "Valor por defecto",
+                    /*De no existir default y not-null estar en false
+                    entonces el valor por defecto será null.
+                    De no existir default y not-null estar en true
+                    entonces el valor de este campo deberá ser especificado,
+                    a no ser que tenga AutoIncrement*/
+            
+                    "special": ["Unique", "PrimaryKey", "AutoIncrement"],
+                    "foreing-key": ["table-name", "column"],
+                    "enum": [], //Lista de los diferentes valores que puede tener,
+                    "float-decimals": "Cantidad máxima de decimales" //Si no existe se guardará el número tal y como fue enviado
+                }
+            }
+        },
+        "tables-data":{
+            "table-name":{
+                "uid":{
+                    "column-1": "value",
+                    "column-2": "value",
+                    "column-3": "value"
+                    //ETC
+                }
+            }
+        },
+        "api-key":{
+            "private-key": "uid",
+            "read": "uid",
+            "write": "uid" //Puede que no exista
+        }
+    },
+    "column-types":[
+        "string",
+        "int",
+        "float",
+        "bool",
+        "date",
+        "datetime",
+        "enum"
+    ],
+    "users":{
+        "auth.id":{
+            "uid-db": 0 //De existir el id del usuario este tendrá el permiso
+        }
+    }
+}
