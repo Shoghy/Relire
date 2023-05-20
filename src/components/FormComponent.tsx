@@ -1,38 +1,19 @@
-import React, { ReactNode, useState } from "react";
+import React from "react";
+import { InputCanBeValidated } from "./FormInputs"
 
-interface InputState{
-    value:string,
-    validate():boolean
-}
-interface InputProps{
-    state:InputState | undefined,
-    setState:React.Dispatch<React.SetStateAction<InputState | undefined>>
-}
-
-export class Zzzzz extends React.Component<InputProps> {
-    render(): ReactNode {
-        return <h1>Hola mundo</h1>;
-    }
-    constructor({state, setState}:InputProps){
-        super({state, setState});
-        setState({value:"", validate:this.validate})
-    }
-    validate():boolean{
-        return true;
-    }
-}
-
-export default function FormComponent({children}:{children?: React.ReactElement[]}){
+export default function FormComponent({children}:{children?: React.ReactElement | React.ReactElement[]}){
     function onSubmit(e: React.FormEvent<HTMLFormElement>){
         e.preventDefault();
         if(children === undefined) return;
+        let childrenList: React.ReactElement[] = [];
+        childrenList.concat(children);
     }
-    const [state, setState] = useState<InputState>();
-    let x = <Zzzzz state={state} setState={setState} />
-    let xProps: InputProps = x.props;
-    console.log(xProps.state?.validate());
+
+    if(children instanceof Array){
+        console.log(InputCanBeValidated(children[0].props));
+    }
+
     return <form onSubmit={(e) => onSubmit(e)}>
-        {x}
         {children}
     </form>
 }

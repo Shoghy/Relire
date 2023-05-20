@@ -1,22 +1,18 @@
-import {Route, Routes, Link} from "react-router-dom";
+import {Route, Routes} from "react-router-dom";
 import FormComponent from "./components/FormComponent";
+import { InputText, InputState } from "./components/FormInputs";
+import { useState } from "react";
 
 export default function App(){
+  const [state, setState] = useState<InputState<string>>({value:""});
   return <Routes>
     <Route
     path="/"
-    element={<h1><Link to="/adios-mundo">Hola mundo</Link></h1>}
-    />
-    <Route
-    path="/adios-mundo"
-    element={<h1><Link to="/">Adiós mundo</Link></h1>}
-    />
-    <Route
-    path="/prueba"
     element={<FormComponent>
-      <h1></h1>
-      <h2></h2>
-      <p></p>
+      <InputText required={true} setState={setState} state={state} name="Hola perros"/>
+      <div>
+        <h1>Hola perros</h1>
+      </div>
     </FormComponent>}
     />
   </Routes>
