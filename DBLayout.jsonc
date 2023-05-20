@@ -1,6 +1,6 @@
 {
     "uid-db":{
-        "author": "Email del creador de la base de datos",
+        "author": "auth.id",
         "db-name": "Nombre de la base de datos",
         "collaborators":{
             "auth.id":{
