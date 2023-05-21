@@ -1,4 +1,5 @@
 import React from "react";
+import copyProperties from "./copyProperties";
 
 export interface ValidateReturn{
     validation:boolean,
@@ -56,7 +57,7 @@ function GenericValidation({
     if(minLength != undefined){
         if(value.length < minLength){
             validation = false;
-            messages.push(`You need to put at least ${maxLength} character(s)`);
+            messages.push(`You need to put at least ${minLength} character(s)`);
         }
     }
     if(customValidation != undefined){
@@ -92,23 +93,21 @@ export class InputText extends React.Component<InputProps<string>>{
             let maxLength = self.props.maxLength;
             let minLength = self.props.minLength;
             let customValidation = self.props.customValidation;
+            let required = self.props.required;
 
             let result = GenericValidation({
                 value,
                 maxLength:maxLength,
                 minLength:minLength,
-                required:self.props.required,
+                required:required,
                 customValidation
             })
 
             return result;
         }
         props.setState({value:props.state.value, validate:validate});
-        
-        for(let key in props){
-            if(reservedProperties.indexOf(key) > -1) continue;
-            this.inputProps[key] = props[key];
-        }
+
+        copyProperties(props, this.inputProps, reservedProperties);
     }
 }
 
@@ -170,9 +169,6 @@ export class InputEmail extends React.Component<InputProps<string>>{
 
         props.setState({value:props.state.value, validate:validate});
 
-        for(let key in props){
-            if(reservedProperties.indexOf(key) > -1) continue;
-            this.inputProps[key] = props[key];
-        }
+        copyProperties(props, this.inputProps, reservedProperties);
     }
 }
