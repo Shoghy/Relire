@@ -1,23 +1,23 @@
 import React from "react";
-import { InputCanBeValidated, InputProps, ValidateReturn } from "./FormInputs";
+import { InputCanBeValidated, InputProps, ValidationReturn } from "./FormInputs";
 import copyProperties from "./copyProperties";
 
 export interface ValidationResults{
     success:boolean,
-    errors:{input:React.ReactElement, results:ValidateReturn}[]
+    errors:{input:React.ReactElement, results:ValidationReturn}[]
 }
 
 interface FormComponentInterface extends React.HTMLAttributes<HTMLFormElement>{
     children?: React.ReactElement | React.ReactElement[],
-    onValidate?(results: ValidationResults): any
+    onValidation?(results: ValidationResults): any
 }
 
 export default function FormComponent(props:FormComponentInterface){
     let children = props.children;
-    let onValidate = props.onValidate;
+    let onValidate = props.onValidation;
     let formProperties:React.HTMLAttributes<HTMLFormElement> = {};
 
-    copyProperties(props, formProperties, ["children", "onValidate", "onSubmit"]);
+    copyProperties(props, formProperties, ["children", "onValidation", "onSubmit"]);
 
     let inputsList: React.ReactElement[] = [];
 

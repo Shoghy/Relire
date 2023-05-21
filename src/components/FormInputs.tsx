@@ -1,14 +1,14 @@
 import React from "react";
 import copyProperties from "./copyProperties";
 
-export interface ValidateReturn{
+export interface ValidationReturn{
     validation:boolean,
     messages: string[]
 }
 
 export interface InputState<T>{
     value:T,
-    validate?():ValidateReturn
+    validate?():ValidationReturn
 }
 
 export interface InputProps<T> extends React.InputHTMLAttributes<HTMLInputElement>{
@@ -16,7 +16,7 @@ export interface InputProps<T> extends React.InputHTMLAttributes<HTMLInputElemen
     setState:React.Dispatch<React.SetStateAction<InputState<T>>>,
     required:boolean,
     genericValidation?:boolean
-    customValidation?(value:T):ValidateReturn
+    customValidation?(value:T):ValidationReturn
 }
 
 export function InputCanBeValidated(input: any): input is InputProps<any>{
@@ -29,7 +29,7 @@ export function InputCanBeValidated(input: any): input is InputProps<any>{
 
 const reservedProperties = ["type", "value", "onChange", "required", "state", "setState", "customValidation"];
 
-function GenericTextValidation(props: InputProps<string>):ValidateReturn{
+function GenericTextValidation(props: InputProps<string>):ValidationReturn{
     let value = props.state.value;
     let required = props.required;
     let maxLength = props.maxLength;
@@ -76,9 +76,9 @@ export class InputText extends React.Component<InputProps<string>>{
         super(props);
         let self = this;
 
-        function validate(): ValidateReturn{
+        function validate(): ValidationReturn{
             let customValidation = self.props.customValidation;
-            let result: ValidateReturn = {validation:true, messages:[]};
+            let result: ValidationReturn = {validation:true, messages:[]};
 
             if(self.props.genericValidation === undefined || self.props.genericValidation){
                 result = GenericTextValidation(self.props)
@@ -133,10 +133,10 @@ export class InputEmail extends React.Component<InputProps<string>>{
         super(props);
         let self = this;
 
-        function validate():ValidateReturn{
+        function validate():ValidationReturn{
             let value = self.props.state.value;
             let customValidation = self.props.customValidation;
-            let result: ValidateReturn = {validation: true, messages:[]};
+            let result: ValidationReturn = {validation: true, messages:[]};
 
             if(self.props.genericValidation !== undefined || self.props.genericValidation){
                 result = GenericTextValidation(self.props);

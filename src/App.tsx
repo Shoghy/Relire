@@ -19,7 +19,7 @@ export default function App(){
   return <Routes>
     <Route
     path="/"
-    element={<FormComponent onValidate={onValidate}>
+    element={<FormComponent onValidation={onValidate}>
       <InputPassword required={true} setState={setNombre} state={nombre} name="Hola perros"/>
       <button></button>
       <div>
