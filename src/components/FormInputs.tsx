@@ -5,10 +5,6 @@ export interface ValidateInput{
     messages: string[]
 }
 
-export interface CanBeValited{
-    validate():ValidateInput
-}
-
 export interface InputState<T>{
     value:T,
     validate?():ValidateInput
@@ -19,7 +15,10 @@ export interface InputProps<T> extends React.InputHTMLAttributes<HTMLInputElemen
     required:boolean,
     customValidation?(value:T):ValidateInput
 }
+
 export function InputCanBeValidated(input: any): input is InputProps<any>{
+    if(input === undefined || input === null) return false;
+
     return "state" in input
     && "setState" in input
     && "required" in input
@@ -31,8 +30,9 @@ export interface InputTextInterface extends InputProps<any>{
     minLength?:number,
     maxLength?:number
 }
-export class InputText extends React.Component<InputTextInterface> implements CanBeValited{
-    rProperties = reservedProperties.concat(["minLength", "maxLength"]);
+
+export class InputText extends React.Component<InputTextInterface>{
+    rProperties = reservedProperties.concat(["minLength", "maxLength", "min", "max"]);
     inputProps: React.InputHTMLAttributes<HTMLInputElement> = {};
 
     render(){
@@ -43,6 +43,8 @@ export class InputText extends React.Component<InputTextInterface> implements Ca
             value={props.state.value}
             onChange={(e) => props.setState({value:e.target.value, validate:this.validate})}
             required={props.required}
+            max={props.maxLength}
+            min={props.maxLength}
             {...this.inputProps}
         />
     }
