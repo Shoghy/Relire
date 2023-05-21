@@ -1,6 +1,6 @@
 import {Route, Routes} from "react-router-dom";
 import FormComponent from "./components/FormComponent";
-import { InputText, InputState } from "./components/FormInputs";
+import { InputText, InputState, InputPassword } from "./components/FormInputs";
 import { useState } from "react";
 
 export default function App(){
@@ -11,7 +11,7 @@ export default function App(){
     <Route
     path="/"
     element={<FormComponent>
-      <InputText required={true} setState={setNombre} state={nombre} name="Hola perros" maxLength={150}/>
+      <InputPassword required={true} setState={setNombre} state={nombre} name="Hola perros"/>
       <button></button>
       <div>
         <InputText required={false} state={apellido} setState={setApellido}/>

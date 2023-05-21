@@ -82,3 +82,19 @@ export class InputText extends React.Component<InputProps<string>>{
         return {validation, messages};
     }
 }
+
+export class InputPassword extends InputText{
+    render(){
+        let props = this.props;
+
+        return <input
+        type="password"
+        value={props.state.value}
+        onChange={(e) => props.setState({value:e.target.value, validate:this.validate})}
+        required={props.required}
+        maxLength={props.maxLength}
+        minLength={props.minLength}
+        {...this.inputProps}
+        />
+    }
+}
