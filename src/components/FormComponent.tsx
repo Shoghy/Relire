@@ -2,9 +2,9 @@ import React from "react";
 import { InputCanBeValidated, InputProps, ValidateReturn } from "./FormInputs";
 import copyProperties from "./copyProperties";
 
-interface ValidationResults{
+export interface ValidationResults{
     success:boolean,
-    errors:{inputName:string, results:ValidateReturn}[]
+    errors:{input:React.ReactElement, results:ValidateReturn}[]
 }
 
 interface FormComponentInterface extends React.HTMLAttributes<HTMLFormElement>{
@@ -33,19 +33,14 @@ export default function FormComponent(props:FormComponentInterface){
             let props: InputProps<any> = input.props;
             if(!(props instanceof Object)) continue;
 
-            let inputName = "";
-            if("name" in input.props){
-                inputName = input.props.name;
-            }
-
             if(props.state.validate === undefined) continue;
 
             let results = props.state.validate();
             
-            information.errors.push({inputName:inputName, results:results});
+            information.errors.push({input:input, results:results}) ;
             if(!results.validation) information.success = false;
         }
-        console.log(information);
+
         if(onValidate !== undefined){
             onValidate(information);
         }
