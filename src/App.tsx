@@ -1,11 +1,12 @@
 import {Route, Routes} from "react-router-dom";
 import FormComponent from "./components/FormComponent";
-import { InputText, InputState, InputPassword } from "./components/FormInputs";
+import { InputText, InputState, InputPassword, InputEmail } from "./components/FormInputs";
 import { useState } from "react";
 
 export default function App(){
   const [nombre, setNombre] = useState<InputState<string>>({value:""});
   const [apellido, setApellido] = useState<InputState<string>>({value:""});
+  const [email, setEmail] = useState<InputState<string>>({value:""});
 
   return <Routes>
     <Route
@@ -16,6 +17,7 @@ export default function App(){
       <div>
         <InputText required={false} state={apellido} setState={setApellido}/>
         <h1>Hola perros</h1>
+        <InputEmail required={false} state={email} setState={setEmail}/>
       </div>
     </FormComponent>}
     />
