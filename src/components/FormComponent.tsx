@@ -1,9 +1,14 @@
 import React from "react";
-import { InputCanBeValidated } from "./FormInputs"
+import { InputCanBeValidated, InputProps, ValidateReturn } from "./FormInputs"
+
+interface ValidationResults{
+    success:boolean,
+    errors:{inputName:string, results:ValidateReturn}[]
+}
 
 interface FormComponentInterface{
     children?: React.ReactElement | React.ReactElement[],
-    onValidate?(): any
+    onValidate?(results: ValidationResults): any
 }
 
 export default function FormComponent({children, onValidate}:FormComponentInterface){
@@ -11,8 +16,31 @@ export default function FormComponent({children, onValidate}:FormComponentInterf
 
     function onSubmit(e: React.FormEvent<HTMLFormElement>){
         e.preventDefault();
+
+        let information:ValidationResults = {success:true, errors:[]};
+
+        for(let i = 0; i < inputsList.length; ++i){
+            let input = inputsList[i];
+            if(!(input instanceof Object)) continue;
+
+            let props: InputProps<any> = input.props;
+            if(!(props instanceof Object)) continue;
+
+            let inputName = "";
+            if("name" in input.props){
+                inputName = input.props.name;
+            }
+
+            if(props.state.validate === undefined) continue;
+
+            let results = props.state.validate();
+            
+            information.errors.push({inputName:inputName, results:results});
+            if(!results.validation) information.success = false;
+        }
+        console.log(information);
         if(onValidate !== undefined){
-            onValidate();
+            onValidate(information);
         }
     }
 
@@ -20,7 +48,7 @@ export default function FormComponent({children, onValidate}:FormComponentInterf
         for(let i = 0; i < inputs.length; ++i){
             let input = inputs[i];
     
-            if(input === undefined || input.props === undefined) continue;
+            if(!(input instanceof Object) || !(input instanceof Object)) continue;
 
             if(InputCanBeValidated(input.props)){
                 inputsList.push(input);
@@ -31,7 +59,7 @@ export default function FormComponent({children, onValidate}:FormComponentInterf
         }
     }
 
-    if(children != undefined){
+    if(children instanceof Object){
         let childrenList: React.ReactElement[] = [];
         childrenList = childrenList.concat(children);
         findInputs(childrenList);

@@ -18,7 +18,7 @@ export interface InputProps<T> extends React.InputHTMLAttributes<HTMLInputElemen
 }
 
 export function InputCanBeValidated(input: any): input is InputProps<any>{
-    if(input === undefined || input === null) return false;
+    if(!(input instanceof Object)) return false;
 
     return "state" in input
     && "setState" in input
@@ -37,7 +37,7 @@ export class InputText extends React.Component<InputProps<string>>{
         return <input
             type="text"
             value={props.state.value}
-            onChange={(e) => props.setState({value:e.target.value, validate:this.validate})}
+            onChange={(e) => props.setState({value:e.target.value, validate:props.state.validate})}
             required={props.required}
             maxLength={props.maxLength}
             minLength={props.minLength}
@@ -46,40 +46,48 @@ export class InputText extends React.Component<InputProps<string>>{
     }
     constructor(props:InputProps<string>){
         super(props);
-        props.setState({value:props.state.value, validate:this.validate});
+        let self = this;
+        function validate(){
+            let value = self.props.state.value;
+            let maxLength = self.props.maxLength;
+            let minLength = self.props.minLength;
+            let customValidation = self.props.customValidation;
+
+            let validation = true;
+            let messages: string[] = [];
+
+            if(value === "" || value === undefined){
+                if(self.props.required) return {validation:false, messages:["This input is required"]};
+                return {validation:true, messages:[]};
+            }
+            if(maxLength != undefined){
+                if(value.length > maxLength){
+                    validation = false;
+                    messages.push(`You can put a maximun of ${maxLength} character(s)`);
+                }
+            }
+            if(minLength != undefined){
+                if(value.length < minLength){
+                    validation = false;
+                    messages.push(`You need to put at least ${maxLength} character(s)`);
+                }
+            }
+            if(customValidation != undefined){
+                let cValidation = customValidation(value);
+                if(!cValidation.validation){
+                    validation = cValidation.validation;
+                }
+                messages = messages.concat(cValidation.messages);
+            }
+
+            return {validation, messages};
+        }
+        props.setState({value:props.state.value, validate:validate});
         
         for(let key in props){
             if(this.rProperties.indexOf(key) > -1) continue;
             this.inputProps[key] = props[key];
         }
-    }
-
-    validate():ValidateReturn{
-        let value = this.props.state.value;
-        let maxLength = this.props.maxLength;
-        let minLength = this.props.minLength;
-        let customValidation = this.props.customValidation;
-
-        let validation = true;
-        let messages: string[] = [];
-
-        if(value === "" || value === undefined){
-            if(this.props.required) return {validation:false, messages:["This input is required"]};
-            return {validation:true, messages:[]};
-        }
-        if(maxLength != undefined){
-            validation = value.length <= maxLength;
-        }
-        if(minLength != undefined){
-            validation = value.length >= minLength;
-        }
-        if(customValidation != undefined){
-            let cValidation = customValidation(value);
-            validation = cValidation.validation;
-            messages = messages.concat(cValidation.messages);
-        }
-
-        return {validation, messages};
     }
 }
 
@@ -90,7 +98,7 @@ export class InputPassword extends InputText{
         return <input
         type="password"
         value={props.state.value}
-        onChange={(e) => props.setState({value:e.target.value, validate:this.validate})}
+        onChange={(e) => props.setState({value:e.target.value, validate:props.state.validate})}
         required={props.required}
         maxLength={props.maxLength}
         minLength={props.minLength}
