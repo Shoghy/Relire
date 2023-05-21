@@ -11,7 +11,7 @@ export default function App(){
     <Route
     path="/"
     element={<FormComponent>
-      <InputText required={true} setState={setNombre} state={nombre} name="Hola perros"/>
+      <InputText required={true} setState={setNombre} state={nombre} name="Hola perros" maxLength={150}/>
       <button></button>
       <div>
         <InputText required={false} state={apellido} setState={setApellido}/>
