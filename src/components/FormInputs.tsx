@@ -15,6 +15,7 @@ export interface InputProps<T> extends React.InputHTMLAttributes<HTMLInputElemen
     state:InputState<T>,
     setState:React.Dispatch<React.SetStateAction<InputState<T>>>,
     required:boolean,
+    genericValidation?:boolean
     customValidation?(value:T):ValidateReturn
 }
 
@@ -28,19 +29,12 @@ export function InputCanBeValidated(input: any): input is InputProps<any>{
 
 const reservedProperties = ["type", "value", "onChange", "required", "state", "setState", "customValidation"];
 
-interface GenericValidationInterface{
-    value: string,
-    required?:boolean,
-    maxLength?:number,
-    minLength?:number,
-    customValidation?(value:string):ValidateReturn
-}
-function GenericValidation({
-    value,
-    required,
-    maxLength,
-    minLength,
-    customValidation}:GenericValidationInterface):ValidateReturn{
+function GenericTextValidation(props: InputProps<string>):ValidateReturn{
+    let value = props.state.value;
+    let required = props.required;
+    let maxLength = props.maxLength;
+    let minLength = props.minLength;
+
     let validation = true;
     let messages: string[] = [];
 
@@ -59,13 +53,6 @@ function GenericValidation({
             validation = false;
             messages.push(`You need to put at least ${minLength} character(s)`);
         }
-    }
-    if(customValidation != undefined){
-        let cValidation = customValidation(value);
-        if(!cValidation.validation){
-            validation = cValidation.validation;
-        }
-        messages = messages.concat(cValidation.messages);
     }
 
     return {validation, messages};
@@ -88,20 +75,22 @@ export class InputText extends React.Component<InputProps<string>>{
     constructor(props:InputProps<string>){
         super(props);
         let self = this;
-        function validate(): ValidateReturn{
-            let value = self.props.state.value;
-            let maxLength = self.props.maxLength;
-            let minLength = self.props.minLength;
-            let customValidation = self.props.customValidation;
-            let required = self.props.required;
 
-            let result = GenericValidation({
-                value,
-                maxLength:maxLength,
-                minLength:minLength,
-                required:required,
-                customValidation
-            })
+        function validate(): ValidateReturn{
+            let customValidation = self.props.customValidation;
+            let result: ValidateReturn = {validation:true, messages:[]};
+
+            if(self.props.genericValidation === undefined || self.props.genericValidation){
+                result = GenericTextValidation(self.props)
+            }
+
+            if(customValidation !== undefined){
+                let cResult = customValidation(self.props.state.value);
+                if(!cResult.validation){
+                    result.validation = false;
+                }
+                result.messages = result.messages.concat(cResult.messages);
+            }
 
             return result;
         }
@@ -146,22 +135,24 @@ export class InputEmail extends React.Component<InputProps<string>>{
 
         function validate():ValidateReturn{
             let value = self.props.state.value;
-            let maxLength = self.props.maxLength;
-            let minLength = self.props.minLength;
             let customValidation = self.props.customValidation;
-            let required = self.props.required;
+            let result: ValidateReturn = {validation: true, messages:[]};
 
-            let result = GenericValidation({
-                value,
-                maxLength:maxLength,
-                minLength:minLength,
-                required,
-                customValidation
-            });
+            if(self.props.genericValidation !== undefined || self.props.genericValidation){
+                result = GenericTextValidation(self.props);
+            }
 
             if(!value.match(validEmailRegex) && value !== ""){
                 result.validation = false;
                 result.messages.push("Invalid Email");
+            }
+
+            if(customValidation !== undefined){
+                let cResult = customValidation(props.state.value);
+                if(!cResult.validation){
+                    result.validation = false;
+                }
+                result.messages = result.messages.concat(cResult.messages);
             }
 
             return result;
