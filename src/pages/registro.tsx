@@ -1,3 +1,3 @@
-export function RelireRegistro(){
-    return <></>
+export function RelireRegistro() {
+  return <></>
 }
