@@ -22,4 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-dbconection.tsx
+DBclient.tsx
+DBadmin.tsx
+serviceAccountKey.json
+.env

@@ -2,32 +2,6 @@
     "uid-db":{
         "author": "auth.id",
         "db-name": "Nombre de la base de datos",
-        "collaborators":{
-            "auth.id":{
-                "added-date": "fecha en la que fue añadido",
-                "who-added": "Quien lo añadió",
-                "admin": "true/false",
-                "top": "número entero para definir la jerarquia de los colaboradores"
-            }
-        },
-        "permisos":{
-            "read": {
-                "table-name":{
-                    "auth.id": 0 //De existir el id del usuario este tendrá permiso el persmiso
-                }
-            },
-            "write": { //Para poder escribir en una tabla también se deberá poder leerla
-                "table-name":{
-                    "auth.id": 0 //De existir el id del usuario este tendrá el permiso
-                }
-            },
-            "add-collaborators": {
-                "auth.id": 0 //De existir el id del usuario este tendrá el permiso
-            },
-            "remove-collaborators": {
-                "auth.id": 0 //De existir el id del usuario este tendrá el permiso
-            }
-        },
         "tables":{
             "table-name":{
                 "column":{
@@ -74,10 +48,5 @@
         "date",
         "datetime",
         "enum"
-    ],
-    "users":{
-        "auth.id":{
-            "uid-db": 0 //De existir el id del usuario este tendrá el permiso
-        }
-    }
+    ]
 }
