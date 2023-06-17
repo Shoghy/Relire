@@ -1,6 +1,8 @@
 import {Formik, Form, Field, ErrorMessage, FormikHelpers} from "formik";
 import { useState } from "react";
-import { logIn } from "../DBclient"
+import { logIn, auth } from "../DBclient";
+import { AuthErrorCodes } from "firebase/auth";
+import { Navigate, useNavigate } from "react-router-dom";
 
 interface ILogIn{
   email?: string,
@@ -9,8 +11,10 @@ interface ILogIn{
 
 export default function LogInForm(){
   const validEmailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
+  const navigate = useNavigate();
 
-  const [sendedForm, changeSendedForm] = useState(false);
+  const [sendedForm, changeSendedForm] = useState<boolean>(false);
+  const [authError, changeAuthError] = useState<string>();
 
   function validate(values:ILogIn){
     let errors: ILogIn = {};
@@ -32,21 +36,53 @@ export default function LogInForm(){
 
   function onSubmit(values:ILogIn, helpers : FormikHelpers<ILogIn>){
     changeSendedForm(true);
+    changeAuthError(undefined);
+
     if(values.email === undefined || values.password === undefined){
       changeSendedForm(false);
-      return "";
+      return;
     }
-    logIn(values.email, values.password);
+
+    logIn(values.email, values.password)
+    .then(() => {
+      navigate("/");
+    })
+    .catch((error) => {
+      const errorCode = error.code;
+
+      switch(errorCode){
+        case AuthErrorCodes.USER_DELETED:{
+          changeAuthError("User don't exist");
+          helpers.resetForm();
+          break;
+        }case AuthErrorCodes.INVALID_PASSWORD:{
+          changeAuthError("Constraseña incorrecta");
+          helpers.setFieldValue("email", "", false);
+          break;
+        }
+        default:{
+          changeAuthError("Something went wrong");
+          break;
+        }
+      }
+    })
+    .finally(() => {
+      changeSendedForm(false);
+    });
   }
 
   const initialValues: ILogIn = {email: "", password: ""};
+
   return <Formik initialValues={initialValues} onSubmit={onSubmit} validate={validate}>
     {({errors}) => (
       <Form>
-        <Field type="email" name="email" disabled={sendedForm}/>
+        {authError && <p>{authError}</p>}
+        {auth.currentUser && <Navigate to="/"/>}
+        <Field type="email" name="email" disabled={sendedForm}/><br/>
         <ErrorMessage name="email" component={() => <p>{errors.email}</p>}/>
-        <Field type="password" name="password" disabled={sendedForm}/>
+        <Field type="password" name="password" disabled={sendedForm}/><br/>
         <ErrorMessage name="password" component={() => <p>{errors.password}</p>}/>
+        <button type="submit">Submit</button>
       </Form>
     )}
   </Formik>
