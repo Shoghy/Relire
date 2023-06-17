@@ -1,11 +1,12 @@
-import {Route, Routes, Navigate} from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import LogInForm from "./pages/LogIn";
+import Main from "./pages/Main";
 
 export default function App(){
   return <Routes>
     <Route
     path="/"
-    element={<Navigate replace to={"/login"}/>}
+    element={<Main/>}
     />
     <Route
     path="/login"

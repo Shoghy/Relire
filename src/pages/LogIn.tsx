@@ -1,8 +1,9 @@
 import {Formik, Form, Field, ErrorMessage, FormikHelpers} from "formik";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { logIn, auth } from "../DBclient";
 import { AuthErrorCodes } from "firebase/auth";
-import { Navigate, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import PageLocations from "../components/PageLocations";
 
 interface ILogIn{
   email?: string,
@@ -12,6 +13,11 @@ interface ILogIn{
 export default function LogInForm(){
   const validEmailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
   const navigate = useNavigate();
+  useEffect(() =>{
+    if(auth.currentUser !== undefined){
+      navigate(PageLocations.MainPage);
+    }
+  });
 
   const [sendedForm, changeSendedForm] = useState<boolean>(false);
   const [authError, changeAuthError] = useState<string>();
@@ -44,9 +50,6 @@ export default function LogInForm(){
     }
 
     logIn(values.email, values.password)
-    .then(() => {
-      navigate("/");
-    })
     .catch((error) => {
       const errorCode = error.code;
 
@@ -66,18 +69,19 @@ export default function LogInForm(){
         }
       }
     })
+    .then(() => {
+      navigate(PageLocations.MainPage);
+    })
     .finally(() => {
       changeSendedForm(false);
     });
   }
 
   const initialValues: ILogIn = {email: "", password: ""};
-
   return <Formik initialValues={initialValues} onSubmit={onSubmit} validate={validate}>
     {({errors}) => (
       <Form>
         {authError && <p>{authError}</p>}
-        {auth.currentUser && <Navigate to="/"/>}
         <Field type="email" name="email" disabled={sendedForm}/><br/>
         <ErrorMessage name="email" component={() => <p>{errors.email}</p>}/>
         <Field type="password" name="password" disabled={sendedForm}/><br/>
