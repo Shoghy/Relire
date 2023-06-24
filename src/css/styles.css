@@ -8,10 +8,18 @@
   /*Variables*/
 }
 
-button{
+.btn{
   padding: 5px;
   border-radius: 0.375rem;
   border-width: 1px;
+  text-decoration: none;
+  color:buttontext;
+  display: inline-block;
+  text-align: center;
+  border-color: buttonborder;
+  background-color: buttonface;
+  border-style: outset;
+  font-size: 0.9rem;
 }
 
 .nav-bar{
