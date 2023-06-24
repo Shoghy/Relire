@@ -3,37 +3,13 @@ import NavBar from "../components/NavBar";
 import { auth, realtimeDB } from "../DBclient";
 import PageLocations from "../components/PageLocations";
 import { useState, useEffect } from "react";
-
-interface Dictionary<T> {
-  [Key: string]: T;
-}
-
-interface IDataBase{
-  author:string,
-  dbName: string,
-  tables?: Dictionary<Dictionary<IColumn>>,
-  tablesData?: Dictionary<Dictionary<Dictionary<unknown>>>
-}
-
-interface IColumn{
-  type: "string" | "int" | "float" | "bool" | "date" | "datetime" | "enum",
-  notNull: boolean,
-  default?: unknown,
-  special?: string[],
-  foreingKey?: IForeingKey,
-  enum?: unknown[]
-}
-
-interface IForeingKey{
-  tableName: string,
-  column: string
-}
+import { IDataBase, IPageContent } from "../Utilities/types";
 
 export default function DescribeDB(){
   const navigate = useNavigate();
   let params = useParams();
 
-  const [content, setContent] = useState({
+  const [content, setContent] = useState<IPageContent>({
     element: (
       <center>
         <h1>Aún no hay tablas, crea una</h1>
