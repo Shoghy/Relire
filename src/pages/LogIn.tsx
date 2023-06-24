@@ -1,5 +1,5 @@
 import {Formik, Form, Field, ErrorMessage, FormikHelpers} from "formik";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { logIn, auth } from "../DBclient";
 import { AuthErrorCodes } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
@@ -13,8 +13,9 @@ interface ILogIn{
 export default function LogInForm(){
   const validEmailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
   const navigate = useNavigate();
-  useEffect(() =>{
-    if(auth.currentUser !== undefined){
+
+  auth.onAuthStateChanged((user) => {
+    if(user !== undefined && user !== null){
       navigate(PageLocations.MainPage);
     }
   });
@@ -68,9 +69,6 @@ export default function LogInForm(){
           break;
         }
       }
-    })
-    .then(() => {
-      navigate(PageLocations.MainPage);
     })
     .finally(() => {
       changeSendedForm(false);

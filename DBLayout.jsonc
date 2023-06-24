@@ -19,8 +19,7 @@
             
                     "special": ["Unique", "PrimaryKey", "AutoIncrement"],
                     "foreing-key": ["table-name", "column"],
-                    "enum": [], //Lista de los diferentes valores que puede tener,
-                    "float-decimals": "Cantidad máxima de decimales" //Si no existe se guardará el número tal y como fue enviado
+                    "enum": [] //Lista de los diferentes valores que puede tener,
                 }
             }
         },

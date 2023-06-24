@@ -1,19 +1,23 @@
 import { useNavigate } from "react-router-dom";
 import { auth } from "../DBclient";
-import NavBar from "../components/navbar";
 import PageLocations from "../components/PageLocations";
+import NavBar from "../components/NavBar";
 
 export default function Main(){
   const navigate = useNavigate();
 
-  if(auth.currentUser === undefined){
-    navigate(PageLocations.LogIn);
-  }
-
+  auth.onAuthStateChanged((user) => {
+    if(user === undefined || user === null){
+      navigate(PageLocations.LogIn);
+    }
+  });
   return (
     <>
       <NavBar/>
-      <button></button>
+      <button onClick={() => {
+        navigate("/db/prueba")
+      }}>Prueba</button>
+      <button><i className="fa fa-plus-circle" aria-hidden="true"></i></button>
     </>
   )
 }
