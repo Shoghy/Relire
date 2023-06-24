@@ -8,7 +8,7 @@ export default function NavBar(){
   return (
     <nav className="nav-bar">
       <div></div>
-      <button onClick={btnLogOut}>Log Out</button>
+      <button onClick={btnLogOut} className="btn">Log Out</button>
     </nav>
   );
 }
