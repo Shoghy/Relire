@@ -33,11 +33,14 @@ export default function DescribeDB(){
   const navigate = useNavigate();
   let params = useParams();
 
-  const [content, setContent] = useState(
-    <center>
-      <h1>Aún no hay tablas, crea una</h1>
-    </center>
-  );
+  const [content, setContent] = useState({
+    element: (
+      <center>
+        <h1>Aún no hay tablas, crea una</h1>
+      </center>
+    ),
+    todoBien: true
+  });
 
   const [db, setDB] = useState<IDataBase>();
   useEffect(() => {
@@ -59,8 +62,9 @@ export default function DescribeDB(){
       );
     }
 
-    setContent(
-      <table>
+    setContent({
+      element: (
+        <table>
         <thead>
           <tr>
             <th>Table Name</th>
@@ -71,7 +75,9 @@ export default function DescribeDB(){
           {tables}
         </tbody>
       </table>
-    );
+      ),
+      todoBien: true
+    });
   }, [db]);
 
   auth.onAuthStateChanged((user) => {
@@ -84,7 +90,27 @@ export default function DescribeDB(){
 
     realtimeDB.get(params.idDB as string)
     .catch((error) => {
-      console.log(error);
+      let message : string = error.message;
+      let contenido = {element: <></>, todoBien: false}
+      switch(message){
+        case "Permission denied":{
+          contenido.element = (
+            <h1>No tienes permiso para acceder a esta base de datos</h1>
+          );
+          break;
+        }
+        default:{
+          contenido.element = (
+            <h1>Algo salió mal</h1>
+          );
+          break;
+        }
+      }
+
+      setContent(contenido);
+      setTimeout(() => {
+        navigate(PageLocations.MainPage);
+      }, 5000);
     })
     .then((value) => {
       if(!(value instanceof Object)) return;
@@ -95,7 +121,13 @@ export default function DescribeDB(){
   return (
     <>
       <NavBar/>
-      {content}
+      {content.element}
+      <br/>
+      <br/>
+      {(() => {
+        if(!content.todoBien) return;
+        return <center><Link to={`/db/${params.idDB}/create-table`} className="btn">Crear Tabla</Link></center>
+      })()}
     </>
   )
 }
