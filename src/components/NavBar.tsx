@@ -6,7 +6,8 @@ export default function NavBar(){
   }
 
   return (
-    <nav>
+    <nav className="nav-bar">
+      <div></div>
       <button onClick={btnLogOut}>Log Out</button>
     </nav>
   );
