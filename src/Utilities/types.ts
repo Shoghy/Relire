@@ -9,11 +9,13 @@ export interface IDataBase{
   tablesData?: Dictionary<Dictionary<Dictionary<unknown>>>
 }
 
+export type ColumnType = "string" | "int" | "float" | "bool" | "date" | "datetime" | "enum";
+
 export interface IColumn{
-  type: "string" | "int" | "float" | "bool" | "date" | "datetime" | "enum",
+  type: ColumnType,
   notNull: boolean,
-  default?: unknown,
-  special?: string[],
+  default?: string | boolean | number,
+  unique: boolean,
   foreingKey?: IForeingKey,
   enum?: unknown[]
 }

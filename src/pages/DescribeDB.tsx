@@ -4,6 +4,7 @@ import { auth, realtimeDB } from "../DBclient";
 import PageLocations from "../components/PageLocations";
 import { useState, useEffect } from "react";
 import { IDataBase, IPageContent } from "../Utilities/types";
+import DBGetDefaultCath from "../Utilities/DBGetDefaultCatch";
 
 export default function DescribeDB(){
   const navigate = useNavigate();
@@ -61,38 +62,14 @@ export default function DescribeDB(){
       navigate(PageLocations.LogIn);
       return;
     }
+  });
 
-    if(db != undefined) return;
+  realtimeDB.get(params.idDB as string)
+  .catch((error) => DBGetDefaultCath(error, content, setContent, navigate))
+  .then((value) => {
+    if(!(value instanceof Object)) return;
 
-    realtimeDB.get(params.idDB as string)
-    .catch((error) => {
-      let message : string = error.message;
-      let contenido = {element: <></>, todoBien: false}
-      switch(message){
-        case "Permission denied":{
-          contenido.element = (
-            <h1>No tienes permiso para acceder a esta base de datos</h1>
-          );
-          break;
-        }
-        default:{
-          contenido.element = (
-            <h1>Algo salió mal</h1>
-          );
-          break;
-        }
-      }
-
-      setContent(contenido);
-      setTimeout(() => {
-        navigate(PageLocations.MainPage);
-      }, 5000);
-    })
-    .then((value) => {
-      if(!(value instanceof Object)) return;
-
-      setDB(value.val());
-    });
+    setDB(value.val());
   });
   return (
     <>
