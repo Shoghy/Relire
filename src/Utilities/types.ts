@@ -17,7 +17,7 @@ export interface IColumn{
   default?: string | boolean | number,
   unique: boolean,
   foreingKey?: IForeingKey,
-  enum?: unknown[]
+  enum?: string[]
 }
 
 export interface IForeingKey{

@@ -27,6 +27,7 @@ export default function CreateTable() {
   const params = useParams();
   let dbTables: [string, Dictionary<IColumn>][] = [];
   const [columns, setColumns] = useState<IColumn2[]>([]);
+  const [tableName, setTableName] = useState<string>("");
   const [content, setContent] = useState<IPageContent>({
     element: (<></>),
     todoBien: true
@@ -77,13 +78,71 @@ export default function CreateTable() {
     });
   }
 
+  function CrearTable(){
+    let errors: string[] = [];
+    
+    if(!tableName){
+      errors.push("Table has no name")
+    }
+    dbTables.forEach((table) => {
+      if(table[0].toLowerCase() === tableName.toLowerCase()){
+        errors.push("Ese nombre de tabla ya está siendo utilizado");
+        return;
+      }
+    });
+
+    let tableColums: Dictionary<IColumn> = {};
+    let uniqueColumnNames : string[] = [];
+    columns.forEach((column, index) => {
+      tableColums[column.name] = {
+        type: column.type,
+        notNull: column.notNull,
+        unique: column.unique
+      };
+      
+      if(uniqueColumnNames.indexOf(column.name.toLowerCase()) > -1){
+        errors.push(`${index+1}: nombre de columna repetido`)
+      }else{
+        uniqueColumnNames.push(column.name.toLowerCase());
+      }
+
+      if(!column.name){
+        errors.push(`${index+1}: Column has no name`);
+      }
+
+      if(column.useDefault){
+        tableColums[column.name].default = column.default;
+    
+        if(!column.default){
+          errors.push(`${index+1}: Disable default or add a value to default`);
+        }
+      }
+
+      if(column.type === "enum"){
+        tableColums[column.name].enum = GetEnumValues(column.enum);
+        if(!column.enum){
+          errors.push(`${index+1}: You need to add at least one value on enum`);
+        }
+      }
+
+    });
+  
+    if(errors.length > 0) {
+      alert(errors.join("\n"));
+      return;
+    }
+
+    realtimeDB.update(`/${params.idDB}/tables/${tableName}`, tableColums);
+    navigate(PageLocations.db(params.idDB as string));
+  }
+
   return (
     <>
       <NavBar />
       {content.todoBien && (
         <>
           <label htmlFor="tableName">
-            Table Name: <input type="text" name="tableName" />
+            Table Name: <input type="text" name="tableName" value={tableName} onChange={(e) =>{setTableName(e.target.value)}}/>
           </label><br />
         </>
       )}
@@ -91,42 +150,46 @@ export default function CreateTable() {
       {content.todoBien && (() => {
         let columnsJSX: React.JSX.Element[] = [];
 
-        columns.forEach((value, index) => {
+        columns.forEach((column, index) => {
           columnsJSX.push(
             <table className="column-table">
               <thead>
                 <tr>
+                  <th>Index</th>
                   <th>Column Name</th>
                   <th>Unique</th>
-                  {value.type == "int" && <th>Auto-Increment</th>}
+                  {column.type == "int" && <th>Auto-Increment</th>}
                   <th>Data-Type</th>
-                  {value.type == "enum" && <th>Enum</th>}
+                  {column.type == "enum" && <th>Enum</th>}
                   <th>Not-Null</th>
                   <th>Use Default</th>
-                  {value.useDefault && <th>Defualt</th>}
-                  {dbTables.length > 0 && <th>Use Foreign Key</th>}
-                  {value.useForeingKey && <th>Table</th>}
-                  {value.useForeingKey && <th>Column</th>}
+                  {column.useDefault && <th>Defualt</th>}
+                  {column.useForeingKey && <th>Table</th>}
+                  {column.useForeingKey && <th>Column</th>}
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <th>
-                    <input type="text" name="name" value={value.name} onChange={(e) => setColumnPropertie(index, "name", e.target.value)} />
+                    {index+1}
                   </th>
                   <th>
-                    <input type="checkbox" name="unique" checked={value.unique} onChange={(e) => setColumnPropertie(index, "unique", e.target.checked)} />
+                    <input type="text" name="name" value={column.name} onChange={(e) => setColumnPropertie(index, "name", e.target.value)} />
+                  </th>
+                  <th>
+                    <input type="checkbox" name="unique" checked={column.unique} onChange={(e) => setColumnPropertie(index, "unique", e.target.checked)} />
                   </th>
                   {
-                    value.type == "int" && <th>
+                    column.type == "int" && <th>
                       <input
                         type="checkbox"
-                        checked={value.autoIncrement}
+                        checked={column.autoIncrement}
                         onChange={(e) => setColumnPropertie(index, "autoIncrement", e.target.checked)}
                       />
                     </th>}
                   <th>
-                    <select value={value.type} onChange={(e) => {
+                    <select value={column.type} onChange={(e) => {
                         setColumnPropertie(index, "type", e.target.value);
                         setColumnPropertie(index, "default", "");
                       }}>
@@ -139,29 +202,29 @@ export default function CreateTable() {
                       })()}
                     </select>
                   </th>
-                  {value.type == "enum" &&
+                  {column.type == "enum" &&
                   <th>
-                    <textarea name="enum" value={value.enum} onChange={(e) => setColumnPropertie(index, "enum", e.target.value)}/>
+                    <textarea name="enum" value={column.enum} onChange={(e) => setColumnPropertie(index, "enum", e.target.value)}/>
                   </th>
                   }
                   <th>
                     <input
                       type="checkbox"
-                      checked={value.notNull}
+                      checked={column.notNull}
                       onChange={(e) => setColumnPropertie(index, "notNull", e.target.checked)}
                     />
                   </th>
                   <th>
                     <input
                       type="checkbox"
-                      checked={value.useDefault}
+                      checked={column.useDefault}
                       onChange={(e) => setColumnPropertie(index, "useDefault", e.target.checked)}
                     />
                   </th>
-                  {value.useDefault && <th>
+                  {column.useDefault && <th>
                     {(() => {
                       let inputType = "";
-                      switch (value.type) {
+                      switch (column.type) {
                         case "string": {
                           inputType = "text"
                           break;
@@ -180,15 +243,15 @@ export default function CreateTable() {
                           break;
                         }
                         case "bool": {
-                          return <input type="checkbox" name="default-value" checked={value.default as boolean} onChange={(e) => setColumnPropertie(index, "default", e.target.checked)} />
+                          return <input type="checkbox" name="default-value" checked={column.default as boolean} onChange={(e) => setColumnPropertie(index, "default", e.target.checked)} />
                         }
                         case "enum":{
-                          let enums = GetEnumValues(value.enum);
+                          let enums = GetEnumValues(column.enum);
                           if(enums.length === 0) return <select value="------------" disabled></select>
-                          if(enums.indexOf(value.default as string) === -1){
-                            value.default = enums[0];
+                          if(enums.indexOf(column.default as string) === -1){
+                            column.default = enums[0];
                           }
-                          return <select value={value.default as string} onChange={(e) => setColumnPropertie(index, "default", e.target.value)}>
+                          return <select value={column.default as string} onChange={(e) => setColumnPropertie(index, "default", e.target.value)}>
                             {(() => {
                               let options: React.JSX.Element[] = [];
                               enums.forEach((value) => {
@@ -199,20 +262,17 @@ export default function CreateTable() {
                           </select>
                         }
                       }
-                      return <input type={inputType} name="default-value" value={value.default as string} onChange={(e) => setColumnPropertie(index, "default", e.target.value)} />
+                      return <input type={inputType} name="default-value" value={column.default as string} onChange={(e) => setColumnPropertie(index, "default", e.target.value)} />
                     })()}
                   </th>}
-                  {dbTables.length > 0 &&
-                    <th>
-                      <input
-                        type="checkbox"
-                        checked={value.useForeingKey}
-                        onChange={(e) => { setColumnPropertie(index, "useForeingKey", e.target.checked) }}
-                      />
-                    </th>}
-                  {value.useForeingKey && <th>
-
-                  </th>}
+                  <th>
+                    <button className="btn" onClick={() => {
+                      setColumns((currentColumns) => {
+                        currentColumns.splice(index, 1);
+                        return [... currentColumns];
+                      });
+                    }}>Delete Column</button>
+                  </th>
                 </tr>
               </tbody>
             </table>
@@ -221,9 +281,13 @@ export default function CreateTable() {
 
         return columnsJSX;
       })()}
+      <br/>
       {content.todoBien && (
         <button className="btn" onClick={AddColumn}>Add Column</button>
       )}
+      <br />
+      <br />
+      {content.todoBien && <button className="btn" onClick={CrearTable}>Crear</button>}
     </>
   )
 }

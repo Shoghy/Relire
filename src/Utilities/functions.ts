@@ -11,7 +11,7 @@ export function TitleCase(val: string):string{
 }
 
 export function GetEnumValues(val:string):string[]{
-  if(val === undefined) return [];
+  if(!val) return [];
 
   let vals = val.split(",");
   let uniqueVals:string[] = [];
