@@ -3,6 +3,7 @@ import LogInForm from "./pages/LogIn";
 import Main from "./pages/Main";
 import DescribeDB from "./pages/DescribeDB";
 import CreateTable from "./pages/CreateTable";
+import DataInTable from "./pages/DataInTable";
 
 export default function App(){
   return <Routes>
@@ -21,6 +22,10 @@ export default function App(){
     <Route
     path="/db/:idDB/create-table"
     element={<CreateTable/>}
+    />
+    <Route
+    path="/db/:idDB/:tbName"
+    element={<DataInTable/>}
     />
   </Routes>
 }
