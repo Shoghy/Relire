@@ -3,7 +3,7 @@ import { useState } from "react";
 import { logIn, auth } from "../DBclient";
 import { AuthErrorCodes } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
-import PageLocations from "../Utilities/PageLocations";
+import { MainPage } from "../Utilities/PageLocations";
 
 interface ILogIn{
   email?: string,
@@ -16,7 +16,7 @@ export default function LogInForm(){
 
   auth.onAuthStateChanged((user) => {
     if(user !== undefined && user !== null){
-      navigate(PageLocations.MainPage);
+      navigate(MainPage);
     }
   });
 

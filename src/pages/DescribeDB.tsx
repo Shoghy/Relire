@@ -1,7 +1,7 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
 import NavBar from "../components/NavBar";
 import { auth, realtimeDB } from "../DBclient";
-import PageLocations from "../Utilities/PageLocations";
+import { DBTableCreate, LogIn } from "../Utilities/PageLocations";
 import { useState, useEffect } from "react";
 import { IDataBase, IPageContent } from "../Utilities/types";
 import DBGetDefaultCath from "../Utilities/DBGetDefaultCatch";
@@ -57,7 +57,7 @@ export default function DescribeDB(){
 
   auth.onAuthStateChanged((user) => {
     if(user === undefined || user === null){
-      navigate(PageLocations.LogIn);
+      navigate(LogIn);
       return;
     }
   });
@@ -81,7 +81,7 @@ export default function DescribeDB(){
       <br/>
       <br/>
       {content.todoBien &&
-        <center><Link to={PageLocations.DBTableCreate(params.idDB as string)} className="btn">Crear Tabla</Link></center>}
+        <center><Link to={DBTableCreate(params.idDB as string)} className="btn">Crear Tabla</Link></center>}
     </>
   )
 }

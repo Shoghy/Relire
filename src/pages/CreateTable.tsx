@@ -1,11 +1,11 @@
 import NavBar from "../components/NavBar";
 import { useNavigate, useParams } from "react-router-dom";
 import { auth, realtimeDB } from "../DBclient";
-import PageLocations from "../Utilities/PageLocations";
 import { useState } from "react"
 import { ColumnType, IForeingKey, IPageContent, IColumn, Dictionary } from "../Utilities/types";
 import DBGetDefaultCath from "../Utilities/DBGetDefaultCatch";
 import { GetEnumValues, TitleCase } from "../Utilities/functions";
+import { DB, LogIn } from "../Utilities/PageLocations";
 
 interface IColumn2 {
   name: string,
@@ -35,7 +35,7 @@ export default function CreateTable() {
 
   auth.onAuthStateChanged((user) => {
     if (user === undefined || user === null) {
-      navigate(PageLocations.LogIn);
+      navigate(LogIn);
       return;
     }
   });
@@ -133,7 +133,7 @@ export default function CreateTable() {
     }
 
     realtimeDB.update(`/${params.idDB}/tables/${tableName}`, tableColums);
-    navigate(PageLocations.DB(params.idDB as string));
+    navigate(DB(params.idDB as string));
   }
 
   return (
