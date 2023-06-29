@@ -20,6 +20,7 @@
   background-color: buttonface;
   border-style: outset;
   font-size: 0.9rem;
+  cursor: pointer;
 }
 
 .nav-bar{
@@ -28,4 +29,10 @@
   justify-content: space-between;
   align-items: stretch;
   padding: 6px;
+}
+
+.column-table{
+  width: 100%;
+  background-color: rgb(194, 194, 194);
+  margin-top: 10px;
 }

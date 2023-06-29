@@ -5,7 +5,7 @@ import PageLocations from "../components/PageLocations";
 import { useState } from "react"
 import { ColumnType, IForeingKey, IPageContent, IColumn, Dictionary } from "../Utilities/types";
 import DBGetDefaultCath from "../Utilities/DBGetDefaultCatch";
-import { TitleCase } from "../Utilities/functions";
+import { GetEnumValues, TitleCase } from "../Utilities/functions";
 
 interface IColumn2 {
   name: string,
@@ -43,7 +43,9 @@ export default function CreateTable() {
     .catch((error) => DBGetDefaultCath(error, content, setContent, navigate))
     .then((value) => {
       if (!(value instanceof Object)) return;
-      dbTables = Object.entries<Dictionary<IColumn>>(value.child("tables").val());
+      let tables = value.child("tables").val();
+      if(tables === undefined || tables === null) return;
+      dbTables = Object.entries<Dictionary<IColumn>>(tables);
     });
 
   function AddColumn() {
@@ -91,12 +93,14 @@ export default function CreateTable() {
 
         columns.forEach((value, index) => {
           columnsJSX.push(
-            <table>
+            <table className="column-table">
               <thead>
                 <tr>
                   <th>Column Name</th>
+                  <th>Unique</th>
                   {value.type == "int" && <th>Auto-Increment</th>}
                   <th>Data-Type</th>
+                  {value.type == "enum" && <th>Enum</th>}
                   <th>Not-Null</th>
                   <th>Use Default</th>
                   {value.useDefault && <th>Defualt</th>}
@@ -107,19 +111,25 @@ export default function CreateTable() {
               </thead>
               <tbody>
                 <tr>
-                  <td>
+                  <th>
                     <input type="text" name="name" value={value.name} onChange={(e) => setColumnPropertie(index, "name", e.target.value)} />
-                  </td>
+                  </th>
+                  <th>
+                    <input type="checkbox" name="unique" checked={value.unique} onChange={(e) => setColumnPropertie(index, "unique", e.target.checked)} />
+                  </th>
                   {
-                    value.type == "int" && <td>
+                    value.type == "int" && <th>
                       <input
                         type="checkbox"
                         checked={value.autoIncrement}
                         onChange={(e) => setColumnPropertie(index, "autoIncrement", e.target.checked)}
                       />
-                    </td>}
-                  <td>
-                    <select value={value.type} onChange={(e) => setColumnPropertie(index, "type", e.target.value)}>
+                    </th>}
+                  <th>
+                    <select value={value.type} onChange={(e) => {
+                        setColumnPropertie(index, "type", e.target.value);
+                        setColumnPropertie(index, "default", "");
+                      }}>
                       {(() => {
                         let options: React.JSX.Element[] = [];
                         ColumTypeArray.forEach((tipo) => {
@@ -128,22 +138,27 @@ export default function CreateTable() {
                         return options;
                       })()}
                     </select>
-                  </td>
-                  <td>
+                  </th>
+                  {value.type == "enum" &&
+                  <th>
+                    <textarea name="enum" value={value.enum} onChange={(e) => setColumnPropertie(index, "enum", e.target.value)}/>
+                  </th>
+                  }
+                  <th>
                     <input
                       type="checkbox"
                       checked={value.notNull}
                       onChange={(e) => setColumnPropertie(index, "notNull", e.target.checked)}
                     />
-                  </td>
-                  <td>
+                  </th>
+                  <th>
                     <input
                       type="checkbox"
                       checked={value.useDefault}
                       onChange={(e) => setColumnPropertie(index, "useDefault", e.target.checked)}
                     />
-                  </td>
-                  {value.useDefault && <td>
+                  </th>
+                  {value.useDefault && <th>
                     {(() => {
                       let inputType = "";
                       switch (value.type) {
@@ -167,21 +182,37 @@ export default function CreateTable() {
                         case "bool": {
                           return <input type="checkbox" name="default-value" checked={value.default as boolean} onChange={(e) => setColumnPropertie(index, "default", e.target.checked)} />
                         }
+                        case "enum":{
+                          let enums = GetEnumValues(value.enum);
+                          if(enums.length === 0) return <select value="------------" disabled></select>
+                          if(enums.indexOf(value.default as string) === -1){
+                            value.default = enums[0];
+                          }
+                          return <select value={value.default as string} onChange={(e) => setColumnPropertie(index, "default", e.target.value)}>
+                            {(() => {
+                              let options: React.JSX.Element[] = [];
+                              enums.forEach((value) => {
+                                options.push(<option value={value}>{value}</option>);
+                              });
+                              return options;
+                            })()}
+                          </select>
+                        }
                       }
                       return <input type={inputType} name="default-value" value={value.default as string} onChange={(e) => setColumnPropertie(index, "default", e.target.value)} />
                     })()}
-                  </td>}
+                  </th>}
                   {dbTables.length > 0 &&
-                    <td>
+                    <th>
                       <input
                         type="checkbox"
                         checked={value.useForeingKey}
                         onChange={(e) => { setColumnPropertie(index, "useForeingKey", e.target.checked) }}
                       />
-                    </td>}
-                  {value.useForeingKey && <td>
+                    </th>}
+                  {value.useForeingKey && <th>
 
-                  </td>}
+                  </th>}
                 </tr>
               </tbody>
             </table>
