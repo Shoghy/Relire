@@ -1,8 +1,13 @@
 const PageLocations = {
   LogIn: "/login",
   MainPage: "/",
-  db: (db:string) => {
-    return `db/${db}`
+  DB: (db:string) => {
+    if(!db) return "";
+    return `/db/${db}`;
+  },
+  DBTableCreate: (db:string) => {
+    if(!db) return "";
+    return `/db/${db}/create-table`;
   }
 };
 

@@ -133,7 +133,7 @@ export default function CreateTable() {
     }
 
     realtimeDB.update(`/${params.idDB}/tables/${tableName}`, tableColums);
-    navigate(PageLocations.db(params.idDB as string));
+    navigate(PageLocations.DB(params.idDB as string));
   }
 
   return (

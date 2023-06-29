@@ -12,9 +12,7 @@ export default function DescribeDB(){
 
   const [content, setContent] = useState<IPageContent>({
     element: (
-      <center>
         <h1>Aún no hay tablas, crea una</h1>
-      </center>
     ),
     todoBien: true
   });
@@ -26,7 +24,7 @@ export default function DescribeDB(){
 
     let tables: React.JSX.Element[] = [];
 
-    for(let tableName in Object.keys(db.tables)){
+    Object.keys(db.tables).forEach((tableName) => {
       let cantEntries = 0;
       if(db.tablesData !== undefined && tableName in db.tablesData){
         cantEntries = Object.keys(db.tablesData[tableName]).length;
@@ -37,7 +35,7 @@ export default function DescribeDB(){
           <td>{cantEntries}</td>
         </tr>
       );
-    }
+    });
 
     setContent({
       element: (
@@ -64,23 +62,26 @@ export default function DescribeDB(){
     }
   });
 
-  realtimeDB.get(params.idDB as string)
-  .catch((error) => DBGetDefaultCath(error, content, setContent, navigate))
-  .then((value) => {
-    if(!(value instanceof Object)) return;
+  if(!db){
+    realtimeDB.get(params.idDB as string)
+    .catch((error) => DBGetDefaultCath(error, content, setContent, navigate))
+    .then((value) => {
+      if(!(value instanceof Object)) return;
+  
+      setDB(value.val());
+    });
+  }
 
-    setDB(value.val());
-  });
   return (
     <>
       <NavBar/>
-      {content.element}
+      <center>
+        {content.element}
+      </center>
       <br/>
       <br/>
-      {(() => {
-        if(!content.todoBien) return;
-        return <center><Link to={`/db/${params.idDB}/create-table`} className="btn">Crear Tabla</Link></center>
-      })()}
+      {content.todoBien &&
+        <center><Link to={PageLocations.DBTableCreate(params.idDB as string)} className="btn">Crear Tabla</Link></center>}
     </>
   )
 }

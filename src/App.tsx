@@ -19,10 +19,6 @@ export default function App(){
     element={<DescribeDB/>}
     />
     <Route
-    path="/db/:idDB.json"
-    element={<DescribeDB/>}
-    />
-    <Route
     path="/db/:idDB/create-table"
     element={<CreateTable/>}
     />
