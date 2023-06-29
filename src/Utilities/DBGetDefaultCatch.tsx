@@ -1,6 +1,6 @@
 import { IPageContent } from "./types";
 import { NavigateFunction } from "react-router-dom";
-import PageLocations from "../components/PageLocations";
+import PageLocations from "./PageLocations";
 
 export default function DBGetDefaultCath(
   error: any,

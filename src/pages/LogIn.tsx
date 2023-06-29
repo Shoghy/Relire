@@ -3,7 +3,7 @@ import { useState } from "react";
 import { logIn, auth } from "../DBclient";
 import { AuthErrorCodes } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
-import PageLocations from "../components/PageLocations";
+import PageLocations from "../Utilities/PageLocations";
 
 interface ILogIn{
   email?: string,

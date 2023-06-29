@@ -1,7 +1,7 @@
 import NavBar from "../components/NavBar";
 import { useNavigate, useParams } from "react-router-dom";
 import { auth, realtimeDB } from "../DBclient";
-import PageLocations from "../components/PageLocations";
+import PageLocations from "../Utilities/PageLocations";
 import { useState } from "react"
 import { ColumnType, IForeingKey, IPageContent, IColumn, Dictionary } from "../Utilities/types";
 import DBGetDefaultCath from "../Utilities/DBGetDefaultCatch";

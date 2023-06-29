@@ -1,6 +1,6 @@
 import { useNavigate, Link } from "react-router-dom";
 import { auth } from "../DBclient";
-import PageLocations from "../components/PageLocations";
+import PageLocations from "../Utilities/PageLocations";
 import NavBar from "../components/NavBar";
 
 export default function Main(){
