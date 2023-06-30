@@ -1,17 +1,17 @@
-import { IPageContent } from "./types";
+import { MainPage } from "./PageLocations";
+import { IErrorElement } from "./types";
 import { NavigateFunction } from "react-router-dom";
-import PageLocations from "./PageLocations";
 
 export default function DBGetDefaultCath(
   error: any,
-  content: IPageContent,
-  setContent: React.Dispatch<React.SetStateAction<IPageContent>>,
+  content: IErrorElement,
+  setContent: React.Dispatch<React.SetStateAction<IErrorElement>>,
   navigate: NavigateFunction
 ){
   if(!content.todoBien) return;
 
   let message : string = error.message;
-  let contenido: IPageContent = {element:<></>, todoBien:false};
+  let contenido: IErrorElement = {element:<></>, todoBien:false};
   switch(message){
     case "Permission denied":{
       contenido.element = (
@@ -29,6 +29,6 @@ export default function DBGetDefaultCath(
 
   setContent(contenido);
   setTimeout(() => {
-    navigate(PageLocations.MainPage);
+    navigate(MainPage);
   }, 3000);
 }
