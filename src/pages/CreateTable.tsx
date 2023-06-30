@@ -2,7 +2,7 @@ import NavBar from "../components/NavBar";
 import { useNavigate, useParams } from "react-router-dom";
 import { auth, realtimeDB } from "../DBclient";
 import { useState } from "react"
-import { ColumnType, IForeingKey, IPageContent, IColumn, Dictionary } from "../Utilities/types";
+import { ColumnType, IForeingKey, IErrorElement, IColumn, Dictionary } from "../Utilities/types";
 import DBGetDefaultCath from "../Utilities/DBGetDefaultCatch";
 import { GetEnumValues, TitleCase } from "../Utilities/functions";
 import { DB, LogIn } from "../Utilities/PageLocations";
@@ -28,7 +28,7 @@ export default function CreateTable() {
   let dbTables: [string, Dictionary<IColumn>][] = [];
   const [columns, setColumns] = useState<IColumn2[]>([]);
   const [tableName, setTableName] = useState<string>("");
-  const [content, setContent] = useState<IPageContent>({
+  const [content, setContent] = useState<IErrorElement>({
     element: (<></>),
     todoBien: true
   })
@@ -117,8 +117,10 @@ export default function CreateTable() {
           errors.push(`${index+1}: Disable default or add a value to default`);
         }
       }
-
-      if(column.type === "enum"){
+      
+      if(column.type === "int"){
+        tableColums[column.name].autoIncrement = column.autoIncrement;
+      }else if(column.type === "enum"){
         tableColums[column.name].enum = GetEnumValues(column.enum);
         if(!column.enum){
           errors.push(`${index+1}: You need to add at least one value on enum`);

@@ -11,21 +11,26 @@ export interface IDataBase{
 
 export type ColumnType = "string" | "int" | "float" | "bool" | "date" | "datetime" | "enum";
 
+export type ColumValue = string | number | boolean;
+
 export interface IColumn{
   type: ColumnType,
   notNull: boolean,
-  default?: string | boolean | number,
+  default?: ColumValue,
   unique: boolean,
   foreingKey?: IForeingKey,
-  enum?: string[]
+  enum?: string[],
+  autoIncrement?: boolean
 }
+
+export type ITableInsert = Dictionary<Dictionary<ColumValue>>;
 
 export interface IForeingKey{
   tableName: string,
   column: string
 }
 
-export interface IPageContent{
+export interface IErrorElement{
   element: React.JSX.Element,
   todoBien: boolean
 }

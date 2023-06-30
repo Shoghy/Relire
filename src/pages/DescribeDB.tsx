@@ -1,16 +1,16 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
 import NavBar from "../components/NavBar";
 import { auth, realtimeDB } from "../DBclient";
-import { DBTableCreate, LogIn } from "../Utilities/PageLocations";
+import { DBTableCreate, DataInTable, LogIn } from "../Utilities/PageLocations";
 import { useState, useEffect } from "react";
-import { IDataBase, IPageContent } from "../Utilities/types";
+import { IDataBase, IErrorElement } from "../Utilities/types";
 import DBGetDefaultCath from "../Utilities/DBGetDefaultCatch";
 
 export default function DescribeDB(){
   const navigate = useNavigate();
   let params = useParams();
 
-  const [content, setContent] = useState<IPageContent>({
+  const [content, setContent] = useState<IErrorElement>({
     element: (
         <h1>Aún no hay tablas, crea una</h1>
     ),
@@ -26,12 +26,13 @@ export default function DescribeDB(){
 
     Object.keys(db.tables).forEach((tableName) => {
       let cantEntries = 0;
+  
       if(db.tablesData !== undefined && tableName in db.tablesData){
         cantEntries = Object.keys(db.tablesData[tableName]).length;
       }
       tables.push(
         <tr>
-          <td>{tableName}</td>
+          <td><Link to={DataInTable(params.idDB as string, tableName)}>{tableName}</Link></td>
           <td>{cantEntries}</td>
         </tr>
       );
