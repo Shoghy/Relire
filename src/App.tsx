@@ -24,7 +24,7 @@ export default function App(){
     element={<CreateTable/>}
     />
     <Route
-    path="/db/:idDB/:tbName"
+    path="/db/:idDB/t/:tbName"
     element={<DataInTable/>}
     />
   </Routes>

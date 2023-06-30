@@ -14,5 +14,5 @@ export const DBTableCreate = (db:string) => {
 
 export const DataInTable = (db: string, table: string) => {
   if(!db || !table) return "";
-  return `/db/${db}/${table}`;
+  return `/db/${db}/t/${table}`;
 }
