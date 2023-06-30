@@ -1,9 +1,9 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { auth, realtimeDB } from "../DBclient";
 import { LogIn } from "../Utilities/PageLocations";
 import DBGetDefaultCath from "../Utilities/DBGetDefaultCatch";
 import { useState } from "react";
-import { Dictionary, IColumn, IErrorElement } from "../Utilities/types";
+import { Dictionary, IColumn, IErrorElement, ITableInsert } from "../Utilities/types";
 
 export default function DataInTable(){
   const navigate = useNavigate();
@@ -11,6 +11,7 @@ export default function DataInTable(){
 
   const [erros, setErrors] = useState<IErrorElement>({element: <></>, todoBien: true});
   const [columns, setColumns] = useState<Dictionary<IColumn>>({});
+  const [cValues, setCValues] = useState<ITableInsert>({});
 
   auth.onAuthStateChanged((user) => {
     if (user === undefined || user === null) {
@@ -33,7 +34,12 @@ export default function DataInTable(){
   }
 
   function GetTableInserts(){
-    
+    realtimeDB.get(`${params.idDB}/tables-data/${params.tbName}`)
+    .catch((error) => DBGetDefaultCath(error, erros, setErrors, navigate))
+    .then((value) => {
+      if (!(value instanceof Object)) return;
+      setCValues(value.val());
+    });
   }
 
   return (
@@ -71,9 +77,28 @@ export default function DataInTable(){
         </tr>
       </thead>
       <tbody>
-
+          {(() => {
+            let tableValuesColumns: React.JSX.Element[] = [];
+            for(let insertUID in cValues){
+              let insert = cValues[insertUID];
+              tableValuesColumns.push(<tr>
+                {(() => {
+                  let tableValuesRows: React.JSX.Element[] = [];
+                  for(let columnName in columns){
+                    let value = insert[columnName];
+                    tableValuesRows.push(<td>{value}</td>);
+                  }
+                  return tableValuesRows;
+                })()}
+              </tr>);
+            }
+            return <></>
+          })()}
       </tbody>
     </table>
+    <br />
+    <br />
+    <Link to="insert">Insert Data</Link>
     </>
   );
 }
