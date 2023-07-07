@@ -4,6 +4,7 @@ import Main from "./pages/Main";
 import DescribeDB from "./pages/DescribeDB";
 import CreateTable from "./pages/CreateTable";
 import DataInTable from "./pages/DataInTable";
+import InsertInTable from "./pages/InsertInTable";
 
 export default function App(){
   return <Routes>
@@ -26,6 +27,10 @@ export default function App(){
     <Route
     path="/db/:idDB/t/:tbName"
     element={<DataInTable/>}
+    />
+    <Route
+    path="/db/:idDB/t/:tbName/insert"
+    element={<InsertInTable/>}
     />
   </Routes>
 }
