@@ -4,7 +4,7 @@ import { LogIn } from "../Utilities/PageLocations";
 import { ColumValue, Dictionary, IColumn, IErrorElement } from "../Utilities/types";
 import { useState } from "react";
 import DBGetDefaultCath from "../Utilities/DBGetDefaultCatch";
-import { RandomString } from "../Utilities/functions";
+import { ColumnToInput, RandomString } from "../Utilities/functions";
 
 export default function InsertInTable(){
   const navigate = useNavigate();
@@ -56,11 +56,13 @@ export default function InsertInTable(){
     });
   }
 
-  function ChangeRowValue(index: number, columnName: string, value: ColumValue){
-    setInserts((currentInsert) => {
-      currentInsert[index][columnName] = value;
-      return [... currentInsert];
-    });
+  function CreateSetValue(index: number, columnName: string){
+    return (value: ColumValue) => {
+      setInserts((currentInsert) => {
+        currentInsert[index][columnName] = value;
+        return [... currentInsert];
+      });
+    }
   }
 
   return (
@@ -86,54 +88,14 @@ export default function InsertInTable(){
               {(() => {
                 let rowsValue : React.JSX.Element[] = [];
                 for(let columnName in columns){
-                  let columnType = columns[columnName].type;
-                  let inp: React.JSX.Element = <></>;
-
-                  switch(columnType){
-                    case "bool":{
-                      inp = <input type="checkbox"
-                      checked={rowValue[columnName] as boolean}
-                      onChange={(e) => ChangeRowValue(index, columnName, e.target.checked)}/>
-                      break;
-                    }
-                    case "date":{
-                      inp = <input
-                      type="date"
-                      value={rowValue[columnName] as string}
-                      onChange={(e) => ChangeRowValue(index, columnName, e.target.value)}
-                      />
-                      break;
-                    }
-                    case "datetime":{
-                      inp = <input
-                      type="datetime-local"
-                      value={rowValue[columnName] as string}
-                      onChange={(e) => ChangeRowValue(index, columnName, e.target.value)}
-                      />
-                      break;
-                    }
-                    case "enum":{
-
-                      inp = (
-                        <select
-                        value={rowValue[columnName] as string}
-                        onChange={(e) => ChangeRowValue(index, columnName, e.target.value)}
-                        >
-                          {(() => {
-                            let options : React.JSX.Element[] = [];
-                            let enumValues = columns[columnName].enum;
-                            if(enumValues === undefined){}
-
-                            return <option></option>;
-                          })()}
-                        </select>
-                      )
-                      break;
-                    }
-                  }
+                  let column = columns[columnName];
                   rowsValue.push(
                     <td key={`${index}-${columnName}`}>
-                      {inp}
+                      <ColumnToInput
+                      column={column}
+                      value={rowValue[columnName]}
+                      setValue={CreateSetValue(index, columnName)}
+                      />
                     </td>
                   );
                 }
