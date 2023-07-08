@@ -5,6 +5,7 @@ import { DBTableCreate, DataInTable, LogIn } from "../Utilities/PageLocations";
 import { useState, useEffect } from "react";
 import { IDataBase, IErrorElement } from "../Utilities/types";
 import DBGetDefaultCath from "../Utilities/DBGetDefaultCatch";
+import { RandomString } from "../Utilities/functions";
 
 export default function DescribeDB(){
   const navigate = useNavigate();
@@ -23,17 +24,17 @@ export default function DescribeDB(){
     if(db.tables === undefined) return;
 
     let tables: React.JSX.Element[] = [];
-
-    Object.keys(db.tables).forEach((tableName) => {
+    let key = RandomString(6);
+    Object.keys(db.tables).forEach((tableName, index) => {
       let cantEntries = 0;
   
       if(db.tablesData !== undefined && tableName in db.tablesData){
         cantEntries = Object.keys(db.tablesData[tableName]).length;
       }
       tables.push(
-        <tr>
-          <td><Link to={DataInTable(params.idDB as string, tableName)}>{tableName}</Link></td>
-          <td>{cantEntries}</td>
+        <tr key={`${index}-${key}`}>
+          <td key={`${index}-1-${key}`}><Link to={DataInTable(params.idDB as string, tableName)}>{tableName}</Link></td>
+          <td key={`${index}-2-${key}`}>{cantEntries}</td>
         </tr>
       );
     });
@@ -43,8 +44,8 @@ export default function DescribeDB(){
         <table>
         <thead>
           <tr>
-            <th>Table Name</th>
-            <th>Entries</th>
+            <th key="Table Name">Table Name</th>
+            <th key="Entries">Entries</th>
           </tr>
         </thead>
         <tbody>

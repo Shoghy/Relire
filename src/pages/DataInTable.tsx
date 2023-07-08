@@ -70,7 +70,7 @@ export default function DataInTable(){
               if(column.default !== undefined){
                 toolTip.push(`Default: ${column.default}`);
               }
-              columnsArray.push(<th title={toolTip.join("\n")}>{columnName}</th>)
+              columnsArray.push(<th title={toolTip.join("\n")} key={columnName}>{columnName}</th>)
             }
             return columnsArray
           })()}
