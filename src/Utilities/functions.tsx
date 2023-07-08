@@ -125,3 +125,7 @@ export function ColumnToInput({column, value, setValue, props}: IColumnToInput) 
   }
   return <input {... props}/>
 }
+
+export function IsValidDate(dateString : string) {
+  return !isNaN(Date.parse(dateString));
+}

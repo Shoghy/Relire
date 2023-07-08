@@ -4,7 +4,8 @@ import { LogIn } from "../Utilities/PageLocations";
 import { ColumValue, Dictionary, IColumn, IErrorElement } from "../Utilities/types";
 import { useState } from "react";
 import DBGetDefaultCath from "../Utilities/DBGetDefaultCatch";
-import { ColumnToInput, RandomString } from "../Utilities/functions";
+import { ColumnToInput, IsValidDate, RandomString } from "../Utilities/functions";
+import { isBooleanObject } from "util/types";
 
 export default function InsertInTable(){
   const navigate = useNavigate();
@@ -54,6 +55,48 @@ export default function InsertInTable(){
   
       return [... currentInsert, newInsert]
     });
+  }
+  function InsertValues(){
+    let removeIndices: number[] = [];
+    let errors: [number[], string[]] = [[], []];
+    inserts.forEach((rowValues, index) => {
+      let insert: Dictionary<ColumValue> = {};
+      for(let columnName in columns){
+        let column = columns[columnName];
+        let value = rowValues[columnName];
+
+        if(value === undefined || value === null){
+          if(column.autoIncrement === true){
+            
+          }if(column.notNull){
+            errors[0].push(index);
+            errors[1].push(`(${columnName}) Value can't be null`);
+          }
+          continue;
+        }
+
+        switch(column.type){
+          case "bool":{
+            if(typeof(value) !== "boolean"){
+              errors[0].push(index);
+              errors[1].push(`(${columnName}) Value is not a boolean`);
+              continue;
+            }
+            insert[columnName] = value;
+            break;
+          }
+          case "date":{
+            if(!IsValidDate(value as string)){
+              errors[0].push(index);
+              errors[1].push(`(${columnName}) Value is not a valid date`);
+              continue;
+            }
+            insert[columnName] = value;
+            break;
+          }
+        }
+      }
+    })
   }
 
   function CreateSetValue(index: number, columnName: string){
@@ -108,7 +151,12 @@ export default function InsertInTable(){
         })()}
       </tbody>
     </table>
+    <br />
+    <br />
     <button onClick={AddRow} className="btn">Add Row</button>
+    <br />
+    <br />
+    <button onClick={InsertValues} className="btn">Insert Values</button>
     </>
   )
 }
