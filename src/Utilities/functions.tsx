@@ -22,6 +22,7 @@ export function GetEnumValues(val: string): string[] {
     while (value.startsWith(" ")) {
       value = value.substring(1);
     }
+    if(value === "") return;
     if (uniqueVals.indexOf(value) === -1) uniqueVals.push(value)
   })
   return uniqueVals;
@@ -81,6 +82,7 @@ export function ColumnToInput({column, value, setValue, props}: IColumnToInput) 
       let key = RandomString(6);
       return (
         <select {... props} key={key}>
+          {!column.notNull && <option value="" key={`$Nada-${key}`}></option>}
           {(() => {
             if(column.enum === undefined) return <></>;
             let options: React.JSX.Element[] = [];

@@ -118,7 +118,6 @@ export default function InsertInTable(){
               errors[1].push(`(${columnName}) Value is not a boolean`);
               continue;
             }
-            insert[columnName] = value;
             break;
           }
           case "date":
@@ -128,7 +127,6 @@ export default function InsertInTable(){
               errors[1].push(`(${columnName}) Value is not a valid date`);
               continue;
             }
-            insert[columnName] = value;
             break;
           }
           case "enum":{
@@ -142,11 +140,47 @@ export default function InsertInTable(){
               errors[1].push(`(${columnName}) Value not in enum.`);
               continue;
             }
-            insert[columnName] = value;
+            break;
+          }
+          case "float":{
+            if(typeof(value) !== "number"){
+              errors[0].push(index);
+              errors[1].push(`(${columnName}) Value is not a number.`);
+              continue;
+            }
+            break;
+          }
+          case "int":{
+            if(typeof(value) !== "number"){
+              errors[0].push(index);
+              errors[1].push(`(${columnName}) Value is not a number.`);
+              continue;
+            }
+            value = value.toFixed(0);
+            break;
+          }
+          case "string":{
+            if(typeof(value) !== "string"){
+              try{
+                value = JSON.stringify(value);
+              }catch(e){
+                errors[0].push(index);
+                errors[1].push(`(${columnName}) Value is not a string or value that can be transform into a string.`);
+                continue;
+              }
+            }
             break;
           }
         }
+        insert[columnName] = value;
       }
+
+      if(errors[0].indexOf(index) > -1){
+        return;
+      }
+
+      removeIndices.push(index);
+      realtimeDB.push(`${params.idDB}/tables-data/${params.tbName}`, insert);
     })
   }
 
