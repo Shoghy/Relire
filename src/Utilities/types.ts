@@ -6,24 +6,24 @@ export interface IDataBase{
   author:string,
   dbName: string,
   tables?: Dictionary<Dictionary<IColumn>>,
-  tablesData?: Dictionary<Dictionary<Dictionary<unknown>>>
+  tablesData?: Dictionary<TableInsert>
 }
 
 export type ColumnType = "string" | "int" | "float" | "bool" | "date" | "datetime" | "enum";
 
-export type ColumValue = string | number | boolean;
+export type ColumnValue = string | number | boolean;
 
 export interface IColumn{
   type: ColumnType,
   notNull: boolean,
-  default?: ColumValue,
+  default?: ColumnValue,
   unique: boolean,
   foreingKey?: IForeingKey,
   enum?: string[],
   autoIncrement?: boolean
 }
 
-export type ITableInsert = Dictionary<Dictionary<ColumValue>>;
+export type TableInsert = Dictionary<Dictionary<ColumnValue>>;
 
 export interface IForeingKey{
   tableName: string,

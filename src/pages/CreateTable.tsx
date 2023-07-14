@@ -2,16 +2,17 @@ import NavBar from "../components/NavBar";
 import { useNavigate, useParams } from "react-router-dom";
 import { auth, realtimeDB } from "../DBclient";
 import { useState } from "react"
-import { ColumnType, IForeingKey, IErrorElement, IColumn, Dictionary } from "../Utilities/types";
+import { ColumnType, IForeingKey, IErrorElement, IColumn, Dictionary, ColumnValue } from "../Utilities/types";
 import DBGetDefaultCath from "../Utilities/DBGetDefaultCatch";
 import { GetEnumValues, TitleCase } from "../Utilities/functions";
 import { DB, LogIn } from "../Utilities/PageLocations";
+import ColumnInput from "../components/ColumnInput";
 
 interface IColumn2 {
   name: string,
   type: ColumnType,
   notNull: boolean,
-  default: string | boolean | number,
+  default: ColumnValue,
   useDefault: boolean,
   enum: string
   autoIncrement: boolean,
@@ -71,7 +72,7 @@ export default function CreateTable() {
     });
   }
 
-  function setColumnPropertie(index: number, key: string, value: any) {
+  function setColumnPropertie(index: number, key: string, value: ColumnValue) {
     setColumns((currentColumns: any) => {
       currentColumns[index][key] = value;
       return [...currentColumns];
@@ -227,48 +228,16 @@ export default function CreateTable() {
                     />
                   </th>
                   {column.useDefault && <th>
-                    {(() => {
-                      let inputType = "";
-                      switch (column.type) {
-                        case "string": {
-                          inputType = "text"
-                          break;
-                        }
-                        case "date": {
-                          inputType = "date"
-                          break;
-                        }
-                        case "datetime": {
-                          inputType = "datetime-local";
-                          break;
-                        }
-                        case "float":
-                        case "int": {
-                          inputType = "number";
-                          break;
-                        }
-                        case "bool": {
-                          return <input type="checkbox" name="default-value" checked={column.default as boolean} onChange={(e) => setColumnPropertie(index, "default", e.target.checked)} />
-                        }
-                        case "enum": {
-                          let enums = GetEnumValues(column.enum);
-                          if (enums.length === 0) return <select value="------------" disabled></select>
-                          if (enums.indexOf(column.default as string) === -1) {
-                            column.default = enums[0];
-                          }
-                          return <select value={column.default as string} onChange={(e) => setColumnPropertie(index, "default", e.target.value)}>
-                            {(() => {
-                              let options: React.JSX.Element[] = [];
-                              enums.forEach((value) => {
-                                options.push(<option value={value}>{value}</option>);
-                              });
-                              return options;
-                            })()}
-                          </select>
-                        }
-                      }
-                      return <input type={inputType} name="default-value" value={column.default as string} onChange={(e) => setColumnPropertie(index, "default", e.target.value)} />
-                    })()}
+                    <ColumnInput
+                    column={{
+                      notNull: column.notNull,
+                      type: column.type,
+                      unique: column.unique,
+                      autoIncrement: column.autoIncrement,
+                      enum: GetEnumValues(column.enum)
+                    }}
+                    value={column.default}
+                    setValue={(e) => setColumnPropertie(index, "default", e)}/>
                   </th>}
                   <th>
                     <button className="btn" onClick={() => {

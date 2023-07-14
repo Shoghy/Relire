@@ -23,7 +23,7 @@
                 }
             }
         },
-        "tables-data":{
+        "tablesData":{
             "table-name":{
                 "uid":{
                     "column-1": "value",

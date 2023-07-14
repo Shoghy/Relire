@@ -1,10 +1,11 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { auth, realtimeDB } from "../DBclient";
 import { LogIn } from "../Utilities/PageLocations";
-import { ColumValue, Dictionary, IColumn, IErrorElement } from "../Utilities/types";
+import { ColumnValue, Dictionary, IColumn, IErrorElement } from "../Utilities/types";
 import { useState } from "react";
 import DBGetDefaultCath from "../Utilities/DBGetDefaultCatch";
-import { ColumnToInput, IsValidDate, RandomString } from "../Utilities/functions";
+import { IsValidDate, RandomString } from "../Utilities/functions";
+import ColumnInput from "../components/ColumnInput";
 
 export default function InsertInTable(){
   const navigate = useNavigate();
@@ -12,7 +13,7 @@ export default function InsertInTable(){
 
   const [erros, setErrors] = useState<IErrorElement>({element: <></>, todoBien: true});
   const [columns, setColumns] = useState<Dictionary<IColumn>>({});
-  const [inserts, setInserts] = useState<Dictionary<ColumValue>[]>([]);
+  const [inserts, setInserts] = useState<Dictionary<ColumnValue>[]>([]);
 
   auth.onAuthStateChanged((user) => {
     if(user === undefined || user === null){
@@ -36,10 +37,10 @@ export default function InsertInTable(){
 
   function AddRow(){
     setInserts((currentInsert) => {
-      let newInsert : Dictionary<ColumValue> = {};
+      let newInsert : Dictionary<ColumnValue> = {};
   
       for(let columnName in columns){
-        let value : ColumValue = "";
+        let value : ColumnValue = "";
         let column = columns[columnName];
 
         if(column.enum !== undefined){
@@ -57,7 +58,7 @@ export default function InsertInTable(){
   }
 
   async function GetAutoIncrementsLastValues(){
-    let columnsWithAutoIncrement: Dictionary<ColumValue> = {};
+    let columnsWithAutoIncrement: Dictionary<ColumnValue> = {};
     let columnsName: string[] = [];
 
     for(let columnName in columns){
@@ -72,13 +73,13 @@ export default function InsertInTable(){
       return columnsWithAutoIncrement;
     }
 
-    return await realtimeDB.get(`${params.idDB}/tables-data/${params.tbName}`)
+    return await realtimeDB.get(`${params.idDB}/tablesData/${params.tbName}`)
     .catch((error) => DBGetDefaultCath(error, erros, setErrors, navigate))
-    .then<Dictionary<ColumValue>>((value) => {
+    .then<Dictionary<ColumnValue>>((value) => {
       if (!(value instanceof Object)) return {};
 
       value.forEach((insert) => {
-        let insertValue: Dictionary<ColumValue> = insert.val();
+        let insertValue: Dictionary<ColumnValue> = insert.val();
         columnsName.forEach((columnName) =>{
           if(insertValue[columnName] > columnsWithAutoIncrement[columnName]){
             columnsWithAutoIncrement[columnName] = insertValue[columnName];
@@ -95,7 +96,7 @@ export default function InsertInTable(){
     let autoIncrements = await GetAutoIncrementsLastValues();
 
     inserts.forEach((rowValues, index) => {
-      let insert: Dictionary<ColumValue> = {};
+      let insert: Dictionary<ColumnValue> = {};
       for(let columnName in columns){
         let column = columns[columnName];
         let value = rowValues[columnName];
@@ -180,12 +181,12 @@ export default function InsertInTable(){
       }
 
       removeIndices.push(index);
-      realtimeDB.push(`${params.idDB}/tables-data/${params.tbName}`, insert);
+      realtimeDB.push(`${params.idDB}/tablesData/${params.tbName}`, insert);
     })
   }
 
   function CreateSetValue(index: number, columnName: string){
-    return (value: ColumValue) => {
+    return (value: ColumnValue) => {
       setInserts((currentInsert) => {
         currentInsert[index][columnName] = value;
         return [... currentInsert];
@@ -219,7 +220,7 @@ export default function InsertInTable(){
                   let column = columns[columnName];
                   rowsValue.push(
                     <td key={`${index}-${columnName}`}>
-                      <ColumnToInput
+                      <ColumnInput
                       column={column}
                       value={rowValue[columnName]}
                       setValue={CreateSetValue(index, columnName)}

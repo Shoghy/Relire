@@ -3,7 +3,7 @@ import { auth, realtimeDB } from "../DBclient";
 import { LogIn } from "../Utilities/PageLocations";
 import DBGetDefaultCath from "../Utilities/DBGetDefaultCatch";
 import { useState } from "react";
-import { Dictionary, IColumn, IErrorElement, ITableInsert } from "../Utilities/types";
+import { Dictionary, IColumn, IErrorElement, TableInsert } from "../Utilities/types";
 
 export default function DataInTable(){
   const navigate = useNavigate();
@@ -11,7 +11,7 @@ export default function DataInTable(){
 
   const [erros, setErrors] = useState<IErrorElement>({element: <></>, todoBien: true});
   const [columns, setColumns] = useState<Dictionary<IColumn>>({});
-  const [cValues, setCValues] = useState<ITableInsert>({});
+  const [cValues, setCValues] = useState<TableInsert>({});
 
   auth.onAuthStateChanged((user) => {
     if (user === undefined || user === null) {
@@ -34,7 +34,7 @@ export default function DataInTable(){
   }
 
   function GetTableInserts(){
-    realtimeDB.get(`${params.idDB}/tables-data/${params.tbName}`)
+    realtimeDB.get(`${params.idDB}/tablesData/${params.tbName}`)
     .catch((error) => DBGetDefaultCath(error, erros, setErrors, navigate))
     .then((value) => {
       if (!(value instanceof Object)) return;
