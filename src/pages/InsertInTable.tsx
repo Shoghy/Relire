@@ -121,10 +121,25 @@ export default function InsertInTable(){
             insert[columnName] = value;
             break;
           }
-          case "date":{
+          case "date":
+          case "datetime":{
             if(!IsValidDate(value as string)){
               errors[0].push(index);
               errors[1].push(`(${columnName}) Value is not a valid date`);
+              continue;
+            }
+            insert[columnName] = value;
+            break;
+          }
+          case "enum":{
+            if(column.enum === undefined || column.enum.length === 0){
+              errors[0].push(index);
+              errors[1].push(`(${columnName}) Error not yet resolved, empty enum in the database.`);
+              continue;
+            }
+            if(column.enum.indexOf(value as string) === -1){
+              errors[0].push(index);
+              errors[1].push(`(${columnName}) Value not in enum.`);
               continue;
             }
             insert[columnName] = value;
