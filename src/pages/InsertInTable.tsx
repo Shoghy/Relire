@@ -5,7 +5,6 @@ import { ColumValue, Dictionary, IColumn, IErrorElement } from "../Utilities/typ
 import { useState } from "react";
 import DBGetDefaultCath from "../Utilities/DBGetDefaultCatch";
 import { ColumnToInput, IsValidDate, RandomString } from "../Utilities/functions";
-import { isBooleanObject } from "util/types";
 
 export default function InsertInTable(){
   const navigate = useNavigate();
@@ -56,19 +55,56 @@ export default function InsertInTable(){
       return [... currentInsert, newInsert]
     });
   }
-  function InsertValues(){
+
+  async function GetAutoIncrementsLastValues(){
+    let columnsWithAutoIncrement: Dictionary<ColumValue> = {};
+    let columnsName: string[] = [];
+
+    for(let columnName in columns){
+      let column = columns[columnName];
+      if(!column.autoIncrement) continue;
+
+      columnsWithAutoIncrement[columnName] = -1;
+      columnsName.push(columnName);
+    }
+
+    if(Object.keys(columnsWithAutoIncrement).length == 0){
+      return columnsWithAutoIncrement;
+    }
+
+    return await realtimeDB.get(`${params.idDB}/tables-data/${params.tbName}`)
+    .catch((error) => DBGetDefaultCath(error, erros, setErrors, navigate))
+    .then<Dictionary<ColumValue>>((value) => {
+      if (!(value instanceof Object)) return {};
+
+      value.forEach((insert) => {
+        let insertValue: Dictionary<ColumValue> = insert.val();
+        columnsName.forEach((columnName) =>{
+          if(insertValue[columnName] > columnsWithAutoIncrement[columnName]){
+            columnsWithAutoIncrement[columnName] = insertValue[columnName];
+          }
+        });
+      });
+      return columnsWithAutoIncrement;
+    });
+  }
+
+  async function InsertValues(){
     let removeIndices: number[] = [];
     let errors: [number[], string[]] = [[], []];
+    let autoIncrements = await GetAutoIncrementsLastValues();
+
     inserts.forEach((rowValues, index) => {
       let insert: Dictionary<ColumValue> = {};
       for(let columnName in columns){
         let column = columns[columnName];
         let value = rowValues[columnName];
 
-        if(value === undefined || value === null){
-          if(column.autoIncrement === true){
-            
-          }if(column.notNull){
+        if(value === undefined || value === null || value === ""){
+          if(column.type === "int" && column.autoIncrement){
+            (autoIncrements[columnName] as number) += 1;
+            insert[columnName] = autoIncrements[columnName];
+          }else if(column.notNull){
             errors[0].push(index);
             errors[1].push(`(${columnName}) Value can't be null`);
           }
