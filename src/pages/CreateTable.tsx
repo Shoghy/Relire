@@ -230,7 +230,7 @@ export default function CreateTable() {
                   {column.useDefault && <th>
                     <ColumnInput
                     column={{
-                      notNull: column.notNull,
+                      notNull: true,
                       type: column.type,
                       unique: column.unique,
                       autoIncrement: column.autoIncrement,

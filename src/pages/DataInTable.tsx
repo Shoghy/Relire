@@ -3,7 +3,7 @@ import { auth, realtimeDB } from "../DBclient";
 import { LogIn } from "../Utilities/PageLocations";
 import DBGetDefaultCath from "../Utilities/DBGetDefaultCatch";
 import { useState } from "react";
-import { Dictionary, IColumn, IErrorElement, TableInsert } from "../Utilities/types";
+import { ColumnValue, Dictionary, IColumn, IErrorElement, TableInsert } from "../Utilities/types";
 
 export default function DataInTable(){
   const navigate = useNavigate();
@@ -85,14 +85,20 @@ export default function DataInTable(){
                 {(() => {
                   let tableValuesRows: React.JSX.Element[] = [];
                   for(let columnName in columns){
-                    let value = insert[columnName];
+                    let value: ColumnValue = "Null";
+                    if(columnName in insert){
+                      value = insert[columnName];
+                      if(typeof(value) === "boolean"){
+                        value = value ? "True" : "False";
+                      }
+                    }
                     tableValuesRows.push(<td>{value}</td>);
                   }
                   return tableValuesRows;
                 })()}
               </tr>);
             }
-            return <></>
+            return tableValuesColumns
           })()}
       </tbody>
     </table>

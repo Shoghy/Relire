@@ -43,12 +43,13 @@ export default function InsertInTable(){
         let value : ColumnValue = "";
         let column = columns[columnName];
 
-        if(column.enum !== undefined){
+        if(column.enum !== undefined && column.notNull){
           value = column.enum[0];
+        }else if(column.type === "bool"){
+          value = false;
         }
-        let dValue = column.default;
-        if(dValue !== undefined){
-          value = dValue;
+        if(column.default !== undefined){
+          value = column.default;
         }
         newInsert[columnName] = value;
       }
@@ -182,7 +183,28 @@ export default function InsertInTable(){
 
       removeIndices.push(index);
       realtimeDB.push(`${params.idDB}/tablesData/${params.tbName}`, insert);
-    })
+    });
+
+    removeIndices.reverse();
+    setInserts((currentInsert)=>{
+      removeIndices.forEach((i) => {
+        currentInsert.splice(i, 1);
+      });
+      return [... currentInsert]
+    });
+
+    let errorMessage: string = "";
+    let lastIndex = -1;
+  
+    errors[1].forEach((value, index) => {
+      if(index !== lastIndex){
+        lastIndex = index;
+        errorMessage += `\n(${index}): `
+      }
+      errorMessage += `${value}, `;
+    });
+
+    if(errorMessage) alert(errorMessage);
   }
 
   function CreateSetValue(index: number, columnName: string){

@@ -71,8 +71,9 @@ export default function ColumnInput({column, value, setValue, props}: IColumnToI
       props.onChange = (e) => {
         e = e as React.ChangeEvent<HTMLInputElement>;
         if(e.target.value === "") setValue(e.target.value);
-        if(isNaN(parseInt(e.target.value))) return;
-        setValue(e.target.value);
+        let value = parseInt(e.target.value);
+        if(isNaN(value)) return;
+        setValue(value);
       }
       break;
     }
