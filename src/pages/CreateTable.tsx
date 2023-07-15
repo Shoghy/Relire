@@ -156,20 +156,20 @@ export default function CreateTable() {
 
         columns.forEach((column, index) => {
           columnsJSX.push(
-            <table className="column-table">
+            <table className="column-table" key={index}>
               <thead>
                 <tr>
-                  <th>Index</th>
-                  <th>Column Name</th>
-                  {column.type !== "enum" && column.type !== "bool" && <th>Unique</th>}
-                  {column.type === "int" && <th>Auto-Increment</th>}
-                  <th>Data-Type</th>
-                  {column.type === "enum" && <th>Enum</th>}
-                  <th>Not-Null</th>
-                  <th>Use Default</th>
-                  {column.useDefault && <th>Defualt</th>}
-                  {column.useForeingKey && <th>Table</th>}
-                  {column.useForeingKey && <th>Column</th>}
+                  <th key={`${index}-index`}>Index</th>
+                  <th key={`${index}-column name`}>Column Name</th>
+                  {column.type !== "enum" && column.type !== "bool" && <th key={`${index}-unique`}>Unique</th>}
+                  {column.type === "int" && <th key={`${index}-auto increment`}>Auto-Increment</th>}
+                  <th key={`${index}-data type`}>Data-Type</th>
+                  {column.type === "enum" && <th key={`${index}-enum`}>Enum</th>}
+                  <th key={`${index}-not null`}>Not-Null</th>
+                  <th key={`${index}-use default`}>Use Default</th>
+                  {column.useDefault && <th key={`${index}-default`}>Defualt</th>}
+                  {column.useForeingKey && <th key={`${index}-table`}>Table</th>}
+                  {column.useForeingKey && <th key={`${index}-column`}>Column</th>}
                   <th></th>
                 </tr>
               </thead>
@@ -198,11 +198,11 @@ export default function CreateTable() {
                     <select value={column.type} onChange={(e) => {
                       setColumnPropertie(index, "type", e.target.value);
                       setColumnPropertie(index, "default", "");
-                    }}>
+                    }} key={`type-select-${index}`}>
                       {(() => {
                         let options: React.JSX.Element[] = [];
                         ColumTypeArray.forEach((tipo) => {
-                          options.push(<option value={tipo}>{TitleCase(tipo)}</option>)
+                          options.push(<option value={tipo} key={`type-select-${index}-${tipo}`}>{TitleCase(tipo)}</option>)
                         });
                         return options;
                       })()}

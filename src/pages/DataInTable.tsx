@@ -81,7 +81,7 @@ export default function DataInTable(){
             let tableValuesColumns: React.JSX.Element[] = [];
             for(let insertUID in cValues){
               let insert = cValues[insertUID];
-              tableValuesColumns.push(<tr>
+              tableValuesColumns.push(<tr key={insertUID}>
                 {(() => {
                   let tableValuesRows: React.JSX.Element[] = [];
                   for(let columnName in columns){
@@ -92,7 +92,7 @@ export default function DataInTable(){
                         value = value ? "True" : "False";
                       }
                     }
-                    tableValuesRows.push(<td>{value}</td>);
+                    tableValuesRows.push(<td key={`${insertUID}-${columnName}`}>{value}</td>);
                   }
                   return tableValuesRows;
                 })()}
