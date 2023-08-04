@@ -1,41 +1,51 @@
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { auth, realtimeDB } from "../DBclient";
+import { auth, realtimeDB } from "../Utilities/DBclient";
 import { LogIn } from "../Utilities/PageLocations";
 import DBGetDefaultCath from "../Utilities/DBGetDefaultCatch";
-import { useState } from "react";
-import { ColumnValue, Dictionary, IColumn, IErrorElement, TableInsert } from "../Utilities/types";
+import { useEffect, useState } from "react";
+import { ColumnValue, Dictionary, IColumn, TableInsert } from "../Utilities/types";
+import { AsyncAttempter } from "../Utilities/functions";
 
 export default function DataInTable(){
   const navigate = useNavigate();
   const params = useParams();
 
-  const [erros, setErrors] = useState<IErrorElement>({element: <></>, todoBien: true});
+  const [errorElement, setErrorElement] = useState<React.JSX.Element>();
   const [columns, setColumns] = useState<Dictionary<IColumn>>({});
   const [cValues, setCValues] = useState<TableInsert>({});
 
-  auth.onAuthStateChanged((user) => {
-    if (user === undefined || user === null) {
-      navigate(LogIn);
-      return;
-    }
-  });
-
-  if(erros.todoBien && Object.keys(columns).length === 0){
-    realtimeDB.get(`${params.idDB}/tables/${params.tbName}`)
-    .catch((error) => DBGetDefaultCath(error, erros, setErrors, navigate))
-    .then((value) => {
-      if (!(value instanceof Object)){
-        setErrors({element: <h1>Something went wrong </h1>, todoBien: false});
+  useEffect(() => { (async () => {
+    auth.onAuthStateChanged((user) => {
+      if (user === undefined || user === null) {
+        navigate(LogIn);
         return;
       }
-      setColumns(value.val());
-      GetTableInserts();
     });
+
+    let [result, error] = await AsyncAttempter(() => realtimeDB.get(`${params.idDB}/tables/${params.tbName}`))
+
+    if(error){
+      DBGetDefaultCath(error, errorElement, setErrorElement, navigate);
+      return;
+    }
+
+    if(!result){
+      setErrorElement(<h1>Something went wrong </h1>);
+      return;
+    }
+
+    setColumns(result.val());
+    GetTableInserts();
+  })()}, [])
+
+  if(errorElement){
+    return errorElement;
   }
+  
 
   function GetTableInserts(){
     realtimeDB.get(`${params.idDB}/tablesData/${params.tbName}`)
-    .catch((error) => DBGetDefaultCath(error, erros, setErrors, navigate))
+    .catch((error) => DBGetDefaultCath(error, errorElement, setErrorElement, navigate))
     .then((value) => {
       if (!(value instanceof Object)) return;
       setCValues(value.val());

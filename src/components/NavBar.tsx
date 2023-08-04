@@ -1,4 +1,4 @@
-import { logOut } from "../DBclient";
+import { logOut } from "../Utilities/DBclient";
 
 export default function NavBar(){
   function btnLogOut(){
