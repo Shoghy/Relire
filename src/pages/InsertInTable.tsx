@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { GetDataInTable, GetTables, auth } from "../utilities/DBclient";
+import { GetDataInTable, GetTables, auth, InsertRow } from '../utilities/DBclient';
 import { LogIn } from "../utilities/PageLocations";
 import { ColumnValue, Dictionary, IColumn } from "../utilities/types";
 import React, { useEffect, useState } from "react";
@@ -83,7 +83,7 @@ export default function InsertInTable(){
       return columnsWithAutoIncrement;
     }
 
-     AsyncAttempter(
+    let [table, tableError] = await AsyncAttempter(
       () => GetDataInTable(
         auth.currentUser?.uid as string,
         params.idDB as string,
@@ -91,27 +91,37 @@ export default function InsertInTable(){
       )
     )
 
-    return await realtimeDB.get(`${params.idDB}/tablesData/${params.tbName}`)
-    .catch((error) => DBGetDefaultCath(error, errorElement, setErrorElement, navigate))
-    .then<Dictionary<ColumnValue>>((value) => {
-      if (!(value instanceof Object)) return {};
+    if(tableError){
+      DBGetDefaultCath(
+        tableError,
+        errorElement,
+        setErrorElement,
+        navigate
+      )
+      return;
+    }
 
-      value.forEach((insert) => {
-        let insertValue: Dictionary<ColumnValue> = insert.val();
-        columnsName.forEach((columnName) =>{
-          if(insertValue[columnName] > columnsWithAutoIncrement[columnName]){
+    if(!(table instanceof Object)){
+      setErrorElement(<h1>Something went wrong</h1>)
+      return;
+    }
+
+    table.forEach((insert) => {
+      let insertValue: Dictionary<ColumnValue> = insert.val();
+      columnsName.forEach((columnName) => {
+        if(insertValue[columnName] > columnsWithAutoIncrement[columnName]){
             columnsWithAutoIncrement[columnName] = insertValue[columnName];
           }
-        });
       });
-      return columnsWithAutoIncrement;
     });
+
+    return columnsWithAutoIncrement;
   }
 
   async function InsertValues(){
     let removeIndices: number[] = [];
     let errors: [number[], string[]] = [[], []];
-    let autoIncrements = await GetAutoIncrementsLastValues();
+    let autoIncrements = (await GetAutoIncrementsLastValues()) as Dictionary<ColumnValue>;
 
     inserts.forEach((rowValues, index) => {
       let insert: Dictionary<ColumnValue> = {};
@@ -199,7 +209,17 @@ export default function InsertInTable(){
       }
 
       removeIndices.push(index);
-      realtimeDB.push(`${params.idDB}/tablesData/${params.tbName}`, insert);
+
+      InsertRow(
+        auth.currentUser?.uid as string,
+        params.idDB as string,
+        params.tbName as string,
+        insert
+      ).catch(() => {
+        setErrorElement(
+          <h1>No fue posible insertar los datos en la base de datos</h1>
+        )
+      })
     });
 
     removeIndices.reverse();

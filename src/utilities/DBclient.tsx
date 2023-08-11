@@ -1,6 +1,6 @@
 import { initializeApp, getApps, FirebaseApp, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { get, getDatabase, ref } from "firebase/database"
+import { get, getDatabase, push, ref } from "firebase/database"
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -39,6 +39,16 @@ export function GetDataInTable(userUID: string, db:string, tb: string){
 export function GetDatabase(userUID: string, db: string){
   let reference = ref(database, `${userUID}/${db}`);
   return get(reference);
+}
+
+export function InsertRow(
+  userUID: string,
+  db: string,
+  tb: string,
+  data: unknown
+){
+  let reference = ref(database, `${userUID}/${db}/tablesData/${tb}`);
+  return push(reference, data);
 }
 
 export { app, auth, database }
