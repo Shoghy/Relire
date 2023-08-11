@@ -34,14 +34,17 @@ export default function CreateTable() {
   const [errorElement, setErrorElement] = useState<React.JSX.Element>();
 
   /*Run just once*/
-  useEffect(() => {(async () => {
+  useEffect(() => {
     auth.onAuthStateChanged((user) => {
       if (!user) {
         navigate(LogIn);
         return;
       }
     });
-    let [response, error] = await AsyncAttempter(() => realtimeDB.get(params.idDB as string));
+
+  (async () => {
+    const idDB = params.idDB as string;
+    let [response, error] = await AsyncAttempter(() => get(ref(database, idDB)));
 
     if(error || !response){
       DBGetDefaultCath(error, errorElement, setErrorElement, navigate);
@@ -139,8 +142,8 @@ export default function CreateTable() {
       alert(errors.join("\n"));
       return;
     }
-
-    realtimeDB.update(`/${params.idDB}/tables/${tableName}`, tableColums);
+    
+    update(ref(database, `/${auth.currentUser?.uid}/${params.idDB}/tables/${tableName}`), tableColums)
     navigate(DB(params.idDB as string));
   }
 

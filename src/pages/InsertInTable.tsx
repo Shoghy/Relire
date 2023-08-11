@@ -1,39 +1,48 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { auth } from "../utilities/DBclient";
+import { GetDataInTable, GetTables, auth } from "../utilities/DBclient";
 import { LogIn } from "../utilities/PageLocations";
-import { ColumnValue, Dictionary, IColumn, IErrorElement } from "../utilities/types";
-import { useState } from "react";
+import { ColumnValue, Dictionary, IColumn } from "../utilities/types";
+import React, { useEffect, useState } from "react";
 import DBGetDefaultCath from "../utilities/DBGetDefaultCatch";
-import { IsValidDate, RandomString } from "../utilities/functions";
+import { AsyncAttempter, IsValidDate, RandomString } from "../utilities/functions";
 import ColumnInput from "../components/ColumnInput";
 
 export default function InsertInTable(){
   const navigate = useNavigate();
   const params = useParams();
 
-  const [erros, setErrors] = useState<IErrorElement>({element: <></>, todoBien: true});
+  const [errorElement, setErrorElement] = useState<React.JSX.Element>();
   const [columns, setColumns] = useState<Dictionary<IColumn>>({});
   const [inserts, setInserts] = useState<Dictionary<ColumnValue>[]>([]);
 
-  auth.onAuthStateChanged((user) => {
-    if(user === undefined || user === null){
-      navigate(LogIn);
-      return;
-    }
-  });
-
-  if(erros.todoBien && Object.keys(columns).length === 0){
-    realtimeDB.get(`${params.idDB}/tables/${params.tbName}`)
-    .catch((error) => DBGetDefaultCath(error, erros, setErrors, navigate))
-    .then((value) => {
-      if (!(value instanceof Object)){
-        setErrors({element: <h1>Something went wrong </h1>, todoBien: false});
+  useEffect(() => {
+    auth.onAuthStateChanged((user) => {
+      if(user === undefined || user === null){
+        navigate(LogIn);
         return;
       }
-
-      setColumns(value.val());
     });
-  }
+  (async () => {
+
+    let [tableData, tableDataError] = await AsyncAttempter(
+      () => GetTables(
+        auth.currentUser?.uid as string,
+        params.idDB as string,
+        params.tbName
+      )
+    )
+    if(tableDataError){
+      DBGetDefaultCath(tableDataError, errorElement, setErrorElement, navigate)
+      return;
+    }
+
+    if(!(tableData instanceof Object)){
+      setErrorElement(<h1>Something went wrong</h1>);
+      return;
+    }
+
+    setColumns(tableData.val());
+  })()}, []);
 
   function AddRow(){
     setInserts((currentInsert) => {
@@ -74,8 +83,16 @@ export default function InsertInTable(){
       return columnsWithAutoIncrement;
     }
 
+     AsyncAttempter(
+      () => GetDataInTable(
+        auth.currentUser?.uid as string,
+        params.idDB as string,
+        params.tbName as string
+      )
+    )
+
     return await realtimeDB.get(`${params.idDB}/tablesData/${params.tbName}`)
-    .catch((error) => DBGetDefaultCath(error, erros, setErrors, navigate))
+    .catch((error) => DBGetDefaultCath(error, errorElement, setErrorElement, navigate))
     .then<Dictionary<ColumnValue>>((value) => {
       if (!(value instanceof Object)) return {};
 

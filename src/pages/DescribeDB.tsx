@@ -18,7 +18,7 @@ export default function DescribeDB(){
   //Reference for the async function
   dbRef.current = db;
 
-  useEffect(() => {(async () => {
+  useEffect(() => {
     auth.onAuthStateChanged((user) => {
       if(user === undefined || user === null){
         navigate(LogIn);
@@ -26,14 +26,25 @@ export default function DescribeDB(){
       }
     });
 
-    let [result, error] = await AsyncAttempter(() => realtimeDB.get(params.idDB as string));
+  (async () => {
+    let [getDBResult, getDBError] = await AsyncAttempter(
+      () => GetDatabase(
+        auth.currentUser?.uid as string,
+        params.idDB as string
+      )
+    );
 
-    if(error){
-      DBGetDefaultCath(error, errorElement, setErrorElement, navigate);
+    if(getDBError){
+      DBGetDefaultCath(
+        getDBError,
+        errorElement,
+        setErrorElement,
+        navigate
+      );
       return;
     }
 
-    setDB(result?.val());
+    setDB(getDBResult?.val());
     if(dbRef.current === undefined || dbRef.current.tables === undefined){
       setDBDataElement(<h1>Aún no hay tablas, crea una</h1>)
       return;

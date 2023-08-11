@@ -1,5 +1,5 @@
-import { ColumnValue, IColumn } from "../Utilities/types";
-import { RandomString, TitleCase } from "../Utilities/functions";
+import { ColumnValue, IColumn } from "../utilities/types";
+import { RandomString, TitleCase } from "../utilities/functions";
 import React from "react";
 
 export interface IColumnToInput{
