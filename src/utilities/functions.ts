@@ -49,7 +49,7 @@ export function IsValidDate(dateString : string) {
   return !isNaN(Date.parse(dateString));
 }
 
-export async function AsyncAttempter<T>(func: AsyncFunc<T>): Promise<[T | null, Error | null]>{
+export async function AsyncAttempter<E = Error, T = any>(func: AsyncFunc<T>): Promise<[T, null] | [null, E]>{
   try{
     let result = await func();
     return [result, null];

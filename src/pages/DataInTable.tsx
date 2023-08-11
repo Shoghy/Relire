@@ -1,10 +1,10 @@
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { auth, realtimeDB } from "../Utilities/DBclient";
-import { LogIn } from "../Utilities/PageLocations";
-import DBGetDefaultCath from "../Utilities/DBGetDefaultCatch";
+import { GetDataInTable, GetTables, auth } from "../utilities/DBclient";
+import { LogIn } from "../utilities/PageLocations";
+import DBGetDefaultCath from "../utilities/DBGetDefaultCatch";
 import { useEffect, useState } from "react";
-import { ColumnValue, Dictionary, IColumn, TableInsert } from "../Utilities/types";
-import { AsyncAttempter } from "../Utilities/functions";
+import { ColumnValue, Dictionary, IColumn, TableInsert } from "../utilities/types";
+import { AsyncAttempter } from "../utilities/functions";
 
 export default function DataInTable(){
   const navigate = useNavigate();

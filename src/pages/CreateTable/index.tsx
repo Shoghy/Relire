@@ -1,11 +1,12 @@
 import NavBar from "../../components/NavBar";
 import { useNavigate, useParams } from "react-router-dom";
-import { auth, realtimeDB } from "../../Utilities/DBclient";
+import { auth, database } from "../../utilities/DBclient";
+import { get, ref, update } from "firebase/database"
 import { useEffect, useState } from "react"
-import { ColumnType, IForeingKey, IColumn, Dictionary, ColumnValue } from "../../Utilities/types";
-import DBGetDefaultCath from "../../Utilities/DBGetDefaultCatch";
-import { AsyncAttempter, GetEnumValues, TitleCase } from "../../Utilities/functions";
-import { DB, LogIn } from "../../Utilities/PageLocations";
+import { ColumnType, IForeingKey, IColumn, Dictionary, ColumnValue } from "../../utilities/types";
+import DBGetDefaultCath from "../../utilities/DBGetDefaultCatch";
+import { AsyncAttempter, GetEnumValues, TitleCase } from "../../utilities/functions";
+import { DB, LogIn } from "../../utilities/PageLocations";
 import ColumnInput from "../../components/ColumnInput";
 
 interface IColumn2 {

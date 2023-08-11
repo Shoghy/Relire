@@ -1,10 +1,10 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { auth, realtimeDB } from "../DBclient";
-import { LogIn } from "../Utilities/PageLocations";
-import { ColumnValue, Dictionary, IColumn, IErrorElement } from "../Utilities/types";
+import { auth } from "../utilities/DBclient";
+import { LogIn } from "../utilities/PageLocations";
+import { ColumnValue, Dictionary, IColumn, IErrorElement } from "../utilities/types";
 import { useState } from "react";
-import DBGetDefaultCath from "../Utilities/DBGetDefaultCatch";
-import { IsValidDate, RandomString } from "../Utilities/functions";
+import DBGetDefaultCath from "../utilities/DBGetDefaultCatch";
+import { IsValidDate, RandomString } from "../utilities/functions";
 import ColumnInput from "../components/ColumnInput";
 
 export default function InsertInTable(){

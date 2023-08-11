@@ -1,9 +1,9 @@
 import {Formik, Form, Field, ErrorMessage, FormikHelpers} from "formik";
 import { useState } from "react";
-import { logIn, auth } from "../DBclient";
+import { auth } from "../utilities/DBclient";
 import { AuthErrorCodes } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
-import { MainPage } from "../Utilities/PageLocations";
+import { MainPage } from "../utilities/PageLocations";
 
 interface ILogIn{
   email?: string,

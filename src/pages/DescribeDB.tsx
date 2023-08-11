@@ -1,11 +1,11 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
 import NavBar from "../components/NavBar";
-import { auth, realtimeDB } from "../Utilities/DBclient";
-import { DBTableCreate, DataInTable, LogIn } from "../Utilities/PageLocations";
+import { GetDatabase, auth } from "../utilities/DBclient";
+import { DBTableCreate, DataInTable, LogIn } from "../utilities/PageLocations";
 import { useState, useEffect, useRef } from "react";
-import { IDataBase } from "../Utilities/types";
-import DBGetDefaultCath from "../Utilities/DBGetDefaultCatch";
-import { AsyncAttempter, RandomString } from "../Utilities/functions";
+import { IDataBase } from "../utilities/types";
+import DBGetDefaultCath from "../utilities/DBGetDefaultCatch";
+import { AsyncAttempter, RandomString } from "../utilities/functions";
 
 export default function DescribeDB(){
   const navigate = useNavigate();

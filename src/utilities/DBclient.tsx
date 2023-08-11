@@ -36,4 +36,9 @@ export function GetDataInTable(userUID: string, db:string, tb: string){
   return get(reference);
 }
 
+export function GetDatabase(userUID: string, db: string){
+  let reference = ref(database, `${userUID}/${db}`);
+  return get(reference);
+}
+
 export { app, auth, database }
