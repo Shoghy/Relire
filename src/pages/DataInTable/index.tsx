@@ -1,45 +1,71 @@
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { auth, realtimeDB } from "../DBclient";
-import { LogIn } from "../Utilities/PageLocations";
-import DBGetDefaultCath from "../Utilities/DBGetDefaultCatch";
-import { useState } from "react";
-import { ColumnValue, Dictionary, IColumn, IErrorElement, TableInsert } from "../Utilities/types";
+import { GetDataInTable, GetTables, auth } from "../../utilities/DBclient";
+import { LogIn } from "../../utilities/PageLocations";
+import DBGetDefaultCath from "../../utilities/DBGetDefaultCatch";
+import { useEffect, useState } from "react";
+import { ColumnValue, Dictionary, IColumn, TableInsert } from "../../utilities/types";
+import { AsyncAttempter } from "../../utilities/functions";
 
 export default function DataInTable(){
   const navigate = useNavigate();
   const params = useParams();
 
-  const [erros, setErrors] = useState<IErrorElement>({element: <></>, todoBien: true});
+  const [errorElement, setErrorElement] = useState<React.JSX.Element>();
   const [columns, setColumns] = useState<Dictionary<IColumn>>({});
   const [cValues, setCValues] = useState<TableInsert>({});
 
-  auth.onAuthStateChanged((user) => {
-    if (user === undefined || user === null) {
-      navigate(LogIn);
-      return;
-    }
-  });
-
-  if(erros.todoBien && Object.keys(columns).length === 0){
-    realtimeDB.get(`${params.idDB}/tables/${params.tbName}`)
-    .catch((error) => DBGetDefaultCath(error, erros, setErrors, navigate))
-    .then((value) => {
-      if (!(value instanceof Object)){
-        setErrors({element: <h1>Something went wrong </h1>, todoBien: false});
+  useEffect(() => {
+    auth.onAuthStateChanged((user) => {
+      if (user === undefined || user === null) {
+        navigate(LogIn);
         return;
       }
-      setColumns(value.val());
-      GetTableInserts();
     });
-  }
 
-  function GetTableInserts(){
-    realtimeDB.get(`${params.idDB}/tablesData/${params.tbName}`)
-    .catch((error) => DBGetDefaultCath(error, erros, setErrors, navigate))
-    .then((value) => {
-      if (!(value instanceof Object)) return;
-      setCValues(value.val());
-    });
+  (async () => {
+
+    let [tableStructure, tableStrunctureError] = await AsyncAttempter(
+      () => GetTables(
+        auth.currentUser?.uid as string,
+        params.idDB as string,
+        params.tbName
+      )
+    )
+
+    if(tableStrunctureError){
+      DBGetDefaultCath(tableStrunctureError, errorElement, setErrorElement, navigate);
+      return;
+    }
+
+    if(!tableStructure){
+      setErrorElement(<h1>Something went wrong </h1>);
+      return;
+    }
+
+    setColumns(tableStructure.val());
+
+    let [tableData, tableDataError] = await AsyncAttempter(
+      () => GetDataInTable(
+        auth.currentUser?.uid as string,
+        params.idDB as string,
+        params.tbName as string
+      )
+    )
+
+    if(tableDataError){
+      DBGetDefaultCath(
+        tableDataError,
+        errorElement,
+        setErrorElement,
+        navigate
+      )
+      return;
+    }
+    setCValues(tableData?.val())
+  })()}, [])
+
+  if(errorElement){
+    return errorElement;
   }
 
   return (

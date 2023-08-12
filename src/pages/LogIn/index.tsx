@@ -1,9 +1,11 @@
 import {Formik, Form, Field, ErrorMessage, FormikHelpers} from "formik";
-import { useState } from "react";
-import { logIn, auth } from "../DBclient";
-import { AuthErrorCodes } from "firebase/auth";
+import { useEffect, useState } from "react";
+import { auth } from "../../utilities/DBclient";
+import { AuthErrorCodes, AuthError } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
-import { MainPage } from "../Utilities/PageLocations";
+import { MainPage } from "../../utilities/PageLocations";
+import { signInWithEmailAndPassword } from "firebase/auth"
+import { AsyncAttempter } from "../../utilities/functions";
 
 interface ILogIn{
   email?: string,
@@ -13,15 +15,16 @@ interface ILogIn{
 export default function LogInForm(){
   const validEmailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
   const navigate = useNavigate();
-
-  auth.onAuthStateChanged((user) => {
-    if(user !== undefined && user !== null){
-      navigate(MainPage);
-    }
-  });
-
   const [sendedForm, changeSendedForm] = useState<boolean>(false);
   const [authError, changeAuthError] = useState<string>();
+
+  useEffect(() => {
+    auth.onAuthStateChanged((user) => {
+      if(user !== undefined && user !== null){
+        navigate(MainPage);
+      }
+    });
+  }, [])
 
   function validate(values:ILogIn){
     let errors: ILogIn = {};
@@ -41,7 +44,7 @@ export default function LogInForm(){
     return errors;
   }
 
-  function onSubmit(values:ILogIn, helpers : FormikHelpers<ILogIn>){
+  async function onSubmit(values:ILogIn, helpers : FormikHelpers<ILogIn>){
     changeSendedForm(true);
     changeAuthError(undefined);
 
@@ -50,29 +53,34 @@ export default function LogInForm(){
       return;
     }
 
-    logIn(values.email, values.password)
-    .catch((error) => {
-      const errorCode = error.code;
 
-      switch(errorCode){
-        case AuthErrorCodes.USER_DELETED:{
-          changeAuthError("User don't exist");
-          helpers.resetForm();
-          break;
-        }case AuthErrorCodes.INVALID_PASSWORD:{
-          changeAuthError("Constraseña incorrecta");
-          helpers.setFieldValue("email", "", false);
-          break;
-        }
-        default:{
-          changeAuthError("Something went wrong");
-          break;
-        }
-      }
-    })
-    .finally(() => {
+    let logIn = signInWithEmailAndPassword(auth, values.email, values.password);
+    let [, logInError] = await AsyncAttempter<AuthError>(() => logIn)
+
+    if(!logInError){
       changeSendedForm(false);
-    });
+      return;
+    }
+
+    const errorCode = logInError.code;
+
+    switch(errorCode){
+      case AuthErrorCodes.USER_DELETED:{
+        changeAuthError("User don't exist");
+        helpers.resetForm();
+        break;
+      }case AuthErrorCodes.INVALID_PASSWORD:{
+        changeAuthError("Constraseña incorrecta");
+        helpers.setFieldValue("email", "", false);
+        break;
+      }
+      default:{
+        changeAuthError("Something went wrong");
+        break;
+      }
+    }
+
+    changeSendedForm(false);
   }
 
   const initialValues: ILogIn = {email: "", password: ""};

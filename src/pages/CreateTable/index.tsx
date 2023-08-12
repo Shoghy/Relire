@@ -1,12 +1,13 @@
-import NavBar from "../components/NavBar";
+import NavBar from "../../components/NavBar";
 import { useNavigate, useParams } from "react-router-dom";
-import { auth, realtimeDB } from "../DBclient";
-import { useState } from "react"
-import { ColumnType, IForeingKey, IErrorElement, IColumn, Dictionary, ColumnValue } from "../Utilities/types";
-import DBGetDefaultCath from "../Utilities/DBGetDefaultCatch";
-import { GetEnumValues, TitleCase } from "../Utilities/functions";
-import { DB, LogIn } from "../Utilities/PageLocations";
-import ColumnInput from "../components/ColumnInput";
+import { auth, database } from "../../utilities/DBclient";
+import { get, ref, update } from "firebase/database"
+import { useEffect, useState } from "react"
+import { ColumnType, IForeingKey, IColumn, Dictionary, ColumnValue } from "../../utilities/types";
+import DBGetDefaultCath from "../../utilities/DBGetDefaultCatch";
+import { AsyncAttempter, GetEnumValues, TitleCase } from "../../utilities/functions";
+import { DB, LogIn } from "../../utilities/PageLocations";
+import ColumnInput from "../../components/ColumnInput";
 
 interface IColumn2 {
   name: string,
@@ -26,29 +27,35 @@ export default function CreateTable() {
   const ColumTypeArray = ["string", "int", "float", "bool", "date", "datetime", "enum"];
   const navigate = useNavigate();
   const params = useParams();
-  let dbTables: [string, Dictionary<IColumn>][] = [];
+
+  const [dbTables, setdbTables] = useState<[string, Dictionary<IColumn>][]>([]);
   const [columns, setColumns] = useState<IColumn2[]>([]);
   const [tableName, setTableName] = useState<string>("");
-  const [content, setContent] = useState<IErrorElement>({
-    element: (<></>),
-    todoBien: true
-  })
+  const [errorElement, setErrorElement] = useState<React.JSX.Element>();
 
-  auth.onAuthStateChanged((user) => {
-    if (user === undefined || user === null) {
-      navigate(LogIn);
+  /*Run just once*/
+  useEffect(() => {
+    auth.onAuthStateChanged((user) => {
+      if (!user) {
+        navigate(LogIn);
+        return;
+      }
+    });
+
+  (async () => {
+    const idDB = params.idDB as string;
+    let [response, error] = await AsyncAttempter(() => get(ref(database, idDB)));
+
+    if(error || !response){
+      DBGetDefaultCath(error, errorElement, setErrorElement, navigate);
       return;
     }
-  });
 
-  realtimeDB.get(params.idDB as string)
-    .catch((error) => DBGetDefaultCath(error, content, setContent, navigate))
-    .then((value) => {
-      if (!(value instanceof Object)) return;
-      let tables = value.child("tables").val();
-      if (tables === undefined || tables === null) return;
-      dbTables = Object.entries<Dictionary<IColumn>>(tables);
-    });
+    let tables = response.child("tables").val();
+    if(!tables) return;
+    setdbTables(Object.entries<Dictionary<IColumn>>(tables));
+  })()}, [])
+
 
   function AddColumn() {
     setColumns((currentColumns) => {
@@ -135,23 +142,22 @@ export default function CreateTable() {
       alert(errors.join("\n"));
       return;
     }
-
-    realtimeDB.update(`/${params.idDB}/tables/${tableName}`, tableColums);
+    
+    update(ref(database, `/${auth.currentUser?.uid}/${params.idDB}/tables/${tableName}`), tableColums)
     navigate(DB(params.idDB as string));
+  }
+
+  if(errorElement){
+    return errorElement;
   }
 
   return (
     <>
       <NavBar />
-      {content.todoBien && (
-        <>
-          <label htmlFor="tableName">
-            Table Name: <input type="text" name="tableName" value={tableName} onChange={(e) => { setTableName(e.target.value) }} />
-          </label><br />
-        </>
-      )}
-      {content.element}
-      {content.todoBien && (() => {
+      <label htmlFor="tableName">
+        Table Name: <input type="text" name="tableName" value={tableName} onChange={(e) => { setTableName(e.target.value) }} />
+      </label><br />
+      {(() => {
         let columnsJSX: React.JSX.Element[] = [];
 
         columns.forEach((column, index) => {
@@ -256,12 +262,10 @@ export default function CreateTable() {
         return columnsJSX;
       })()}
       <br />
-      {content.todoBien && (
-        <button className="btn" onClick={AddColumn}>Add Column</button>
-      )}
+      <button className="btn" onClick={AddColumn}>Add Column</button>
       <br />
       <br />
-      {content.todoBien && <button className="btn" onClick={CrearTable}>Crear</button>}
+      <button className="btn" onClick={CrearTable}>Crear</button>
     </>
   )
 }

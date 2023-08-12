@@ -34,3 +34,5 @@ export interface IErrorElement{
   element: React.JSX.Element,
   todoBien: boolean
 }
+
+export type AsyncFunc<T> = (... args: any) => Promise<T>;

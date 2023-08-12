@@ -1,3 +1,5 @@
+import { AsyncFunc } from "./types";
+
 export function TitleCase(val: string): string {
   val = val.toLowerCase();
   let words = val.split(" ");
@@ -45,4 +47,13 @@ export function RandomInt(minInclusive:number, maxInclusive:number){
 
 export function IsValidDate(dateString : string) {
   return !isNaN(Date.parse(dateString));
+}
+
+export async function AsyncAttempter<E = Error, T = any>(func: AsyncFunc<T>): Promise<[T, null] | [null, E]>{
+  try{
+    let result = await func();
+    return [result, null];
+  }catch(e: any){
+    return [null, e];
+  }
 }
