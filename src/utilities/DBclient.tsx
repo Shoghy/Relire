@@ -36,9 +36,12 @@ export function GetDataInTable(userUID: string, db:string, tb: string){
   return get(reference);
 }
 
-export function GetDatabase(userUID: string, db: string){
-  let reference = ref(database, `${userUID}/${db}`);
-  return get(reference);
+export function GetDatabases(userUID: string, db?: string){
+  let reference = `${userUID}`;
+  if(db){
+    reference += `/${db}`
+  }
+  return get(ref(database, reference));
 }
 
 export function InsertRow(

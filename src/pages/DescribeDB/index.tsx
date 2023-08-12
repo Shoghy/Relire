@@ -1,11 +1,11 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
-import NavBar from "../components/NavBar";
-import { GetDatabase, auth } from "../utilities/DBclient";
-import { DBTableCreate, DataInTable, LogIn } from "../utilities/PageLocations";
+import NavBar from "../../components/NavBar";
+import { GetDatabases, auth } from "../../utilities/DBclient";
+import { DBTableCreate, DataInTable, LogIn } from "../../utilities/PageLocations";
 import { useState, useEffect, useRef } from "react";
-import { IDataBase } from "../utilities/types";
-import DBGetDefaultCath from "../utilities/DBGetDefaultCatch";
-import { AsyncAttempter, RandomString } from "../utilities/functions";
+import { IDataBase } from "../../utilities/types";
+import DBGetDefaultCath from "../../utilities/DBGetDefaultCatch";
+import { AsyncAttempter, RandomString } from "../../utilities/functions";
 
 export default function DescribeDB(){
   const navigate = useNavigate();
@@ -28,7 +28,7 @@ export default function DescribeDB(){
 
   (async () => {
     let [getDBResult, getDBError] = await AsyncAttempter(
-      () => GetDatabase(
+      () => GetDatabases(
         auth.currentUser?.uid as string,
         params.idDB as string
       )
