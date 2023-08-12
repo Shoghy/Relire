@@ -15,8 +15,8 @@ export default function Main(){
       if(user === undefined || user === null){
         navigate(LogIn);
       }
+      GetUserDataBases();
     });
-    GetUserDataBases();
   }, [])
 
   async function GetUserDataBases(){
@@ -27,7 +27,11 @@ export default function Main(){
     );
 
     if(dbsError){
-      setErrorElement(<h1>We were not able to communicate with the database</h1>)
+      setErrorElement(
+        <h1>
+          We were not able to communicate with the database. Try again later
+        </h1>
+      );
       return;
     }
 
