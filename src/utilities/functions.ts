@@ -57,3 +57,7 @@ export async function AsyncAttempter<E = Error, T = any>(func: AsyncFunc<T>): Pr
     return [null, e];
   }
 }
+
+export function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
