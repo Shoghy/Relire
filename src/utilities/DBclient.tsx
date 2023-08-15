@@ -1,6 +1,7 @@
 import { initializeApp, getApps, FirebaseApp, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { get, getDatabase, push, ref } from "firebase/database"
+import { IDataBase } from "./types";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -42,6 +43,16 @@ export function GetDatabases(userUID: string, db?: string){
     reference += `/${db}`
   }
   return get(ref(database, reference));
+}
+export function CreateDatabase(userUID: string, db: string){
+  let reference = ref(database, userUID);
+
+  let newDB:IDataBase = {
+    dbName:db,
+    author: userUID
+  };
+
+  return push(reference, newDB)
 }
 
 export function InsertRow(
