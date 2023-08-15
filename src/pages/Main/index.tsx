@@ -4,6 +4,8 @@ import NavBar from "../../components/NavBar";
 import { DB, LogIn } from "../../utilities/PageLocations";
 import React, { useEffect, useState } from "react";
 import { AsyncAttempter } from "../../utilities/functions";
+import "./styles.css"
+import { DatabaseReference } from "firebase/database";
 
 interface BasicDBInfo{
   name: string,
@@ -70,12 +72,17 @@ export default function Main(){
       auth.currentUser?.uid as string,
       dbName
     )
-
-    let error = await cdbAsync.catch((error) => error);
-    if(error){
-      console.log(error)
+    let newDB: DatabaseReference;
+    try{
+      newDB = await cdbAsync;
+    }catch(error){
+      console.error(error);
       return;
     }
+    setUserDBs((current) => {
+      current.push({name: dbName as string, uid: newDB.key as string});
+      return [... current]
+    })
   }
 
   if(errorElement){
@@ -86,7 +93,7 @@ export default function Main(){
     <>
       <NavBar/>
       {userDBsElement}
-      <div>
+      <div className="dbs-container">
         {(() => {
           if(userDBs.length === 0) return;
 
@@ -94,15 +101,25 @@ export default function Main(){
           for(let i = 0; i < userDBs.length; ++i){
             let userDB = userDBs[i];
             dbList.push(
-              <Link to={DB(userDB.uid as string)} className="btn" key={i}>
-                {userDB.name}
+              <Link to={DB(userDB.uid as string)} className="db-button" key={i}>
+                <span>{userDB.name}</span>
+                <span>{userDB.uid}</span>
               </Link>
             )
           }
+          dbList.push(
+            <button
+            className="db-button"
+            onClick={() => CreateDB()}
+            key={"Crear DB"}
+            >
+              <i className="fa fa-plus" aria-hidden="true"></i>
+            </button>
+            
+          )
           return dbList;
         })()}
       </div>
-      <button className="btn" onClick={() => CreateDB()}><i className="fa fa-plus-circle" aria-hidden="true"></i></button>
     </>
   )
 }
