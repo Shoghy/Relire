@@ -5,6 +5,10 @@
   color: #fff;
 }
 
+input, select{
+  color: #000;
+}
+
 .btn{
   padding: 5px;
   border-radius: 0.375rem;

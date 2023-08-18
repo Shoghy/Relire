@@ -1,0 +1,47 @@
+.container{
+  display: flex;
+  max-width: 100vw;
+  box-sizing: border-box;
+  padding: 10px;
+  flex-wrap: wrap;
+  overflow: hidden;
+  align-items: flex-start;
+}
+
+.columna{
+  width: 350px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background-color: #353535;
+  border: solid 2px #232323;
+  border-radius: 20px;
+  margin: 5px;
+  -webkit-mask-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAA5JREFUeNpiYGBgAAgwAAAEAAGbA+oJAAAAAElFTkSuQmCC);
+  mask-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAA5JREFUeNpiYGBgAAgwAAAEAAGbA+oJAAAAAElFTkSuQmCC);
+}
+
+.columna > *{
+  padding: 5px;
+}
+.columna > input[type='checkbox'] {
+  margin: 5px;
+}
+.columna > *:nth-child(n+3){
+  border-top: solid 2px #232323;
+}
+.columna > *:nth-child(odd){
+  text-align: center;
+  border-right: solid 2px #232323;
+}
+.columna > *:nth-child(1){
+  border-radius: 20px 0 0 0;
+}
+.columna > *:nth-child(2){
+  border-radius: 0 20px 0 0;
+}
+.columna > *:nth-last-child(1){
+  border-radius: 0 0 20px 0;
+}
+.columna > *:nth-last-child(2){
+  border-radius: 0 0 0 20px;
+}

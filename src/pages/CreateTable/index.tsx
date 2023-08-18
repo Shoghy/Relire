@@ -1,13 +1,14 @@
 import NavBar from "../../components/NavBar";
 import { useNavigate, useParams } from "react-router-dom";
-import { auth, database } from "../../utilities/DBclient";
-import { get, ref, update } from "firebase/database"
+import { GetTables, auth, database } from "../../utilities/DBclient";
+import { ref, update } from "firebase/database"
 import { useEffect, useState } from "react"
 import { ColumnType, IForeingKey, IColumn, Dictionary, ColumnValue } from "../../utilities/types";
 import DBGetDefaultCath from "../../utilities/DBGetDefaultCatch";
 import { AsyncAttempter, GetEnumValues, TitleCase } from "../../utilities/functions";
-import { DB, LogIn } from "../../utilities/PageLocations";
+import { LogIn } from "../../utilities/PageLocations";
 import ColumnInput from "../../components/ColumnInput";
+import "./styles.css"
 
 interface IColumn2 {
   name: string,
@@ -40,11 +41,18 @@ export default function CreateTable() {
         navigate(LogIn);
         return;
       }
+      start();
     });
+  }, [])
 
-  (async () => {
+  async function start(){
     const idDB = params.idDB as string;
-    let [response, error] = await AsyncAttempter(() => get(ref(database, idDB)));
+    let [response, error] = await AsyncAttempter(
+      () => GetTables(
+        auth.currentUser?.uid as string,
+        idDB
+      )
+    );
 
     if(error || !response){
       DBGetDefaultCath(error, errorElement, setErrorElement, navigate);
@@ -54,7 +62,7 @@ export default function CreateTable() {
     let tables = response.child("tables").val();
     if(!tables) return;
     setdbTables(Object.entries<Dictionary<IColumn>>(tables));
-  })()}, [])
+  }
 
 
   function AddColumn() {
@@ -86,12 +94,13 @@ export default function CreateTable() {
     });
   }
 
-  function CrearTable() {
+  async function CrearTable() {
     let errors: string[] = [];
 
     if (!tableName) {
       errors.push("Table has no name")
     }
+
     dbTables.forEach((table) => {
       if (table[0].toLowerCase() === tableName.toLowerCase()) {
         errors.push("Ese nombre de tabla ya está siendo utilizado");
@@ -142,9 +151,27 @@ export default function CreateTable() {
       alert(errors.join("\n"));
       return;
     }
-    
-    update(ref(database, `/${auth.currentUser?.uid}/${params.idDB}/tables/${tableName}`), tableColums)
-    navigate(DB(params.idDB as string));
+    try{
+      await update(ref(database, `/${auth.currentUser?.uid}/${params.idDB}/tables/${tableName}`), tableColums)
+
+      setTableName("");
+      setColumns([]);
+
+      alert("Table was succesfully created")
+    }catch(e){
+      alert("Something went wrong, try again later.")
+      return;
+    }
+  }
+
+  function CanBeUnique(column: IColumn2){
+    if(column.type === "enum" || column.type === "bool") return <></>;
+    return (
+      <>
+        <div>Unique</div>
+        <input type="checkbox" name="" id="" />
+      </>
+    )
   }
 
   if(errorElement){
@@ -157,110 +184,40 @@ export default function CreateTable() {
       <label htmlFor="tableName">
         Table Name: <input type="text" name="tableName" value={tableName} onChange={(e) => { setTableName(e.target.value) }} />
       </label><br />
+      <div className="container">
       {(() => {
         let columnsJSX: React.JSX.Element[] = [];
 
         columns.forEach((column, index) => {
           columnsJSX.push(
-            <table className="column-table">
-              <thead>
-                <tr>
-                  <th>Index</th>
-                  <th>Column Name</th>
-                  {column.type !== "enum" && column.type !== "bool" && <th>Unique</th>}
-                  {column.type === "int" && <th>Auto-Increment</th>}
-                  <th>Data-Type</th>
-                  {column.type === "enum" && <th>Enum</th>}
-                  <th>Not-Null</th>
-                  <th>Use Default</th>
-                  {column.useDefault && <th>Defualt</th>}
-                  {column.useForeingKey && <th>Table</th>}
-                  {column.useForeingKey && <th>Column</th>}
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <th>
-                    {index + 1}
-                  </th>
-                  <th>
-                    <input type="text" name="name" value={column.name} onChange={(e) => setColumnPropertie(index, "name", e.target.value)} />
-                  </th>
-                  {column.type !== "enum" && column.type !== "bool" &&
-                    <th>
-                      <input type="checkbox" name="unique" checked={column.unique} onChange={(e) => setColumnPropertie(index, "unique", e.target.checked)} />
-                    </th>
-                  }
-                  {
-                    column.type == "int" && <th>
-                      <input
-                        type="checkbox"
-                        checked={column.autoIncrement}
-                        onChange={(e) => setColumnPropertie(index, "autoIncrement", e.target.checked)}
-                      />
-                    </th>}
-                  <th>
-                    <select value={column.type} onChange={(e) => {
-                      setColumnPropertie(index, "type", e.target.value);
-                      setColumnPropertie(index, "default", "");
-                    }}>
-                      {(() => {
-                        let options: React.JSX.Element[] = [];
-                        ColumTypeArray.forEach((tipo) => {
-                          options.push(<option value={tipo}>{TitleCase(tipo)}</option>)
-                        });
-                        return options;
-                      })()}
-                    </select>
-                  </th>
-                  {column.type == "enum" &&
-                    <th>
-                      <textarea name="enum" value={column.enum} onChange={(e) => setColumnPropertie(index, "enum", e.target.value)} />
-                    </th>
-                  }
-                  <th>
-                    <input
-                      type="checkbox"
-                      checked={column.notNull}
-                      onChange={(e) => setColumnPropertie(index, "notNull", e.target.checked)}
-                    />
-                  </th>
-                  <th>
-                    <input
-                      type="checkbox"
-                      checked={column.useDefault}
-                      onChange={(e) => setColumnPropertie(index, "useDefault", e.target.checked)}
-                    />
-                  </th>
-                  {column.useDefault && <th>
-                    <ColumnInput
-                    column={{
-                      notNull: true,
-                      type: column.type,
-                      unique: column.unique,
-                      autoIncrement: column.autoIncrement,
-                      enum: GetEnumValues(column.enum)
-                    }}
-                    value={column.default}
-                    setValue={(e) => setColumnPropertie(index, "default", e)}/>
-                  </th>}
-                  <th>
-                    <button className="btn" onClick={() => {
-                      setColumns((currentColumns) => {
-                        currentColumns.splice(index, 1);
-                        return [...currentColumns];
-                      });
-                    }}>Delete Column</button>
-                  </th>
-                </tr>
-              </tbody>
-            </table>
+            <div className="columna" key={index}>
+              <span>#</span>
+              <center>{index}</center>
+              <span>Column Name</span>
+              <input type="text" />
+              <span>Column Type</span>
+              <select value={column.type} onChange={(e) => {
+                setColumnPropertie(index, "type", e.target.value);
+                setColumnPropertie(index, "default", "");
+              }} key={`type-select-${index}`}>
+                {(() => {
+                  let options: React.JSX.Element[] = [];
+                  ColumTypeArray.forEach((tipo) => {
+                    options.push(<option value={tipo} key={`type-select-${index}-${tipo}`}>{TitleCase(tipo)}</option>)
+                  });
+                  return options;
+                })()}
+              </select>
+              {CanBeUnique(column)}
+              <span>Not Null</span>
+              <input type="checkbox" name="" id="" />
+            </div>
           )
         });
 
         return columnsJSX;
       })()}
+      </div>
       <br />
       <button className="btn" onClick={AddColumn}>Add Column</button>
       <br />
