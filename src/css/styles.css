@@ -22,6 +22,7 @@ input, select{
   border-style: outset;
   font-size: 0.9rem;
   cursor: pointer;
+  color: #000;
 }
 
 .nav-bar{

@@ -92,7 +92,7 @@ export default function LogInForm(){
         <ErrorMessage name="email" component={() => <p>{errors.email}</p>}/>
         <Field type="password" name="password" disabled={sendedForm}/><br/>
         <ErrorMessage name="password" component={() => <p>{errors.password}</p>}/>
-        <button type="submit">Submit</button>
+        <button type="submit" className="btn">Submit</button>
       </Form>
     )}
   </Formik>

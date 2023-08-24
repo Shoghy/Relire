@@ -45,7 +45,7 @@ export default function CreateTable() {
     });
   }, [])
 
-  async function start(){
+  async function start() {
     const idDB = params.idDB as string;
     let [response, error] = await AsyncAttempter(
       () => GetTables(
@@ -54,13 +54,13 @@ export default function CreateTable() {
       )
     );
 
-    if(error || !response){
+    if (error || !response) {
       DBGetDefaultCath(error, errorElement, setErrorElement, navigate);
       return;
     }
 
     let tables = response.child("tables").val();
-    if(!tables) return;
+    if (!tables) return;
     setdbTables(Object.entries<Dictionary<IColumn>>(tables));
   }
 
@@ -116,22 +116,22 @@ export default function CreateTable() {
         notNull: column.notNull,
         unique: column.unique
       };
-      if(column.type === "bool") tableColums[column.name].unique = false;
+      if (column.type === "bool") tableColums[column.name].unique = false;
       if (uniqueColumnNames.indexOf(column.name.toLowerCase()) > -1) {
-        errors.push(`${index + 1}: nombre de columna repetido`)
+        errors.push(`${index}: Repeated column name`)
       } else {
         uniqueColumnNames.push(column.name.toLowerCase());
       }
 
       if (!column.name) {
-        errors.push(`${index + 1}: Column has no name`);
+        errors.push(`${index}: Column has no name`);
       }
 
       if (column.useDefault) {
         tableColums[column.name].default = column.default;
 
         if (!column.default) {
-          errors.push(`${index + 1}: Disable default or add a value to default`);
+          errors.push(`${index}: Disable default or add a value to default`);
         }
       }
 
@@ -141,7 +141,7 @@ export default function CreateTable() {
         tableColums[column.name].unique = false;
         tableColums[column.name].enum = GetEnumValues(column.enum);
         if (!column.enum) {
-          errors.push(`${index + 1}: You need to add at least one value on enum`);
+          errors.push(`${index}: You need to add at least one value on enum`);
         }
       }
 
@@ -151,36 +151,36 @@ export default function CreateTable() {
       alert(errors.join("\n"));
       return;
     }
-    try{
+    try {
       await update(ref(database, `/${auth.currentUser?.uid}/${params.idDB}/tables/${tableName}`), tableColums)
 
       setTableName("");
       setColumns([]);
 
       alert("Table was succesfully created")
-    }catch(e){
+    } catch (e) {
       alert("Something went wrong, try again later.")
       return;
     }
   }
 
-  function CanBeUnique(column: IColumn2, index:number){
-    if(column.type === "enum" || column.type === "bool") return <></>;
+  function CanBeUnique(column: IColumn2, index: number) {
+    if (column.type === "enum" || column.type === "bool") return <></>;
     return (
       <>
         <div>Unique</div>
         <center>
           <input
-          type="checkbox"
-          checked={column.unique}
-          onChange={(e) => setColumnPropertie(index, "unique", e.target.checked)}
+            type="checkbox"
+            checked={column.unique}
+            onChange={(e) => setColumnPropertie(index, "unique", e.target.checked)}
           />
         </center>
       </>
     )
   }
 
-  if(errorElement){
+  if (errorElement) {
     return errorElement;
   }
 
@@ -197,90 +197,102 @@ export default function CreateTable() {
       <br />
       <button className="btn" onClick={CrearTable}>Crear</button>
       <div className="container">
-      {(() => {
-        let columnsJSX: React.JSX.Element[] = [];
+        {(() => {
+          let columnsJSX: React.JSX.Element[] = [];
 
-        columns.forEach((column, index) => {
-          columnsJSX.push(
-            <div className="columna" key={index}>
-              <span>#</span>
-              <center>{index}</center>
-              <button className="remove-columna">X</button>
-              <span>Column Name</span>
-              <input
-              type="text"
-              value={column.name}
-              onChange={(e) => setColumnPropertie(index, "name", e.target.value)} 
-              />
-              <span>Column Type</span>
-              <select value={column.type} onChange={(e) => {
-                setColumnPropertie(index, "type", e.target.value);
-                setColumnPropertie(index, "default", "");
-              }}>
-                {(() => {
-                  let options: React.JSX.Element[] = [];
-                  ColumTypeArray.forEach((tipo) => {
-                    options.push(<option value={tipo} key={`type-select-${index}-${tipo}`}>{TitleCase(tipo)}</option>)
+          columns.forEach((column, index) => {
+            columnsJSX.push(
+              <div style={{position: "relative"}} key={index}>
+                <button
+                className="remove-columna"
+                onClick={() => {
+                  setColumns((currentColumns) => {
+                    currentColumns.splice(index, 1);
+                    return [...currentColumns];
                   });
-                  return options;
-                })()}
-              </select>
-              {column.type === "int" &&
-              <>
-                <span>AutoIncrement</span>
-                <center>
+                }}
+                >
+                  <i className="fa fa-trash" aria-hidden="true"></i>
+                </button>
+                <div className="columna">
+                  <span>#</span>
+                  <center>{index}</center>
+                  <span>Column Name</span>
                   <input
-                  type="checkbox"
-                  checked={column.autoIncrement}
-                  onChange={(e) => setColumnPropertie(index, "autoIncrement", e.target.checked)}/>
-                </center>
-              </>
-              }
-              {column.type === "enum" &&
-              <>
-                <span>Enum values</span>
-                <input
-                type="text"
-                value={column.enum}
-                onChange={(e) => setColumnPropertie(index, "enum", e.target.value)}
-                />
-              </>}
-              {CanBeUnique(column, index)}
-              <span>Not Null</span>
-              <center>
-                <input type="checkbox"
-                checked={column.notNull}
-                onChange={(e) => setColumnPropertie(index, "notNull", e.target.checked)}
-                />
-              </center>
-              <span>Use Default</span>
-              <center>
-                <input type="checkbox"
-                checked={column.useDefault}
-                onChange={(e) => setColumnPropertie(index, "useDefault", e.target.checked)}
-                />
-              </center>
-              {column.useDefault &&
-              <>
-              <span>Defaul</span>
-              <ColumnInput
-              column={{
-                notNull: true,
-                type: column.type,
-                unique: column.unique,
-                autoIncrement: column.autoIncrement,
-                enum: GetEnumValues(column.enum)
-              }}
-              value={column.default}
-              setValue={(e) => setColumnPropertie(index, "default", e)}/>
-              </>
-              }
-            </div>
-          )
-        });
+                    type="text"
+                    value={column.name}
+                    onChange={(e) => setColumnPropertie(index, "name", e.target.value)}
+                  />
+                  <span>Column Type</span>
+                  <select value={column.type} onChange={(e) => {
+                    setColumnPropertie(index, "type", e.target.value);
+                    setColumnPropertie(index, "default", "");
+                  }}>
+                    {(() => {
+                      let options: React.JSX.Element[] = [];
+                      ColumTypeArray.forEach((tipo) => {
+                        options.push(<option value={tipo} key={`type-select-${index}-${tipo}`}>{TitleCase(tipo)}</option>)
+                      });
+                      return options;
+                    })()}
+                  </select>
+                  {column.type === "int" &&
+                    <>
+                      <span>AutoIncrement</span>
+                      <center>
+                        <input
+                          type="checkbox"
+                          checked={column.autoIncrement}
+                          onChange={(e) => setColumnPropertie(index, "autoIncrement", e.target.checked)} />
+                      </center>
+                    </>
+                  }
+                  {column.type === "enum" &&
+                    <>
+                      <span>Enum values</span>
+                      <input
+                        type="text"
+                        value={column.enum}
+                        onChange={(e) => setColumnPropertie(index, "enum", e.target.value)}
+                      />
+                    </>}
+                  {CanBeUnique(column, index)}
+                  <span>Not Null</span>
+                  <center>
+                    <input type="checkbox"
+                      checked={column.notNull}
+                      onChange={(e) => setColumnPropertie(index, "notNull", e.target.checked)}
+                    />
+                  </center>
+                  <span>Use Default</span>
+                  <center>
+                    <input type="checkbox"
+                      checked={column.useDefault}
+                      onChange={(e) => setColumnPropertie(index, "useDefault", e.target.checked)}
+                    />
+                  </center>
+                  {column.useDefault &&
+                    <>
+                      <span>Defaul</span>
+                      <ColumnInput
+                        column={{
+                          notNull: true,
+                          type: column.type,
+                          unique: column.unique,
+                          autoIncrement: column.autoIncrement,
+                          enum: GetEnumValues(column.enum)
+                        }}
+                        value={column.default}
+                        setValue={(e) => setColumnPropertie(index, "default", e)} />
+                    </>
+                  }
+                </div>
+              </div>
+            )
+          });
 
-        return columnsJSX;
-      })()}
+          return columnsJSX;
+        })()}
       </div>
     </>
   )
