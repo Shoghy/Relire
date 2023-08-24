@@ -18,13 +18,16 @@
   margin: 5px;
   -webkit-mask-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAA5JREFUeNpiYGBgAAgwAAAEAAGbA+oJAAAAAElFTkSuQmCC);
   mask-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAA5JREFUeNpiYGBgAAgwAAAEAAGbA+oJAAAAAElFTkSuQmCC);
+  position: relative;
+}
+
+.remove-columna{
+  position: absolute;
+  color: #000;
 }
 
 .columna > *{
   padding: 5px;
-}
-.columna > input[type='checkbox'] {
-  margin: 5px;
 }
 .columna > *:nth-child(n+3){
   border-top: solid 2px #232323;

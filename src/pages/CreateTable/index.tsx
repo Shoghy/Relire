@@ -164,12 +164,18 @@ export default function CreateTable() {
     }
   }
 
-  function CanBeUnique(column: IColumn2){
+  function CanBeUnique(column: IColumn2, index:number){
     if(column.type === "enum" || column.type === "bool") return <></>;
     return (
       <>
         <div>Unique</div>
-        <input type="checkbox" name="" id="" />
+        <center>
+          <input
+          type="checkbox"
+          checked={column.unique}
+          onChange={(e) => setColumnPropertie(index, "unique", e.target.checked)}
+          />
+        </center>
       </>
     )
   }
@@ -183,7 +189,13 @@ export default function CreateTable() {
       <NavBar />
       <label htmlFor="tableName">
         Table Name: <input type="text" name="tableName" value={tableName} onChange={(e) => { setTableName(e.target.value) }} />
-      </label><br />
+      </label>
+      <br />
+      <br />
+      <button className="btn" onClick={AddColumn}>Add Column</button>
+      <br />
+      <br />
+      <button className="btn" onClick={CrearTable}>Crear</button>
       <div className="container">
       {(() => {
         let columnsJSX: React.JSX.Element[] = [];
@@ -193,13 +205,18 @@ export default function CreateTable() {
             <div className="columna" key={index}>
               <span>#</span>
               <center>{index}</center>
+              <button className="remove-columna">X</button>
               <span>Column Name</span>
-              <input type="text" />
+              <input
+              type="text"
+              value={column.name}
+              onChange={(e) => setColumnPropertie(index, "name", e.target.value)} 
+              />
               <span>Column Type</span>
               <select value={column.type} onChange={(e) => {
                 setColumnPropertie(index, "type", e.target.value);
                 setColumnPropertie(index, "default", "");
-              }} key={`type-select-${index}`}>
+              }}>
                 {(() => {
                   let options: React.JSX.Element[] = [];
                   ColumTypeArray.forEach((tipo) => {
@@ -208,9 +225,56 @@ export default function CreateTable() {
                   return options;
                 })()}
               </select>
-              {CanBeUnique(column)}
+              {column.type === "int" &&
+              <>
+                <span>AutoIncrement</span>
+                <center>
+                  <input
+                  type="checkbox"
+                  checked={column.autoIncrement}
+                  onChange={(e) => setColumnPropertie(index, "autoIncrement", e.target.checked)}/>
+                </center>
+              </>
+              }
+              {column.type === "enum" &&
+              <>
+                <span>Enum values</span>
+                <input
+                type="text"
+                value={column.enum}
+                onChange={(e) => setColumnPropertie(index, "enum", e.target.value)}
+                />
+              </>}
+              {CanBeUnique(column, index)}
               <span>Not Null</span>
-              <input type="checkbox" name="" id="" />
+              <center>
+                <input type="checkbox"
+                checked={column.notNull}
+                onChange={(e) => setColumnPropertie(index, "notNull", e.target.checked)}
+                />
+              </center>
+              <span>Use Default</span>
+              <center>
+                <input type="checkbox"
+                checked={column.useDefault}
+                onChange={(e) => setColumnPropertie(index, "useDefault", e.target.checked)}
+                />
+              </center>
+              {column.useDefault &&
+              <>
+              <span>Defaul</span>
+              <ColumnInput
+              column={{
+                notNull: true,
+                type: column.type,
+                unique: column.unique,
+                autoIncrement: column.autoIncrement,
+                enum: GetEnumValues(column.enum)
+              }}
+              value={column.default}
+              setValue={(e) => setColumnPropertie(index, "default", e)}/>
+              </>
+              }
             </div>
           )
         });
@@ -218,11 +282,6 @@ export default function CreateTable() {
         return columnsJSX;
       })()}
       </div>
-      <br />
-      <button className="btn" onClick={AddColumn}>Add Column</button>
-      <br />
-      <br />
-      <button className="btn" onClick={CrearTable}>Crear</button>
     </>
   )
 }
