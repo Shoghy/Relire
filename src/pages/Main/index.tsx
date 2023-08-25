@@ -16,7 +16,16 @@ export default function Main(){
   const navigate = useNavigate();
   const [errorElement, setErrorElement] = useState<React.JSX.Element>();
   const [userDBsElement, setUserDBsElement] = useState<React.JSX.Element | null>(<h1>Loading databases...</h1>)
-  const [userDBs, setUserDBs] = useState<BasicDBInfo[]>([])
+  const [userDBs, setUserDBs] = useState<BasicDBInfo[]>([]);
+  const createDBButton = (
+    <button
+    className="db-button"
+    onClick={() => CreateDB()}
+    key={"Crear DB"}
+    >
+      <i className="fa fa-plus" aria-hidden="true"></i>
+    </button>
+  )
 
   useEffect(() => {
     auth.onAuthStateChanged((user) => {
@@ -79,6 +88,7 @@ export default function Main(){
       console.error(error);
       return;
     }
+    setUserDBsElement(null);
     setUserDBs((current) => {
       current.push({name: dbName as string, uid: newDB.key as string});
       return [... current]
@@ -95,7 +105,7 @@ export default function Main(){
       {userDBsElement}
       <div className="dbs-container">
         {(() => {
-          if(userDBs.length === 0) return;
+          if(userDBs.length === 0) return createDBButton;
 
           let dbList: React.JSX.Element[] = [];
           for(let i = 0; i < userDBs.length; ++i){
@@ -107,16 +117,7 @@ export default function Main(){
               </Link>
             )
           }
-          dbList.push(
-            <button
-            className="db-button"
-            onClick={() => CreateDB()}
-            key={"Crear DB"}
-            >
-              <i className="fa fa-plus" aria-hidden="true"></i>
-            </button>
-            
-          )
+          dbList.push(createDBButton);
           return dbList;
         })()}
       </div>
