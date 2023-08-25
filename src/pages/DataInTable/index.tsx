@@ -4,7 +4,7 @@ import { LogIn } from "../../utilities/PageLocations";
 import DBGetDefaultCath from "../../utilities/DBGetDefaultCatch";
 import { useEffect, useState } from "react";
 import { ColumnValue, Dictionary, IColumn, TableInsert } from "../../utilities/types";
-import { AsyncAttempter } from "../../utilities/functions";
+import { AsyncAttempter, RandomString } from "../../utilities/functions";
 
 export default function DataInTable(){
   const navigate = useNavigate();
@@ -20,10 +20,11 @@ export default function DataInTable(){
         navigate(LogIn);
         return;
       }
+      Start()
     });
+  }, []);
 
-  (async () => {
-
+  async function Start(){
     let [tableStructure, tableStrunctureError] = await AsyncAttempter(
       () => GetTables(
         auth.currentUser?.uid as string,
@@ -62,7 +63,7 @@ export default function DataInTable(){
       return;
     }
     setCValues(tableData?.val())
-  })()}, [])
+  }
 
   if(errorElement){
     return errorElement;
@@ -107,7 +108,8 @@ export default function DataInTable(){
             let tableValuesColumns: React.JSX.Element[] = [];
             for(let insertUID in cValues){
               let insert = cValues[insertUID];
-              tableValuesColumns.push(<tr>
+              let key = RandomString(6);
+              tableValuesColumns.push(<tr key={key}>
                 {(() => {
                   let tableValuesRows: React.JSX.Element[] = [];
                   for(let columnName in columns){
@@ -118,7 +120,7 @@ export default function DataInTable(){
                         value = value ? "True" : "False";
                       }
                     }
-                    tableValuesRows.push(<td>{value}</td>);
+                    tableValuesRows.push(<td key={`${columnName}-${key}`}>{value}</td>);
                   }
                   return tableValuesRows;
                 })()}

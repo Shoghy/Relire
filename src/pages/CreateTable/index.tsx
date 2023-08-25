@@ -41,11 +41,11 @@ export default function CreateTable() {
         navigate(LogIn);
         return;
       }
-      start();
+      Start();
     });
   }, [])
 
-  async function start() {
+  async function Start() {
     const idDB = params.idDB as string;
     let [response, error] = await AsyncAttempter(
       () => GetTables(
