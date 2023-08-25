@@ -41,11 +41,11 @@ export default function CreateTable() {
         navigate(LogIn);
         return;
       }
-      start();
+      Start();
     });
   }, [])
 
-  async function start() {
+  async function Start() {
     const idDB = params.idDB as string;
     let [response, error] = await AsyncAttempter(
       () => GetTables(
@@ -214,7 +214,7 @@ export default function CreateTable() {
                 >
                   <i className="fa fa-trash" aria-hidden="true"></i>
                 </button>
-                <div className="columna">
+                <div className="columna mask">
                   <span>#</span>
                   <center>{index}</center>
                   <span>Column Name</span>

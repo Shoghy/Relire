@@ -2,31 +2,29 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import { GetDatabases, auth } from "../../utilities/DBclient";
 import { DBTableCreate, DataInTable, LogIn } from "../../utilities/PageLocations";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { IDataBase } from "../../utilities/types";
 import DBGetDefaultCath from "../../utilities/DBGetDefaultCatch";
 import { AsyncAttempter, RandomString } from "../../utilities/functions";
 
-export default function DescribeDB(){
+export default function DescribeDB() {
   const navigate = useNavigate();
   let params = useParams();
 
   const [errorElement, setErrorElement] = useState<React.JSX.Element>();
-  const [db, setDB] = useState<IDataBase>();
   const [dbDataElement, setDBDataElement] = useState<React.ReactNode>(<h1>Cargando base de datos</h1>);
-  const dbRef  = useRef<IDataBase>();
-  //Reference for the async function
-  dbRef.current = db;
 
   useEffect(() => {
     auth.onAuthStateChanged((user) => {
-      if(user === undefined || user === null){
+      if (user === undefined || user === null) {
         navigate(LogIn);
         return;
       }
+      Start()
     });
+  }, []);
 
-  (async () => {
+  async function Start() {
     let [getDBResult, getDBError] = await AsyncAttempter(
       () => GetDatabases(
         auth.currentUser?.uid as string,
@@ -34,7 +32,7 @@ export default function DescribeDB(){
       )
     );
 
-    if(getDBError){
+    if (getDBError) {
       DBGetDefaultCath(
         getDBError,
         errorElement,
@@ -44,28 +42,28 @@ export default function DescribeDB(){
       return;
     }
 
-    setDB(getDBResult?.val());
-    if(dbRef.current === undefined || dbRef.current.tables === undefined){
+    let dbInfo: IDataBase = getDBResult?.val();
+    if (dbInfo === undefined || dbInfo.tables === undefined) {
       setDBDataElement(<h1>Aún no hay tablas, crea una</h1>)
       return;
     }
 
     let tables: React.JSX.Element[] = [];
     let key = RandomString(6);
-    let tablesNames = Object.keys(dbRef.current.tables);
+    let tablesNames = Object.keys(dbInfo.tables);
 
-    for(let i = 0; i < tablesNames.length; ++i){
+    for (let i = 0; i < tablesNames.length; ++i) {
       let tableName = tablesNames[i];
       let cantEntries = 0;
 
-      if(dbRef.current.tablesData !== undefined && tableName in dbRef.current.tablesData){
-        cantEntries = Object.keys(dbRef.current.tablesData[tableName]).length;
+      if (dbInfo.tablesData !== undefined && tableName in dbInfo.tablesData) {
+        cantEntries = Object.keys(dbInfo.tablesData[tableName]).length;
       }
 
       tables.push(
         <tr key={`${i}-${key}`}>
-          <td key={`${i}-1-${key}`}><Link to={DataInTable(params.idDB as string, tableName)}>{tableName}</Link></td>
-          <td key={`${i}-2-${key}`}>{cantEntries}</td>
+          <td><Link to={DataInTable(params.idDB as string, tableName)}>{tableName}</Link></td>
+          <td>{cantEntries}</td>
         </tr>
       );
     }
@@ -73,8 +71,8 @@ export default function DescribeDB(){
       <table>
         <thead>
           <tr>
-            <th key="Table Name">Table Name</th>
-            <th key="Entries">Entries</th>
+            <th>Table Name</th>
+            <th>Entries</th>
           </tr>
         </thead>
         <tbody>
@@ -82,20 +80,20 @@ export default function DescribeDB(){
         </tbody>
       </table>
     ));
-  })()}, []);
+  }
 
-  if(errorElement){
+  if (errorElement) {
     return errorElement;
   }
 
   return (
     <>
-      <NavBar/>
+      <NavBar />
       <center>
         {dbDataElement}
       </center>
-      <br/>
-      <br/>
+      <br />
+      <br />
       <center>
         <Link to={DBTableCreate(params.idDB as string)} className="btn">Crear Tabla</Link>
       </center>

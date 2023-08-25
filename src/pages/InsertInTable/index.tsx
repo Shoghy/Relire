@@ -21,9 +21,11 @@ export default function InsertInTable(){
         navigate(LogIn);
         return;
       }
+      Start();
     });
-  (async () => {
+  }, []);
 
+  async function Start(){
     let [tableData, tableDataError] = await AsyncAttempter(
       () => GetTables(
         auth.currentUser?.uid as string,
@@ -42,7 +44,7 @@ export default function InsertInTable(){
     }
 
     setColumns(tableData.val());
-  })()}, []);
+  }
 
   function AddRow(){
     setInserts((currentInsert) => {

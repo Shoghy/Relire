@@ -6,7 +6,7 @@ export interface IDataBase{
   author:string,
   dbName: string,
   tables?: Dictionary<Dictionary<IColumn>>,
-  tablesData?: Dictionary<TableInsert>
+  tablesData?: Dictionary<TableRow>
 }
 
 export type ColumnType = "string" | "int" | "float" | "bool" | "date" | "datetime" | "enum";
@@ -23,7 +23,7 @@ export interface IColumn{
   autoIncrement?: boolean
 }
 
-export type TableInsert = Dictionary<Dictionary<ColumnValue>>;
+export type TableRow = Dictionary<Dictionary<ColumnValue>>;
 
 export interface IForeingKey{
   tableName: string,
