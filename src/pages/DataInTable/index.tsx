@@ -5,6 +5,8 @@ import DBGetDefaultCath from "../../utilities/DBGetDefaultCatch";
 import { useEffect, useState } from "react";
 import { ColumnValue, Dictionary, IColumn, TableRow } from "../../utilities/types";
 import { AsyncAttempter, RandomString } from "../../utilities/functions";
+import NavBar from '../../components/NavBar';
+import "./styles.css"
 
 export default function DataInTable(){
   const navigate = useNavigate();
@@ -13,7 +15,7 @@ export default function DataInTable(){
   const [errorElement, setErrorElement] = useState<React.JSX.Element>();
   const [columns, setColumns] = useState<React.JSX.Element[]>([<th key="Loading Columns">Loading columns...</th>]);
   const [rows, setRows] = useState<React.JSX.Element[]>([
-    <tr key="Loading Rows">
+    <tr key="Loading Rows" className="tr">
       <td>Loading Rows...</td>
     </tr>
   ]);
@@ -105,7 +107,6 @@ export default function DataInTable(){
 
     for(let rowUID in dbRows){
       let dbRow = dbRows[rowUID];
-      let key = RandomString(8);
 
       let JSXRowValues: React.JSX.Element[] = [];
       for(let columnName in dbRow){
@@ -113,9 +114,9 @@ export default function DataInTable(){
         if(columnName in dbRow){
           columnValue = `${dbRow[columnName]}`
         }
-        JSXRowValues.push(<td key={`${key}-${columnValue}`}>{columnValue}</td>)
+        JSXRowValues.push(<td key={`${rowUID}-${columnName}`}>{columnValue}</td>)
       }
-      JSXRows.push(<tr key={`${key}`}>{JSXRowValues}</tr>)
+      JSXRows.push(<tr key={`${rowUID}`} className="tr">{JSXRowValues}</tr>)
     }
     setRows(JSXRows);
   }
@@ -126,19 +127,20 @@ export default function DataInTable(){
 
   return (
     <>
-    <table>
-      <thead>
+    <NavBar />
+    <Link to="insert">Insert Data</Link>
+    <table id="table" className="mask" cellSpacing="0">
+      <thead id="thead">
         <tr>
           {columns}
         </tr>
       </thead>
-      <tbody>
+      <tbody id="tbody">
           {rows}
       </tbody>
     </table>
     <br />
     <br />
-    <Link to="insert">Insert Data</Link>
     </>
   );
 }

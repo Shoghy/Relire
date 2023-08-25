@@ -214,7 +214,7 @@ export default function CreateTable() {
                 >
                   <i className="fa fa-trash" aria-hidden="true"></i>
                 </button>
-                <div className="columna">
+                <div className="columna mask">
                   <span>#</span>
                   <center>{index}</center>
                   <span>Column Name</span>
