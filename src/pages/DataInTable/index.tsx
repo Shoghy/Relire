@@ -3,7 +3,7 @@ import { GetDataInTable, GetTables, auth } from "../../utilities/DBclient";
 import { LogIn } from "../../utilities/PageLocations";
 import DBGetDefaultCath from "../../utilities/DBGetDefaultCatch";
 import { useEffect, useState } from "react";
-import { ColumnValue, Dictionary, IColumn, TableInsert } from "../../utilities/types";
+import { ColumnValue, Dictionary, IColumn, TableRow } from "../../utilities/types";
 import { AsyncAttempter, RandomString } from "../../utilities/functions";
 
 export default function DataInTable(){
@@ -11,8 +11,12 @@ export default function DataInTable(){
   const params = useParams();
 
   const [errorElement, setErrorElement] = useState<React.JSX.Element>();
-  const [columns, setColumns] = useState<Dictionary<IColumn>>({});
-  const [cValues, setCValues] = useState<TableInsert>({});
+  const [columns, setColumns] = useState<React.JSX.Element[]>([<th key="Loading Columns">Loading columns...</th>]);
+  const [rows, setRows] = useState<React.JSX.Element[]>([
+    <tr key="Loading Rows">
+      <td>Loading Rows...</td>
+    </tr>
+  ]);
 
   useEffect(() => {
     auth.onAuthStateChanged((user) => {
@@ -20,7 +24,7 @@ export default function DataInTable(){
         navigate(LogIn);
         return;
       }
-      Start()
+      Start();
     });
   }, []);
 
@@ -31,7 +35,7 @@ export default function DataInTable(){
         params.idDB as string,
         params.tbName
       )
-    )
+    );
 
     if(tableStrunctureError){
       DBGetDefaultCath(tableStrunctureError, errorElement, setErrorElement, navigate);
@@ -42,8 +46,6 @@ export default function DataInTable(){
       setErrorElement(<h1>Something went wrong </h1>);
       return;
     }
-
-    setColumns(tableStructure.val());
 
     let [tableData, tableDataError] = await AsyncAttempter(
       () => GetDataInTable(
@@ -62,7 +64,60 @@ export default function DataInTable(){
       )
       return;
     }
-    setCValues(tableData?.val())
+
+    DBColumnsToJSXColumns(tableStructure.val());
+    DBRowsToJSXRows(tableData?.val())
+  }
+
+  async function DBColumnsToJSXColumns(dbColumns: Dictionary<IColumn>){
+    let JSXColumns: React.JSX.Element[] = [];
+
+    for(let columnName in dbColumns){
+      let dbColumn = dbColumns[columnName];
+      let toolTip:string[] = [];
+      toolTip.push(`Type: ${dbColumn.type}`);
+      toolTip.push(`Unique: ${dbColumn.unique}`);
+      toolTip.push(`Not-Null: ${dbColumn.notNull}`);
+
+      switch(dbColumn.type){
+        case "int":{
+          toolTip.push(`Auto-Increment: ${dbColumn.autoIncrement}`);
+          break;
+        }
+        case "enum":{
+          toolTip.push(`Enum: [${dbColumn.enum?.join(", ")}]`);
+          break;
+        }
+      }
+      
+      if(dbColumn.default !== undefined){
+        toolTip.push(`Default: ${dbColumn.default}`);
+      }
+      let key = RandomString(8);
+      JSXColumns.push(<th title={toolTip.join("\n")} key={key}>{columnName}</th>)
+    }
+
+    setColumns(JSXColumns)
+  }
+
+  async function DBRowsToJSXRows(dbRows: TableRow){
+    let JSXRows: React.JSX.Element[] = [];
+
+    for(let rowUID in dbRows){
+      let dbRow = dbRows[rowUID];
+      let key = RandomString(8);
+
+      let JSXRowValues: React.JSX.Element[] = [];
+      for(let columnName in dbRow){
+        let columnValue: ColumnValue = "Null";
+        if(columnName in dbRow){
+          columnValue = `${dbRow[columnName]}`
+        }
+        JSXRowValues.push(<td key={`${key}-${columnValue}`}>{columnValue}</td>)
+      }
+      JSXRows.push(<tr key={`${key}`}>{JSXRowValues}</tr>)
+    }
+    setRows(JSXRows);
   }
 
   if(errorElement){
@@ -74,60 +129,11 @@ export default function DataInTable(){
     <table>
       <thead>
         <tr>
-          {(() => {
-            let columnsArray: React.JSX.Element[] = [];
-            for(let columnName in columns){
-              let column = columns[columnName];
-              let toolTip:string[] = [];
-              toolTip.push(`Type: ${column.type}`);
-              toolTip.push(`Unique: ${column.unique}`);
-              toolTip.push(`Not-Null: ${column.notNull}`);
-  
-              switch(column.type){
-                case "int":{
-                  toolTip.push(`Auto-Increment: ${column.autoIncrement}`);
-                  break;
-                }
-                case "enum":{
-                  toolTip.push(`Enum: [${column.enum?.join(", ")}]`);
-                  break;
-                }
-              }
-              
-              if(column.default !== undefined){
-                toolTip.push(`Default: ${column.default}`);
-              }
-              columnsArray.push(<th title={toolTip.join("\n")} key={columnName}>{columnName}</th>)
-            }
-            return columnsArray
-          })()}
+          {columns}
         </tr>
       </thead>
       <tbody>
-          {(() => {
-            let tableValuesColumns: React.JSX.Element[] = [];
-            for(let insertUID in cValues){
-              let insert = cValues[insertUID];
-              let key = RandomString(6);
-              tableValuesColumns.push(<tr key={key}>
-                {(() => {
-                  let tableValuesRows: React.JSX.Element[] = [];
-                  for(let columnName in columns){
-                    let value: ColumnValue = "Null";
-                    if(columnName in insert){
-                      value = insert[columnName];
-                      if(typeof(value) === "boolean"){
-                        value = value ? "True" : "False";
-                      }
-                    }
-                    tableValuesRows.push(<td key={`${columnName}-${key}`}>{value}</td>);
-                  }
-                  return tableValuesRows;
-                })()}
-              </tr>);
-            }
-            return tableValuesColumns
-          })()}
+          {rows}
       </tbody>
     </table>
     <br />
