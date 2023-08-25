@@ -9,7 +9,7 @@ import { AsyncAttempter, RandomString } from "../../utilities/functions";
 
 export default function DescribeDB() {
   const navigate = useNavigate();
-  let params = useParams();
+  const params = useParams();
 
   const [errorElement, setErrorElement] = useState<React.JSX.Element>();
   const [dbDataElement, setDBDataElement] = useState<React.ReactNode>(<h1>Cargando base de datos</h1>);
