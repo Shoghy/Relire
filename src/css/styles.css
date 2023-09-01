@@ -5,7 +5,7 @@
   color: #fff;
 }
 
-input, select{
+input, select, select > option{
   color: #000;
 }
 

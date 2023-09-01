@@ -23,6 +23,7 @@ export interface IColumn{
   autoIncrement?: boolean
 }
 
+//                     UID        Column     Value
 export type TableRow = Dictionary<Dictionary<ColumnValue>>;
 
 export interface IForeingKey{

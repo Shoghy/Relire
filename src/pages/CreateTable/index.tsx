@@ -1,6 +1,6 @@
 import NavBar from "../../components/NavBar";
 import { useNavigate, useParams } from "react-router-dom";
-import { GetTables, auth, database } from "../../utilities/DBclient";
+import { GetTables, auth, database, GetDataInTable } from '../../utilities/DBclient';
 import { ref, update } from "firebase/database"
 import { useEffect, useState } from "react"
 import { ColumnType, IForeingKey, IColumn, Dictionary, ColumnValue } from "../../utilities/types";
@@ -23,6 +23,11 @@ interface IColumn2 {
   foreingKey: IForeingKey
 }
 
+interface IUniqueColumsWithValues {
+  type: ColumnType,
+  rows: ColumnValue[]
+}
+
 export default function CreateTable() {
 
   const ColumTypeArray = ["string", "int", "float", "bool", "date", "datetime", "enum"];
@@ -32,9 +37,13 @@ export default function CreateTable() {
   const [dbTables, setdbTables] = useState<[string, Dictionary<IColumn>][]>([]);
   const [columns, setColumns] = useState<IColumn2[]>([]);
   const [tableName, setTableName] = useState<string>("");
+  const [
+    tablesWithUniqueColumns,
+    setTablesWithUniqueColumns
+  ] = useState<Dictionary<Dictionary<IUniqueColumsWithValues>>>({});
+  const [canForeignKeys, setCanForeignKeys] = useState(false);
   const [errorElement, setErrorElement] = useState<React.JSX.Element>();
 
-  /*Run just once*/
   useEffect(() => {
     auth.onAuthStateChanged((user) => {
       if (!user) {
@@ -46,11 +55,10 @@ export default function CreateTable() {
   }, [])
 
   async function Start() {
-    const idDB = params.idDB as string;
     let [response, error] = await AsyncAttempter(
       () => GetTables(
         auth.currentUser?.uid as string,
-        idDB
+        params.idDB as string
       )
     );
 
@@ -59,9 +67,47 @@ export default function CreateTable() {
       return;
     }
 
-    let tables = response.child("tables").val();
+    let tables: Dictionary<Dictionary<IColumn>> = response.val();
     if (!tables) return;
     setdbTables(Object.entries<Dictionary<IColumn>>(tables));
+    GetUniqueColumns(tables);
+  }
+
+  async function GetUniqueColumns(tables: Dictionary<Dictionary<IColumn>>) {
+    let uniqueColumns: Dictionary<Dictionary<IUniqueColumsWithValues>> = {};
+
+    for (let tableName in tables) {
+      let table = tables[tableName];
+
+      let [tableRows, getDataError] = await AsyncAttempter(
+        () => GetDataInTable(
+          auth.currentUser?.uid as string,
+          params.idDB as string,
+          tableName
+        )
+      );
+      if (getDataError) continue;
+      if (!tableRows) continue;
+
+      let columnsInfo: Dictionary<IUniqueColumsWithValues> = {};
+      tableRows.forEach((value) => {
+        for (let columnName in table) {
+          let column = table[columnName];
+          if (!column.unique) continue;
+          if (columnsInfo[columnName] === undefined) {
+            columnsInfo[columnName] = {
+              type: column.type,
+              rows: []
+            }
+          }
+          columnsInfo[columnName].rows.push(value.child(columnName).val());
+        }
+
+      });
+      uniqueColumns[tableName] = columnsInfo;
+    }
+    setCanForeignKeys(Object.keys(uniqueColumns).length > 0);
+    setTablesWithUniqueColumns(uniqueColumns);
   }
 
 
@@ -116,11 +162,16 @@ export default function CreateTable() {
         notNull: column.notNull,
         unique: column.unique
       };
+
       if (column.type === "bool") tableColums[column.name].unique = false;
       if (uniqueColumnNames.indexOf(column.name.toLowerCase()) > -1) {
         errors.push(`${index}: Repeated column name`)
       } else {
-        uniqueColumnNames.push(column.name.toLowerCase());
+        if(!column.name){
+          errors.push(`${index}: Column has no name`);
+        }else{
+          uniqueColumnNames.push(column.name.toLowerCase());
+        }
       }
 
       if (!column.name) {
@@ -145,6 +196,9 @@ export default function CreateTable() {
         }
       }
 
+      if(column.useForeingKey){
+        tableColums[column.name].foreingKey = column.foreingKey;
+      }
     });
 
     if (errors.length > 0) {
@@ -180,6 +234,128 @@ export default function CreateTable() {
     )
   }
 
+  function CanUseForeignKeys(column: IColumn2, index: number) {
+    if (!canForeignKeys) return <></>;
+
+    for (let tableName in tablesWithUniqueColumns) {
+      let table = tablesWithUniqueColumns[tableName];
+      for (let columnName in table) {
+        let dbColumn = table[columnName];
+        if (dbColumn.type !== column.type) continue;
+        return (
+          <>
+            <span>Use Foreign Key</span>
+            <center>
+              <input type="checkbox"
+                checked={column.useForeingKey}
+                onChange={(e) => setColumnPropertie(index, "useForeingKey", e.target.checked)}
+              />
+            </center>
+          </>
+        )
+      }
+    }
+
+    return <></>;
+  }
+
+  function PosiblesForeignKeys(column: IColumn2, index: number){
+    if(!column.useForeingKey) return <></>;
+
+    let tablesWithColumns: Dictionary<string[]> = {};
+    for (let tableName in tablesWithUniqueColumns) {
+      let table = tablesWithUniqueColumns[tableName];
+
+      for (let columnName in table) {
+        let dbColumn = table[columnName];
+        if(dbColumn.type !== column.type) continue;
+  
+        if(tableName in tablesWithColumns){
+          tablesWithColumns[tableName].push(columnName);
+        }else{
+          tablesWithColumns[tableName] = [columnName];
+        }
+      }
+    }
+
+    let tablesNames = Object.keys(tablesWithColumns);
+
+    if(tablesNames.length === 0) return <></>;
+
+    if(column.foreingKey.tableName === ""){
+      setColumns((currentColumns) => {
+        currentColumns[index].foreingKey = {
+          tableName: tablesNames[0],
+          column: tablesWithColumns[tablesNames[0]][0]
+        };
+        return [...currentColumns];
+      })
+    }
+
+    return (
+      <>
+        <span>ForeignKey Table</span>
+        <select
+        value={column.foreingKey.tableName}
+        onChange={(e) => {
+          setColumns((current) => {
+            current[index].foreingKey ={
+              tableName: e.target.value,
+              column: tablesWithColumns[e.target.value][0]
+            }
+            return [... current]
+          });
+        }}
+        >
+          {(() => {
+            let options: React.JSX.Element[] = [];
+            for(let i = 0; i < tablesNames.length; ++i){
+              options.push(
+                <option value={tablesNames[i]} key={`${tablesNames[i]}-${i}`}>
+                  {tablesNames[i]}
+                </option>
+              )
+            }
+            return options;
+          })()}
+        </select>
+
+        <span>ForeignKey Column</span>
+        <select
+        value={column.foreingKey.column}
+        onChange={(e) => {
+          setColumns((current) => {
+            current[index].foreingKey ={
+              tableName: current[index].foreingKey.tableName,
+              column: e.target.value
+            }
+            return [...current]
+          });
+        }}
+        >
+          {(() => {
+            if(column.foreingKey.tableName === "") return <option value=""></option>
+            let options: React.JSX.Element[] = [];
+            let columnsNames = tablesWithColumns[column.foreingKey.tableName];
+            for(let i = 0; i < columnsNames.length; ++i){
+              options.push(
+                <option
+                value={columnsNames[i]}
+                key={`${column.foreingKey.tableName}-${columnsNames[i]}-${i}`}
+                >
+                  {columnsNames[i]}
+                </option>
+              )
+            }
+
+            return options
+          })()}
+        </select>
+      </>
+    )
+
+  }
+
   if (errorElement) {
     return errorElement;
   }
@@ -202,15 +378,15 @@ export default function CreateTable() {
 
           columns.forEach((column, index) => {
             columnsJSX.push(
-              <div style={{position: "relative"}} key={index}>
+              <div style={{ position: "relative" }} key={index}>
                 <button
-                className="remove-columna"
-                onClick={() => {
-                  setColumns((currentColumns) => {
-                    currentColumns.splice(index, 1);
-                    return [...currentColumns];
-                  });
-                }}
+                  className="remove-columna"
+                  onClick={() => {
+                    setColumns((currentColumns) => {
+                      currentColumns.splice(index, 1);
+                      return [...currentColumns];
+                    });
+                  }}
                 >
                   <i className="fa fa-trash" aria-hidden="true"></i>
                 </button>
@@ -225,6 +401,7 @@ export default function CreateTable() {
                   />
                   <span>Column Type</span>
                   <select value={column.type} onChange={(e) => {
+                    setColumnPropertie(index, "useForeingKey", false);
                     setColumnPropertie(index, "type", e.target.value);
                     setColumnPropertie(index, "default", "");
                   }}>
@@ -273,19 +450,26 @@ export default function CreateTable() {
                   </center>
                   {column.useDefault &&
                     <>
-                      <span>Defaul</span>
-                      <ColumnInput
-                        column={{
-                          notNull: true,
-                          type: column.type,
-                          unique: column.unique,
-                          autoIncrement: column.autoIncrement,
-                          enum: GetEnumValues(column.enum)
-                        }}
-                        value={column.default}
-                        setValue={(e) => setColumnPropertie(index, "default", e)} />
+                      <span>Default</span>
+                      {(() => {
+                        let columnInput = <ColumnInput
+                          column={{
+                            notNull: true,
+                            type: column.type,
+                            unique: column.unique,
+                            autoIncrement: column.autoIncrement,
+                            enum: GetEnumValues(column.enum)
+                          }}
+                          value={column.default}
+                          setValue={(e) => setColumnPropertie(index, "default", e)} />
+
+                        if (column.type === "bool") return <center>{columnInput}</center>
+                        return columnInput;
+                      })()}
                     </>
                   }
+                  {CanUseForeignKeys(column, index)}
+                  {PosiblesForeignKeys(column, index)}
                 </div>
               </div>
             )
