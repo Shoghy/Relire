@@ -162,11 +162,16 @@ export default function CreateTable() {
         notNull: column.notNull,
         unique: column.unique
       };
+
       if (column.type === "bool") tableColums[column.name].unique = false;
       if (uniqueColumnNames.indexOf(column.name.toLowerCase()) > -1) {
         errors.push(`${index}: Repeated column name`)
       } else {
-        uniqueColumnNames.push(column.name.toLowerCase());
+        if(!column.name){
+          errors.push(`${index}: Column has no name`);
+        }else{
+          uniqueColumnNames.push(column.name.toLowerCase());
+        }
       }
 
       if (!column.name) {
@@ -191,6 +196,9 @@ export default function CreateTable() {
         }
       }
 
+      if(column.useForeingKey){
+        tableColums[column.name].foreingKey = column.foreingKey;
+      }
     });
 
     if (errors.length > 0) {
@@ -228,6 +236,7 @@ export default function CreateTable() {
 
   function CanUseForeignKeys(column: IColumn2, index: number) {
     if (!canForeignKeys) return <></>;
+
     for (let tableName in tablesWithUniqueColumns) {
       let table = tablesWithUniqueColumns[tableName];
       for (let columnName in table) {
@@ -246,33 +255,104 @@ export default function CreateTable() {
         )
       }
     }
+
     return <></>;
   }
 
   function PosiblesForeignKeys(column: IColumn2, index: number){
     if(!column.useForeingKey) return <></>;
 
-    let posibleTables: [string, string[]][] = [];
+    let tablesWithColumns: Dictionary<string[]> = {};
     for (let tableName in tablesWithUniqueColumns) {
       let table = tablesWithUniqueColumns[tableName];
-      let tableIndex = -1;
+
       for (let columnName in table) {
         let dbColumn = table[columnName];
         if(dbColumn.type !== column.type) continue;
-        if(tableIndex === -1){
-          tableIndex = posibleTables.push([tableName, [columnName]]) - 1;
+  
+        if(tableName in tablesWithColumns){
+          tablesWithColumns[tableName].push(columnName);
         }else{
-          posibleTables[tableIndex][1].push(columnName);
+          tablesWithColumns[tableName] = [columnName];
         }
       }
     }
+
+    let tablesNames = Object.keys(tablesWithColumns);
+
+    if(tablesNames.length === 0) return <></>;
+
     if(column.foreingKey.tableName === ""){
       setColumns((currentColumns) => {
-        
-        return [...currentColumns]
+        currentColumns[index].foreingKey = {
+          tableName: tablesNames[0],
+          column: tablesWithColumns[tablesNames[0]][0]
+        };
+        return [...currentColumns];
       })
     }
-    if(posibleTables.length === 0) return <></>;
+
+    return (
+      <>
+        <span>ForeignKey Table</span>
+        <select
+        value={column.foreingKey.tableName}
+        onChange={(e) => {
+          setColumns((current) => {
+            current[index].foreingKey ={
+              tableName: e.target.value,
+              column: tablesWithColumns[e.target.value][0]
+            }
+            return [... current]
+          });
+        }}
+        >
+          {(() => {
+            let options: React.JSX.Element[] = [];
+            for(let i = 0; i < tablesNames.length; ++i){
+              options.push(
+                <option value={tablesNames[i]} key={`${tablesNames[i]}-${i}`}>
+                  {tablesNames[i]}
+                </option>
+              )
+            }
+            return options;
+          })()}
+        </select>
+
+        <span>ForeignKey Column</span>
+        <select
+        value={column.foreingKey.column}
+        onChange={(e) => {
+          setColumns((current) => {
+            current[index].foreingKey ={
+              tableName: current[index].foreingKey.tableName,
+              column: e.target.value
+            }
+            return [...current]
+          });
+        }}
+        >
+          {(() => {
+            if(column.foreingKey.tableName === "") return <option value=""></option>
+            let options: React.JSX.Element[] = [];
+            let columnsNames = tablesWithColumns[column.foreingKey.tableName];
+            for(let i = 0; i < columnsNames.length; ++i){
+              options.push(
+                <option
+                value={columnsNames[i]}
+                key={`${column.foreingKey.tableName}-${columnsNames[i]}-${i}`}
+                >
+                  {columnsNames[i]}
+                </option>
+              )
+            }
+
+            return options
+          })()}
+        </select>
+      </>
+    )
 
   }
 
@@ -321,6 +401,7 @@ export default function CreateTable() {
                   />
                   <span>Column Type</span>
                   <select value={column.type} onChange={(e) => {
+                    setColumnPropertie(index, "useForeingKey", false);
                     setColumnPropertie(index, "type", e.target.value);
                     setColumnPropertie(index, "default", "");
                   }}>
@@ -388,6 +469,7 @@ export default function CreateTable() {
                     </>
                   }
                   {CanUseForeignKeys(column, index)}
+                  {PosiblesForeignKeys(column, index)}
                 </div>
               </div>
             )
