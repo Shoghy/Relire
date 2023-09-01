@@ -90,10 +90,12 @@ export default function CreateTable() {
       if (!tableRows) continue;
 
       let columnsInfo: Dictionary<IUniqueColumsWithValues> = {};
+      let tableHasUnique = false;
       tableRows.forEach((value) => {
         for (let columnName in table) {
           let column = table[columnName];
           if (!column.unique) continue;
+          tableHasUnique = true;
           if (columnsInfo[columnName] === undefined) {
             columnsInfo[columnName] = {
               type: column.type,
@@ -104,7 +106,9 @@ export default function CreateTable() {
         }
 
       });
-      uniqueColumns[tableName] = columnsInfo;
+      if(tableHasUnique){
+        uniqueColumns[tableName] = columnsInfo;
+      }
     }
     setCanForeignKeys(Object.keys(uniqueColumns).length > 0);
     setTablesWithUniqueColumns(uniqueColumns);
@@ -244,7 +248,7 @@ export default function CreateTable() {
         if (dbColumn.type !== column.type) continue;
         return (
           <>
-            <span>Use Foreign Key</span>
+            <span>Use ForeignKey</span>
             <center>
               <input type="checkbox"
                 checked={column.useForeingKey}
@@ -335,6 +339,7 @@ export default function CreateTable() {
         >
           {(() => {
             if(column.foreingKey.tableName === "") return <option value=""></option>
+
             let options: React.JSX.Element[] = [];
             let columnsNames = tablesWithColumns[column.foreingKey.tableName];
             for(let i = 0; i < columnsNames.length; ++i){
