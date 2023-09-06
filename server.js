@@ -35,9 +35,15 @@ if (!isProduction) {
 }
 
 // Serve HTML
+app.use('/api', async (req, res) => {
+  res.status(200).end("No hay nada aquí");
+})
+
 app.use('/api/*', async (req, res) => {
+  req.is('json');
   res.status(200).end("Hola mundo")
 })
+
 app.use('*', async (req, res) => {
   try {
     const url = req.originalUrl.replace(base, '')
@@ -54,7 +60,7 @@ app.use('*', async (req, res) => {
       render = (await import('./dist/server/entry-server.js')).render
     }
 
-    const rendered = await render(url, ssrManifest)
+    const rendered = await render(req.originalUrl, ssrManifest)
 
     const html = template
       .replace(`<!--app-head-->`, rendered.head ?? '')
