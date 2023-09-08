@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises'
 import express from 'express'
+import { admin } from './DBadim.cjs'
 
 // Constants
 const isProduction = process.env.NODE_ENV === 'production'
@@ -35,13 +36,17 @@ if (!isProduction) {
 }
 
 // Serve HTML
-app.use('/api', async (req, res) => {
-  res.status(200).end("No hay nada aquí");
-})
-
 app.use('/api/*', async (req, res) => {
   req.is('json');
+  console.log(req);
   res.status(200).end("Hola mundo")
+})
+
+app.use('/api', async (req, res) => {
+  console.log(admin)
+  res.status(404)
+  .set({ "Content-Type": "text/pain; charset=utf-8" })
+  .end("No hay nada aquí");
 })
 
 app.use('*', async (req, res) => {
