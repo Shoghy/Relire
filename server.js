@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises'
 import express from 'express'
-import { admin } from './DBadim.cjs'
+import RoutesHandler from './DBadim.cjs'
 
 // Constants
 const isProduction = process.env.NODE_ENV === 'production'
@@ -35,20 +35,18 @@ if (!isProduction) {
   app.use(base, sirv('./dist/client', { extensions: [] }))
 }
 
-// Serve HTML
-app.use('/api/*', async (req, res) => {
-  req.is('json');
-  console.log(req);
-  res.status(200).end("Hola mundo")
+//Server Side
+app.use('/api/*', express.json(), async (req, res) => {
+  RoutesHandler(req, res);
 })
 
 app.use('/api', async (req, res) => {
-  console.log(admin)
   res.status(404)
   .set({ "Content-Type": "text/pain; charset=utf-8" })
   .end("No hay nada aquí");
 })
 
+//Client Side
 app.use('*', async (req, res) => {
   try {
     const url = req.originalUrl.replace(base, '')
