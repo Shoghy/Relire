@@ -1,7 +1,7 @@
 import { initializeApp, getApps, FirebaseApp, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { get, getDatabase, push, ref } from "firebase/database"
-import { IDataBase } from "./types";
+import { IApiRequest, IApiResponse } from './types';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -44,15 +44,49 @@ export function GetDatabases(userUID: string, db?: string){
   }
   return get(ref(database, reference));
 }
-export function CreateDatabase(userUID: string, db: string){
-  let reference = ref(database, userUID);
+export async function CreateDatabase(db: string): Promise<IApiResponse>{
+  let userIDToken = await auth.currentUser?.getIdToken();
+
+  let requestBody: IApiRequest = {
+    auth: userIDToken as string,
+    type: "user",
+    dbName: db
+  }
+
+  let response = await fetch(
+    "http://localhost:5173/api/create-db", {
+    body: JSON.stringify(requestBody),
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      'Accept': 'application/json'
+    }
+  });
+
+  try{
+    let userUID = auth.currentUser?.uid;
+    let apiResponse: IApiResponse = await response.json();
+    apiResponse.dbRef = ref(database, `${userUID}/${apiResponse.dbUID}`)
+    return apiResponse;
+  }catch(e){
+    console.log(e);
+    return {
+      ok: false,
+      error: {
+        message: "The server didn't return a JSON",
+        code: "bad-api-programmer",
+        name: ""
+      }
+    }
+  }
+  /*let reference = ref(database, userUID);
 
   let newDB:IDataBase = {
     dbName:db,
     author: userUID
   };
 
-  return push(reference, newDB)
+  return push(reference, newDB)*/
 }
 
 export function InsertRow(
