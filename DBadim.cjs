@@ -30,6 +30,13 @@ const database = admin.database();
 const STATUS_CODES = {
   BAD_REQUEST: 400,
   PAGE_NOT_FOUND: 404,
+  OK: 200,
+  CREATED: 201,
+  UNAUTHORIZED: 401,
+  INTERNAL_SERVER_ERROR: 500,
+  INSUFFICIENT_STORAGE: 507,
+  TOO_MANY_REQUESTS: 429,
+  FAILED_DEPENDENCY: 424,
   IDK: 69420
 }
 
@@ -49,7 +56,7 @@ async function CreateDB(req, res){
   let reqInfo = req.body;
 
   if(reqInfo.type === "key"){
-    res.status(STATUS_CODES.IDK)
+    res.status(STATUS_CODES.UNAUTHORIZED)
     .json({
       ok: false,
       error:{
@@ -101,7 +108,7 @@ async function CreateDB(req, res){
   if(userError){
     switch(userError.code){
       case "auth/id-token-revoked":{
-        res.status(STATUS_CODES.IDK)
+        res.status(STATUS_CODES.UNAUTHORIZED)
         .json({
           ok: false,
           error:{
@@ -112,7 +119,7 @@ async function CreateDB(req, res){
         break;
       }
       default:{
-        res.status(STATUS_CODES.IDK)
+        res.status(STATUS_CODES.FAILED_DEPENDENCY)
         .json({
           ok: false,
           error:{
@@ -142,7 +149,7 @@ async function CreateDB(req, res){
 
     if(pushError){
       console.log(pushError);
-      res.status(STATUS_CODES.IDK)
+      res.status(STATUS_CODES.FAILED_DEPENDENCY)
       .json({
         ok: false,
         error:{
@@ -153,14 +160,14 @@ async function CreateDB(req, res){
       return;
     }
 
-    res.status(STATUS_CODES.IDK)
+    res.status(STATUS_CODES.CREATED)
     .json({
       ok: true
     });
     return;
   }
 
-  res.status(STATUS_CODES.IDK)
+  res.status(STATUS_CODES.TOO_MANY_REQUESTS)
   .json({
     ok: false,
     error:{
