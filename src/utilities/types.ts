@@ -13,6 +13,20 @@ export type ColumnType = "string" | "int" | "float" | "bool" | "date" | "datetim
 
 export type ColumnValue = string | number | boolean;
 
+export interface IApiRequest extends Dictionary<any>{
+  auth: string,
+  type: "user" | "key"
+}
+
+export interface DefaultReturnedError extends Error{
+  code: string
+}
+
+export interface IApiResponse extends Dictionary<any>{
+  ok: boolean,
+  error?: DefaultReturnedError
+}
+
 export interface IColumn{
   type: ColumnType,
   notNull: boolean,

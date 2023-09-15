@@ -5,7 +5,7 @@ import { DB, LogIn } from "../../utilities/PageLocations";
 import React, { useEffect, useState } from "react";
 import { AsyncAttempter } from "../../utilities/functions";
 import "./styles.css"
-import { DatabaseReference } from "firebase/database";
+import { IApiResponse } from "../../utilities/types";
 
 interface BasicDBInfo{
   name: string,
@@ -78,19 +78,34 @@ export default function Main(){
     let dbName = prompt("Insert the name of the database");
     if(!dbName) return;
     let cdbAsync = CreateDatabase(
-      auth.currentUser?.uid as string,
       dbName
     )
-    let newDB: DatabaseReference;
+
+    let newDB: IApiResponse;
     try{
       newDB = await cdbAsync;
     }catch(error){
       console.error(error);
       return;
     }
+
+    if(!newDB.ok){
+      switch(newDB.error?.code){
+        case "db-limit":{
+          alert(newDB.error.message);
+          break;
+        }
+        default:{
+          alert("We were not able to process yor request");
+          break;
+        }
+      }
+      return;
+    }
+
     setUserDBsElement(null);
     setUserDBs((current) => {
-      current.push({name: dbName as string, uid: newDB.key as string});
+      current.push({name: dbName as string, uid: newDB.dbUID});
       return [... current]
     })
   }
@@ -117,7 +132,9 @@ export default function Main(){
               </Link>
             )
           }
-          dbList.push(createDBButton);
+
+          if(dbList.length < 5) dbList.push(createDBButton);
+
           return dbList;
         })()}
       </div>

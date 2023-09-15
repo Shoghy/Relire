@@ -1,4 +1,4 @@
-import { AsyncFunc } from "./types";
+import { AsyncFunc, DefaultReturnedError } from "./types";
 
 export function TitleCase(val: string): string {
   val = val.toLowerCase();
@@ -49,7 +49,7 @@ export function IsValidDate(dateString : string) {
   return !isNaN(Date.parse(dateString));
 }
 
-export async function AsyncAttempter<E = Error, T = any>(func: AsyncFunc<T>): Promise<[T, null] | [null, E]>{
+export async function AsyncAttempter<E = DefaultReturnedError, T = any>(func: AsyncFunc<T>): Promise<[T, null] | [null, E]>{
   try{
     let result = await func();
     return [result, null];

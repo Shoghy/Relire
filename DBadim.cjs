@@ -140,8 +140,9 @@ async function CreateDB(req, res){
   let countDatabases = (await database.ref(user.uid).get()).numChildren();
 
   if(countDatabases < 5){
-    let [, pushError] = await AsyncAttempter(
-      () =>  userSpaceRef.push({
+    /**@type {[admin.database.Reference, GenericError]} */
+    let [dbResponse, pushError] = await AsyncAttempter(
+      () => userSpaceRef.push({
         dbName: reqInfo.dbName,
         author: user.uid
       })
@@ -162,7 +163,8 @@ async function CreateDB(req, res){
 
     res.status(STATUS_CODES.CREATED)
     .json({
-      ok: true
+      ok: true,
+      dbUID: dbResponse.key
     });
     return;
   }
