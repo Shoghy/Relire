@@ -11,23 +11,35 @@ export interface IDataBase {
   tablesData?: Dictionary<TableRow>
 }
 
-interface ExtraFields<T> extends React.InputHTMLAttributes<HTMLInputElement & HTMLSelectElement> {
+export interface ExtraFields<T>
+  extends
+React.InputHTMLAttributes<HTMLInputElement & HTMLSelectElement> {
+  columnName: string,
   columnValue: T,
   setColumnValue: (value: T) => any,
+  [key: string]: any
 }
 
+export interface VerifyReturn{
+  bien: boolean,
+  error?: string,
+  value?: any
+}
 
-export class ColumnType<T> extends React.Component<ExtraFields<T>>{
+export class ColumnType extends React.Component<ExtraFields<any>>{
   static types: ColumnDerived[] = [];
   static typeName = "";
   static canBeUnique = true;
+  name = ""
 
-  constructor(props: ExtraFields<T>) {
+  constructor(props: ExtraFields<any>) {
     super(props);
   }
 
-  verify() {
-    return true
+  verify(_: TableRow): VerifyReturn {
+    return {
+      bien: true
+    }
   }
 
   render(): React.ReactNode {
@@ -37,12 +49,17 @@ export class ColumnType<T> extends React.Component<ExtraFields<T>>{
 
 export type ColumnDerived = typeof ColumnType;
 
-export class IntColumn extends ColumnType<number>{
-  static dummy = ColumnType.types.push(this as any);
+export class IntColumn extends ColumnType{
+  static dummy = ColumnType.types.push(this);
   static typeName: string = "int";
 
-  autoIncrement = ({columnValue, setColumnValue, ...props}: ExtraFields<boolean>) => {
+  autoIncrement = ({columnValue, setColumnValue, columnName, ...props}: ExtraFields<boolean>) => {
     let onChange = props.onChange;
+
+    if(typeof columnValue !== "boolean"){
+      setColumnValue(false);
+      return;
+    }
 
     props.onChange = (e) => {
       if (onChange) onChange(e);
@@ -58,16 +75,45 @@ export class IntColumn extends ColumnType<number>{
     )
   }
 
-  constructor(props: ExtraFields<number>) {
+  constructor(props: ExtraFields<string>) {
     super(props);
   }
 
-  verify(): boolean {
-    return !isNaN(parseInt(`${this.props.columnValue}`));
+  verify(tableRows: TableRow): VerifyReturn {
+    if(this.props.columnValue === ""){
+      if(!this.props["autoIncrement"]){
+        return {
+          bien: false,
+          error: "Null value"
+        }
+      }
+
+      let maxValue = Number.NEGATIVE_INFINITY;
+      let columnName = this.props.columnName;
+      for(let rowUID in tableRows){
+        let row = tableRows[rowUID];
+        if(row[columnName] as number > maxValue){
+          maxValue = row[columnName] as number;
+        }
+      }
+
+      return {
+        bien: true,
+        value: ++maxValue
+      }
+    }
+
+    let returnValue: VerifyReturn = {
+      bien: !isNaN(parseInt(this.props.columnValue))
+    }
+    if(!returnValue.bien){
+      returnValue.error = "Value is not a number";
+    }
+    return returnValue;
   }
 
   render() {
-    let { columnValue, setColumnValue, ... props } = this.props;
+    let { columnValue, setColumnValue, columnName, ... props } = this.props;
 
     let onChange = props.onChange;
     props.onChange = (e) => {
@@ -77,7 +123,7 @@ export class IntColumn extends ColumnType<number>{
       if (e.target.value === "") setColumnValue(e.target.value as any);
       let value = parseInt(e.target.value);
       if (isNaN(value)) return;
-      setColumnValue(value);
+      setColumnValue(value.toString());
     }
 
     return (

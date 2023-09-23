@@ -2,23 +2,22 @@ import NavBar from "../../components/NavBar";
 import { useNavigate } from "react-router-dom";
 import { auth } from '../../utilities/DBclient';
 import { useEffect, useState } from "react"
-import { IForeingKey, ColumnType, ColumnDerived } from "../../utilities/types";
+import { ColumnType, ColumnDerived, Dictionary } from "../../utilities/types";
 import { LogIn } from "../../utilities/PageLocations";
 import "./styles.css"
 
 interface IColumn2 {
-  name: string,
+  columnName: string,
   type: ColumnDerived,
   notNull: boolean,
   useDefault: boolean,
   default: any,
   unique: boolean,
-  useForeingKey: boolean,
-  foreingKey: IForeingKey
+  aditionalProperties: Dictionary<any>
 }
 
 export default function CreateTable() {
-  const ColumTypeArray = ColumnType.types;
+  const ColumnTypeArray = ColumnType.types;
   const navigate = useNavigate();
 
   const [tableName, setTableName] = useState("");
@@ -37,7 +36,19 @@ export default function CreateTable() {
   async function Start() { }
 
   function AddColumn() {
+    setColumns((currentColumns) => {
+      let aditionalProperties: Dictionary<any> = {};
 
+      return [... currentColumns,{
+        columnName: "",
+        type: ColumnTypeArray[0],
+        useDefault: false,
+        default: "",
+        notNull: false,
+        unique: false,
+        aditionalProperties: aditionalProperties
+      }]
+    });
   }
 
   return (
