@@ -50,6 +50,50 @@ async function AsyncAttempter(func){
   }
 }
 
+/**
+ * @param {string} authId
+ * @param {Response} res
+ * @returns {Promise<admin.auth.DecodedIdToken | null>}
+ */
+async function GetUserHandler(authId, res){
+  let [user, userError] = await AsyncAttempter(
+    () => auth.verifyIdToken(authId, true)
+  )
+
+  if(userError){
+    switch(userError.code){
+      case "auth/id-token-revoked":{
+        res.status(STATUS_CODES.UNAUTHORIZED)
+        .json({
+          ok: false,
+          error:{
+            message: "The Id Token sended was revoked",
+            code: "id-token-revoked"
+          }
+        });
+        break;
+      }
+      default:{
+        res.status(STATUS_CODES.FAILED_DEPENDENCY)
+        .json({
+          ok: false,
+          error:{
+            message: "An error occurred, try again later",
+            code: "unkwon-error"
+          }
+        });
+        break;
+      }
+    }
+    console.log(userError.code);
+    console.log(userError.message);
+    console.log(reqInfo);
+    return null;
+  }
+
+  return user
+}
+
 /** @type {AdminHandler} */
 async function CreateDB(req, res){
   /**@type {ReqInfo} */
@@ -101,40 +145,8 @@ async function CreateDB(req, res){
 
   reqInfo.dbName = reqInfo.dbName.trim();
 
-  let [user, userError] = await AsyncAttempter(
-    () => auth.verifyIdToken(reqInfo.auth, true)
-  )
-
-  if(userError){
-    switch(userError.code){
-      case "auth/id-token-revoked":{
-        res.status(STATUS_CODES.UNAUTHORIZED)
-        .json({
-          ok: false,
-          error:{
-            message: "The Id Token sended was revoked",
-            code: "id-token-revoked"
-          }
-        });
-        break;
-      }
-      default:{
-        res.status(STATUS_CODES.FAILED_DEPENDENCY)
-        .json({
-          ok: false,
-          error:{
-            message: "An error occurred, try again later",
-            code: "unkwon-error"
-          }
-        });
-        break;
-      }
-    }
-    console.log(userError.code);
-    console.log(userError.message);
-    console.log(reqInfo);
-    return;
-  }
+  let user = await GetUserHandler(reqInfo.auth, res);
+  if(user === null) return;
 
   let userSpaceRef = database.ref(user.uid);
   let countDatabases = (await database.ref(user.uid).get()).numChildren();
