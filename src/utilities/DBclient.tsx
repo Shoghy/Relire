@@ -52,9 +52,9 @@ export async function CreateDatabase(db: string): Promise<IApiResponse>{
     type: "user",
     dbName: db
   }
-
+  const serverURL = import.meta.env.VITE_SERVER_URL;
   let response = await fetch(
-    "http://localhost:5173/api/create-db", {
+    `${serverURL}/api/create-db`, {
     body: JSON.stringify(requestBody),
     method: "POST",
     headers: {

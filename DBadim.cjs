@@ -214,6 +214,18 @@ async function CreateDB(req, res){
     }
   });
 }
+
+/**
+ * @param {number} minInclusive 
+ * @param {number} maxInclusive 
+ * @returns {number}
+ */
+function RandomInt(minInclusive, maxInclusive){
+  return Math.floor(
+    Math.random() * (maxInclusive - minInclusive + 1)
+  )  + minInclusive;
+}
+
 /**
  * @param {number} length 
  * @returns {string}
@@ -290,9 +302,8 @@ async function CreateAPIKey(req, res){
     random: RandomString(256)
   }
   
-  let key = CryptoJS.AES.encrypt(JSON.stringify(dbAPIkey), process.env.VITE_CRYPTO_KEY);
-  console.log(process.env.VITE_CRYPTO_KEY)
-  console.log(key);
+  let keyObject = CryptoJS.AES.encrypt(JSON.stringify(dbAPIkey), process.env.VITE_CRYPTO_KEY);
+  let key = keyObject.toString();
 
   let [, updateError] = await AsyncAttempter(
     () => dbRef.update({"api-key": key})
