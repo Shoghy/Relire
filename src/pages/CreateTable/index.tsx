@@ -167,36 +167,32 @@ export default function CreateTable() {
         unique: column.unique
       };
 
-      if (column.type === "bool") tableColums[column.name].unique = false;
-      if (uniqueColumnNames.indexOf(column.name.toLowerCase()) > -1) {
-        errors.push(`${index}: Repeated column name`)
-      } else {
-        if(!column.name){
-          errors.push(`${index}: Column has no name`);
-        }else{
-          uniqueColumnNames.push(column.name.toLowerCase());
-        }
-      }
-
-      if (!column.name) {
+      if(!column.name){
         errors.push(`${index}: Column has no name`);
+      }else if (uniqueColumnNames.indexOf(column.name.toLowerCase()) > -1) {
+        errors.push(`${index}: Repeated column name`);
+      }else{
+        uniqueColumnNames.push(column.name.toLowerCase());
       }
 
-      if (column.useDefault) {
+      if (column.useDefault && !column.default) {
+        errors.push(`${index}: Disable default or add a value to default`);
+      }else{
         tableColums[column.name].default = column.default;
-
-        if (!column.default) {
-          errors.push(`${index}: Disable default or add a value to default`);
-        }
       }
 
-      if (column.type === "int") {
-        tableColums[column.name].autoIncrement = column.autoIncrement;
-      } else if (column.type === "enum") {
-        tableColums[column.name].unique = false;
-        tableColums[column.name].enum = GetEnumValues(column.enum);
-        if (!column.enum) {
-          errors.push(`${index}: You need to add at least one value on enum`);
+      switch(column.type){
+        case "int":{
+          tableColums[column.name].autoIncrement = column.autoIncrement;
+          break;
+        }
+        case "enum":{
+          if (!column.enum) {
+            errors.push(`${index}: You need to add at least one value on enum`);
+          }else{
+            tableColums[column.name].enum = GetEnumValues(column.enum);
+          }
+          break;
         }
       }
 
@@ -209,6 +205,7 @@ export default function CreateTable() {
       alert(errors.join("\n"));
       return;
     }
+
     try {
       await update(ref(database, `/${auth.currentUser?.uid}/${params.idDB}/tables/${tableName}`), tableColums)
 
@@ -409,6 +406,9 @@ export default function CreateTable() {
                     setColumnPropertie(index, "useForeingKey", false);
                     setColumnPropertie(index, "type", e.target.value);
                     setColumnPropertie(index, "default", "");
+                    if(e.target.value === "enum" || e.target.value === "bool"){
+                      setColumnPropertie(index, "unique", false);
+                    }
                   }}>
                     {(() => {
                       let options: React.JSX.Element[] = [];
