@@ -89,6 +89,11 @@ export default function DescribeDB() {
   return (
     <>
       <NavBar />
+      <button
+        className="btn"
+      >
+        Create API key
+      </button>
       <center>
         {dbDataElement}
       </center>

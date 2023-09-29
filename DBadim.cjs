@@ -1,6 +1,7 @@
 const admin = require("firebase-admin");
 const serviceAccount = require("./RelireFirebaseAdmin.json");
 const express = require("express");
+const CryptoJS = require("crypto-js");
 
 /**
  * @typedef {express.Request<{}, any, any, QueryString.ParsedQs, Record<string, any>>} Request
@@ -48,6 +49,43 @@ async function AsyncAttempter(func){
   }catch(e){
     return [null, e]
   }
+}
+
+/**
+ * @param {Response} res
+ * @param {any} dbName 
+ * @param {{
+ *  NotSended: GenericError,
+ *  WrongType: GenericError,
+ *  EmptyString: GenericError
+ * }} errors
+ * @returns {false | string}
+ */
+function IsValidString(res, dbName, errors){
+  if(dbName === undefined) {
+    res.status(STATUS_CODES.BAD_REQUEST)
+    .json({
+      ok: false,
+      error: errors.NotSended
+    });
+    return false;
+  }else if(typeof(dbName) !== "string"){
+    res.status(STATUS_CODES.BAD_REQUEST)
+    .json({
+      ok: false,
+      error: errors.WrongType
+    });
+    return false;
+  }else if(!dbName.trim()){
+    res.status(STATUS_CODES.BAD_REQUEST)
+    .json({
+      ok: false,
+      error: errors.EmptyString
+    });
+    return false;
+  }
+
+  return dbName.trim();
 }
 
 /**
@@ -111,39 +149,25 @@ async function CreateDB(req, res){
     return;
   }
 
-  if(!("dbName" in reqInfo)){
-    res.status(STATUS_CODES.BAD_REQUEST)
-    .json({
-      ok: false,
-      error:{
+  let dbName = IsValidString(
+    res,
+    reqInfo.dbName,
+    {
+      NotSended: {
         message: "Database name was not granted.",
         code: "missing-dbName"
-      }
-    });
-    return;
-  }else if(typeof(reqInfo.dbName) !== "string"){
-    res.status(STATUS_CODES.BAD_REQUEST)
-    .json({
-      ok: false,
-      error:{
+      },
+      WrongType: {
         message: "Database name is not a string.",
         code: "wrong-dbName"
-      }
-    });
-    return;
-  }else if(!reqInfo.dbName.trim()){
-    res.status(STATUS_CODES.BAD_REQUEST)
-    .json({
-      ok: false,
-      error:{
+      },
+      EmptyString: {
         message: "Database name is an empty string.",
         code: "wrong-dbName"
       }
-    });
-    return;
-  }
-
-  reqInfo.dbName = reqInfo.dbName.trim();
+    }
+  );
+  if(!dbName) return;
 
   let user = await GetUserHandler(reqInfo.auth, res);
   if(user === null) return;
@@ -155,7 +179,7 @@ async function CreateDB(req, res){
     /**@type {[admin.database.Reference, GenericError]} */
     let [dbResponse, pushError] = await AsyncAttempter(
       () => userSpaceRef.push({
-        dbName: reqInfo.dbName,
+        dbName: dbName,
         author: user.uid
       })
     );
@@ -190,6 +214,109 @@ async function CreateDB(req, res){
     }
   });
 }
+/**
+ * @param {number} length 
+ * @returns {string}
+ */
+function RandomString(length) {
+  let result = '';
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const charactersLength = characters.length - 1;
+  let counter = 0;
+  while (counter < length) {
+    result += characters.charAt(RandomInt(0, charactersLength));
+    counter += 1;
+  }
+  return result;
+}
+
+/**@type {AdminHandler} */
+async function CreateAPIKey(req, res){
+  /**@type {ReqInfo} */
+  let reqInfo = req.body;
+
+  if(reqInfo.type === "key"){
+    res.status(STATUS_CODES.UNAUTHORIZED)
+    .json({
+      ok: false,
+      error:{
+        message: "Holy recursion! APIkeys cannot create APIkeys.",
+        code: "apikey-out-of-bounds"
+      }
+    });
+    return;
+  }
+
+  let dbUID = IsValidString(
+    res,
+    reqInfo.dbUID,
+    {
+      EmptyString: {
+        code: "wrong-dbUID",
+        message: "The dbUID sended was an empty string."
+      },
+      NotSended: {
+        code: "no-dbUID",
+        message: "There was no dbUID in the request sended."
+      },
+      WrongType: {
+        code: "wrong-dbUID",
+        message: "The dbUID sended was not a string."
+      }
+    }
+  );
+  if(!dbUID) return;
+
+  let user = await GetUserHandler(reqInfo.auth, res);
+  if(!user) return;
+
+  let dbRef = database.ref(`${user.uid}/${dbUID}`);
+  let dbInfo = await database.ref(`${user.uid}/${dbUID}`).get();
+  if(!dbInfo.exists()){
+    res.status(STATUS_CODES.PAGE_NOT_FOUND)
+    .json({
+      ok: false,
+      error:{
+        message: "The DataBase provided do not exists or was deleted.",
+        code: "not-a-real-db"
+      }
+    });
+    return;
+  }
+
+  let dbAPIkey = {
+    user: user.uid,
+    dbUID: dbUID,
+    random: RandomString(256)
+  }
+  
+  let key = CryptoJS.AES.encrypt(JSON.stringify(dbAPIkey), process.env.VITE_CRYPTO_KEY);
+  console.log(process.env.VITE_CRYPTO_KEY)
+  console.log(key);
+
+  let [, updateError] = await AsyncAttempter(
+    () => dbRef.update({"api-key": key})
+  );
+
+  if(updateError){
+    res.status(STATUS_CODES.FAILED_DEPENDENCY)
+    .json({
+      ok: false,
+      error:{
+        message: "An error occurred, try again later",
+        code: "unkwon-error"
+      }
+    });
+    console.log(updateError);
+    return;
+  }
+
+  res.status(STATUS_CODES.CREATED)
+  .json({
+    ok: true,
+    APIKey: key
+  });
+}
 
 /** @type {AdminHandler} */
 module.exports = function RoutesHandler(req, res){
@@ -204,8 +331,16 @@ module.exports = function RoutesHandler(req, res){
     });
     return;
   }
-
-  if(!("auth" in req.body) || !("type" in req.body)){
+  if(typeof(req.body) !== "object"){
+    res.status(STATUS_CODES.BAD_REQUEST)
+    .json({
+      "ok": false,
+      "error": {
+        "message": "The body is not an object.",
+        "code": "body-type"
+      }
+    });
+  }else if(!("auth" in req.body) || !("type" in req.body)){
     res.status(STATUS_CODES.BAD_REQUEST)
     .json({
       "ok": false,
@@ -219,6 +354,10 @@ module.exports = function RoutesHandler(req, res){
 
   if(req.originalUrl === "/api/create-db"){
     CreateDB(req, res);
+    return;
+  }
+  if(req.originalUrl === "/api/create-api"){
+    CreateAPIKey(req, res);
     return;
   }
 
