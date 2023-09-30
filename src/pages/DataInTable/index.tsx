@@ -3,7 +3,7 @@ import { GetDataInTable, GetTables, auth } from "../../utilities/DBclient";
 import { LogIn } from "../../utilities/PageLocations";
 import DBGetDefaultCath from "../../utilities/DBGetDefaultCatch";
 import { useEffect, useState } from "react";
-import { ColumnValue, Dictionary, IColumn, TableRow } from "../../utilities/types";
+import { ColumnType, ColumnValue, Dictionary, IColumn, TableRow } from "../../utilities/types";
 import { AsyncAttempter, RandomString } from "../../utilities/functions";
 import NavBar from '../../components/NavBar';
 import "./styles.css"
@@ -82,11 +82,11 @@ export default function DataInTable(){
       toolTip.push(`Not-Null: ${dbColumn.notNull}`);
 
       switch(dbColumn.type){
-        case "int":{
+        case ColumnType.INT:{
           toolTip.push(`Auto-Increment: ${dbColumn.autoIncrement}`);
           break;
         }
-        case "enum":{
+        case ColumnType.ENUM:{
           toolTip.push(`Enum: [${dbColumn.enum?.join(", ")}]`);
           break;
         }

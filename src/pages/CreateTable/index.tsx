@@ -29,8 +29,7 @@ interface IUniqueColumsWithValues {
 }
 
 export default function CreateTable() {
-
-  const ColumTypeArray = ["string", "int", "float", "bool", "date", "datetime", "enum"];
+  const ColumTypeArray = Object.values(ColumnType);
   const navigate = useNavigate();
   const params = useParams();
 
@@ -124,7 +123,7 @@ export default function CreateTable() {
       }
       return [...currentColumns, {
         name: "",
-        type: "string",
+        type: ColumnType.STRING,
         default: "",
         unique: false,
         notNull: false,
@@ -182,11 +181,11 @@ export default function CreateTable() {
       }
 
       switch(column.type){
-        case "int":{
+        case ColumnType.INT:{
           tableColums[column.name].autoIncrement = column.autoIncrement;
           break;
         }
-        case "enum":{
+        case ColumnType.ENUM:{
           if (!column.enum) {
             errors.push(`${index}: You need to add at least one value on enum`);
           }else{
@@ -220,7 +219,7 @@ export default function CreateTable() {
   }
 
   function CanBeUnique(column: IColumn2, index: number) {
-    if (column.type === "enum" || column.type === "bool") return <></>;
+    if (column.type === ColumnType.ENUM || column.type === ColumnType.BOOL) return <></>;
     return (
       <>
         <div>Unique</div>
@@ -406,7 +405,7 @@ export default function CreateTable() {
                     setColumnPropertie(index, "useForeingKey", false);
                     setColumnPropertie(index, "type", e.target.value);
                     setColumnPropertie(index, "default", "");
-                    if(e.target.value === "enum" || e.target.value === "bool"){
+                    if(e.target.value === ColumnType.ENUM || e.target.value === ColumnType.BOOL){
                       setColumnPropertie(index, "unique", false);
                     }
                   }}>
@@ -418,7 +417,7 @@ export default function CreateTable() {
                       return options;
                     })()}
                   </select>
-                  {column.type === "int" &&
+                  {column.type === ColumnType.INT &&
                     <>
                       <span>AutoIncrement</span>
                       <center>
@@ -429,7 +428,7 @@ export default function CreateTable() {
                       </center>
                     </>
                   }
-                  {column.type === "enum" &&
+                  {column.type === ColumnType.ENUM &&
                     <>
                       <span>Enum values</span>
                       <input
@@ -468,7 +467,7 @@ export default function CreateTable() {
                           value={column.default}
                           setValue={(e) => setColumnPropertie(index, "default", e)} />
 
-                        if (column.type === "bool") return <center>{columnInput}</center>
+                        if (column.type === ColumnType.BOOL) return <center>{columnInput}</center>
                         return columnInput;
                       })()}
                     </>
