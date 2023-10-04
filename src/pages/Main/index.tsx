@@ -5,7 +5,7 @@ import { DB, LogIn } from "../../utilities/PageLocations";
 import React, { useEffect, useState } from "react";
 import { AsyncAttempter } from "../../utilities/functions";
 import "./styles.css"
-import { IApiResponse } from "../../utilities/types";
+import { DatabaseListResponse, IApiResponse } from "../../utilities/types";
 
 interface BasicDBInfo{
   name: string,
@@ -37,13 +37,11 @@ export default function Main(){
   }, [])
 
   async function GetUserDataBases(){
-    let [dbs, dbsError] = await AsyncAttempter(
-      () => GetDatabases(
-        auth.currentUser?.uid as string
-      )
+    let [dbsList, dbsError] = await AsyncAttempter(
+      () => GetDatabases()
     );
 
-    if(dbsError){
+    if(dbsError || !dbsList || !dbsList.ok){
       setErrorElement(
         <h1>
           We were not able to communicate with the database. Try again later
@@ -52,7 +50,7 @@ export default function Main(){
       return;
     }
 
-    if(!dbs?.size){
+    if((dbsList as DatabaseListResponse).dbInfos.length === 0){
       setUserDBsElement(
         <center>
           <h1>You still don't have any database, create one</h1>
@@ -64,10 +62,11 @@ export default function Main(){
     setUserDBsElement(null);
 
     setUserDBs((current) => {
-      dbs?.forEach((value) => {
+      (dbsList as DatabaseListResponse).dbInfos
+      .forEach((value) => {
         current.push({
-          uid: value.key as string,
-          name: value.child("dbName").val() as string
+          uid: value.dbUID,
+          name: value.dbName
         })
       });
       return [... current];

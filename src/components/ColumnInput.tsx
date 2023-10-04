@@ -1,4 +1,4 @@
-import { ColumnValue, IColumn } from "../utilities/types";
+import { ColumnType, ColumnValue, IColumn } from "../utilities/types";
 import { RandomString, TitleCase } from "../utilities/functions";
 import React from "react";
 
@@ -17,22 +17,22 @@ export default function ColumnInput({column, value, setValue, props}: IColumnToI
   props.onChange = (e) => setValue((e as React.ChangeEvent<HTMLInputElement>).target.value)
 
   switch (column.type) {
-    case "bool": {
+    case ColumnType.BOOL: {
       props.type = "checkbox";
       props.checked = value as boolean;
       props.value = undefined;
       props.onChange = (e) => setValue((e as React.ChangeEvent<HTMLInputElement>).target.checked)
       break;
     }
-    case "date": {
+    case ColumnType.DATE: {
       props.type = "date";
       break;
     }
-    case "datetime": {
+    case ColumnType.DATETIME: {
       props.type = "datetime-local";
       break;
     }
-    case "enum":{
+    case ColumnType.ENUM:{
       props.type = undefined;
       props.onChange = (e) => setValue((e as React.ChangeEvent<HTMLSelectElement>).target.value)
       let key = RandomString(6);
@@ -52,7 +52,7 @@ export default function ColumnInput({column, value, setValue, props}: IColumnToI
         </select>
       )
     }
-    case "float":{
+    case ColumnType.FLOAT:{
       props.type = "number";
       props.onChange = (e) => {
         e = e as React.ChangeEvent<HTMLInputElement>;
@@ -66,7 +66,7 @@ export default function ColumnInput({column, value, setValue, props}: IColumnToI
       }
       break;
     }
-    case "int":{
+    case ColumnType.INT:{
       props.type = "number";
       props.onChange = (e) => {
         e = e as React.ChangeEvent<HTMLInputElement>;
@@ -77,7 +77,7 @@ export default function ColumnInput({column, value, setValue, props}: IColumnToI
       }
       break;
     }
-    case "string":{
+    case ColumnType.STRING:{
       props.type = "text";
       break;
     }

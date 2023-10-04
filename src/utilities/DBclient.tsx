@@ -23,6 +23,19 @@ if (getApps().length === 0) {
 
 const auth = getAuth(app);
 const database = getDatabase(app);
+const serverURL = import.meta.env.VITE_SERVER_URL;
+const headers = {
+  "Content-Type": "application/json; charset=utf-8",
+  'Accept': 'application/json'
+}
+const BadAPI: IApiResponse = {
+  ok: false,
+  error: {
+    message: "The server didn't return a JSON",
+    code: "bad-api-programmer",
+    name: ""
+  }
+}
 
 export function GetTables(userUID: string, db: string, tb?:string){
   let reference = `${userUID}/${db}/tables`;
@@ -37,13 +50,32 @@ export function GetDataInTable(userUID: string, db:string, tb: string){
   return get(reference);
 }
 
-export function GetDatabases(userUID: string, db?: string){
-  let reference = `${userUID}`;
-  if(db){
-    reference += `/${db}`
+export async function GetDatabases(): Promise<IApiResponse>{
+  let userIDToken = await auth.currentUser?.getIdToken();
+
+  let requestBody: IApiRequest = {
+    auth: userIDToken as string,
+    type: "user"
   }
-  return get(ref(database, reference));
+
+  let response = await fetch(
+    `${serverURL}/api/get-databases`, {
+      body: JSON.stringify(requestBody),
+      method: "POST",
+      headers: headers
+    }
+  )
+
+  try{
+    let apiResponse: IApiResponse = await response.json();
+    return apiResponse;
+  }catch(e){
+    console.log(e)
+  }
+
+  return BadAPI;
 }
+
 export async function CreateDatabase(db: string): Promise<IApiResponse>{
   let userIDToken = await auth.currentUser?.getIdToken();
 
@@ -52,15 +84,12 @@ export async function CreateDatabase(db: string): Promise<IApiResponse>{
     type: "user",
     dbName: db
   }
-  const serverURL = import.meta.env.VITE_SERVER_URL;
+
   let response = await fetch(
     `${serverURL}/api/create-db`, {
     body: JSON.stringify(requestBody),
     method: "POST",
-    headers: {
-      "Content-Type": "application/json; charset=utf-8",
-      'Accept': 'application/json'
-    }
+    headers: headers
   });
 
   try{
@@ -70,23 +99,9 @@ export async function CreateDatabase(db: string): Promise<IApiResponse>{
     return apiResponse;
   }catch(e){
     console.log(e);
-    return {
-      ok: false,
-      error: {
-        message: "The server didn't return a JSON",
-        code: "bad-api-programmer",
-        name: ""
-      }
-    }
   }
-  /*let reference = ref(database, userUID);
 
-  let newDB:IDataBase = {
-    dbName:db,
-    author: userUID
-  };
-
-  return push(reference, newDB)*/
+  return BadAPI;
 }
 
 export function InsertRow(

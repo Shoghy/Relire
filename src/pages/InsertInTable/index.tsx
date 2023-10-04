@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { GetDataInTable, GetTables, auth, InsertRow } from '../../utilities/DBclient';
 import { LogIn } from "../../utilities/PageLocations";
-import { ColumnValue, Dictionary, IColumn } from "../../utilities/types";
+import { ColumnType, ColumnValue, Dictionary, IColumn } from "../../utilities/types";
 import React, { useEffect, useState } from "react";
 import DBGetDefaultCath from "../../utilities/DBGetDefaultCatch";
 import { AsyncAttempter, IsValidDate, RandomString } from "../../utilities/functions";
@@ -56,7 +56,7 @@ export default function InsertInTable(){
 
         if(column.enum !== undefined && column.notNull){
           value = column.enum[0];
-        }else if(column.type === "bool"){
+        }else if(column.type === ColumnType.BOOL){
           value = false;
         }
         if(column.default !== undefined){
@@ -132,7 +132,7 @@ export default function InsertInTable(){
         let value = rowValues[columnName];
 
         if(value === undefined || value === null || value === ""){
-          if(column.type === "int" && column.autoIncrement){
+          if(column.type === ColumnType.INT && column.autoIncrement){
             (autoIncrements[columnName] as number) += 1;
             insert[columnName] = autoIncrements[columnName];
           }else if(column.notNull){
@@ -143,7 +143,7 @@ export default function InsertInTable(){
         }
 
         switch(column.type){
-          case "bool":{
+          case ColumnType.BOOL:{
             if(typeof(value) !== "boolean"){
               errors[0].push(index);
               errors[1].push(`(${columnName}) Value is not a boolean`);
@@ -151,8 +151,8 @@ export default function InsertInTable(){
             }
             break;
           }
-          case "date":
-          case "datetime":{
+          case ColumnType.DATE:
+          case ColumnType.DATETIME:{
             if(!IsValidDate(value as string)){
               errors[0].push(index);
               errors[1].push(`(${columnName}) Value is not a valid date`);
@@ -160,7 +160,7 @@ export default function InsertInTable(){
             }
             break;
           }
-          case "enum":{
+          case ColumnType.ENUM:{
             if(column.enum === undefined || column.enum.length === 0){
               errors[0].push(index);
               errors[1].push(`(${columnName}) Error not yet resolved, empty enum in the database.`);
@@ -173,7 +173,7 @@ export default function InsertInTable(){
             }
             break;
           }
-          case "float":{
+          case ColumnType.FLOAT:{
             if(typeof(value) !== "number"){
               errors[0].push(index);
               errors[1].push(`(${columnName}) Value is not a number.`);
@@ -181,7 +181,7 @@ export default function InsertInTable(){
             }
             break;
           }
-          case "int":{
+          case ColumnType.INT:{
             if(typeof(value) !== "number"){
               errors[0].push(index);
               errors[1].push(`(${columnName}) Value is not a number.`);
@@ -190,7 +190,7 @@ export default function InsertInTable(){
             value = value.toFixed(0);
             break;
           }
-          case "string":{
+          case ColumnType.STRING:{
             if(typeof(value) !== "string"){
               try{
                 value = JSON.stringify(value);

@@ -9,7 +9,22 @@ export interface IDataBase{
   tablesData?: Dictionary<TableRow>
 }
 
-export type ColumnType = "string" | "int" | "float" | "bool" | "date" | "datetime" | "enum";
+export enum ColumnType{
+  /**Plain text */
+  STRING = "string",
+  /**Numbers without decimal part */
+  INT = "int",
+  /**Numbers with decimal part */
+  FLOAT = "float",
+  /**True or False values */
+  BOOL = "bool",
+  /**DD/MM/YYYY */
+  DATE = "date",
+  /**DD/MM/YYYY HH:mm */
+  DATETIME = "datetime",
+  /**Confines the value of the variable to a limited number of options */
+  ENUM = "enum"
+}
 
 export type ColumnValue = string | number | boolean;
 
@@ -25,6 +40,13 @@ export interface DefaultReturnedError extends Error{
 export interface IApiResponse extends Dictionary<any>{
   ok: boolean,
   error?: DefaultReturnedError
+}
+
+export interface DatabaseListResponse extends IApiResponse{
+  dbInfos: {
+    dbUID: string,
+    dbName: string
+  }[]
 }
 
 export interface IColumn{
