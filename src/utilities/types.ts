@@ -42,6 +42,13 @@ export interface IApiResponse extends Dictionary<any>{
   error?: DefaultReturnedError
 }
 
+export interface DatabaseListResponse extends IApiResponse{
+  dbInfos: {
+    dbUID: string,
+    dbName: string
+  }[]
+}
+
 export interface IColumn{
   type: ColumnType,
   notNull: boolean,

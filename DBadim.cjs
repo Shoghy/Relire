@@ -16,6 +16,10 @@ const CryptoJS = require("crypto-js");
  *  code: string,
  *  message: string
  * }} GenericError
+ * 
+ * @typedef dbInfo
+ * @prop {string} dbUID
+ * @prop {string} dbName
 */
 
 require('dotenv').config();
@@ -53,7 +57,7 @@ async function AsyncAttempter(func){
 
 /**
  * @param {Response} res
- * @param {any} dbName 
+ * @param {any} value 
  * @param {{
  *  NotSended: GenericError,
  *  WrongType: GenericError,
@@ -61,22 +65,22 @@ async function AsyncAttempter(func){
  * }} errors
  * @returns {false | string}
  */
-function IsValidString(res, dbName, errors){
-  if(dbName === undefined) {
+function IsValidString(res, value, errors){
+  if(value === undefined) {
     res.status(STATUS_CODES.BAD_REQUEST)
     .json({
       ok: false,
       error: errors.NotSended
     });
     return false;
-  }else if(typeof(dbName) !== "string"){
+  }else if(typeof(value) !== "string"){
     res.status(STATUS_CODES.BAD_REQUEST)
     .json({
       ok: false,
       error: errors.WrongType
     });
     return false;
-  }else if(!dbName.trim()){
+  }else if(!value.trim()){
     res.status(STATUS_CODES.BAD_REQUEST)
     .json({
       ok: false,
@@ -85,7 +89,7 @@ function IsValidString(res, dbName, errors){
     return false;
   }
 
-  return dbName.trim();
+  return value.trim();
 }
 
 /**
@@ -213,6 +217,59 @@ async function CreateDB(req, res){
       code: "db-limit"
     }
   });
+}
+
+/** @type {AdminHandler} */
+async function GetDatabases(req, res){
+  /**@type {ReqInfo} */
+  let reqInfo = req.body;
+
+  if(reqInfo.type === "key"){
+    res.status(STATUS_CODES.UNAUTHORIZED)
+    .json({
+      ok: false,
+      error:{
+        message: "Each database has its own APIkey, one cannot work in others.",
+        code: "apikey-out-of-bounds"
+      }
+    });
+    return;
+  }
+
+  let user = await GetUserHandler(reqInfo.auth, res);
+  if(user === null) return;
+
+  let [databases, dbError] = await AsyncAttempter(
+    () => database.ref(user.uid).get()
+  );
+
+  if(dbError){
+    console.log(dbError);
+    res.status(STATUS_CODES.FAILED_DEPENDENCY)
+    .json({
+      ok: false,
+      error:{
+        message: "An error occurred, try again later",
+        code: "unkwon-error"
+      }
+    });
+    return;
+  }
+
+  /**@type {dbInfo[]} */
+  let dbInfos = [];
+  databases.forEach((db) => {
+    dbInfos.push({
+      dbName: db.child("dbName").val(),
+      dbUID: db.key
+    })
+  });
+
+  res.status(STATUS_CODES.OK)
+  .json({
+    ok:true,
+    dbInfos: dbInfos
+  })
 }
 
 /**
@@ -356,20 +413,26 @@ module.exports = function RoutesHandler(req, res){
     .json({
       "ok": false,
       "error": {
-        "message": "Incomplete or no auth was sended information.",
+        "message": "Incomplete or no auth information was sended.",
         "code": "missing-auth"
       }
     });
     return;
   }
 
-  if(req.originalUrl === "/api/create-db"){
-    CreateDB(req, res);
-    return;
-  }
-  if(req.originalUrl === "/api/create-api"){
-    CreateAPIKey(req, res);
-    return;
+  switch(req.originalUrl){
+    case "/api/create-db":{
+      CreateDB(req, res);
+      return;
+    }
+    case "/api/create-api":{
+      CreateAPIKey(req, res);
+      return;
+    }
+    case "/api/get-databases":{
+      GetDatabases(req, res);
+      return;
+    }
   }
 
   res.status(STATUS_CODES.PAGE_NOT_FOUND)
