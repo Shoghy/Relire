@@ -20,6 +20,22 @@ const CryptoJS = require("crypto-js");
  * @typedef dbInfo
  * @prop {string} dbUID
  * @prop {string} dbName
+ * 
+ * @typedef ForeingKey
+ * @prop {string} tableName
+ * @prop {string} column
+ * 
+ * @typedef Columns
+ * @prop {string} type
+ * @prop {string} name
+ * @prop {boolean} notNull
+ * @prop {boolean} unique
+ * @prop {ForeingKey | undefined} foreingKey
+ * 
+ * @typedef ApiKey
+ * @prop {string} user
+ * @prop {string} dbUID
+ * @prop {string} random
 */
 
 require('dotenv').config();
@@ -134,6 +150,191 @@ async function GetUserHandler(authId, res){
   }
 
   return user
+}
+
+/**
+ * @param {Request} req 
+ * @param {Response} res 
+ * @returns {{dbUID: string, userUID: string} | null}
+ */
+async function VerifyAuthInformation(req, res){
+  /**@type {ReqInfo} */
+  let reqInfo = req.body;
+
+  if(reqInfo.type === "user"){
+    let dbUID = IsValidString(
+      res,
+      reqInfo.dbUID,
+      {
+        EmptyString: {
+          code: "wrong-dbUID",
+          message: "The dbUID sended was an empty string."
+        },
+        NotSended: {
+          code: "no-dbUID",
+          message: "There was no dbUID in the request sended."
+        },
+        WrongType: {
+          code: "wrong-dbUID",
+          message: "The dbUID sended was not a string."
+        }
+      }
+    );
+    if(!dbUID) return null;
+
+    let user = await GetUserHandler(reqInfo.auth, res);
+    if(!user) return null;
+
+    let db = await database.ref(user.uid).child(dbUID).get();
+    if(!db.exists()){
+      res.status(STATUS_CODES.PAGE_NOT_FOUND)
+      .json({
+        ok: false,
+        error:{
+          code: "db-does-not-exists",
+          message: "You don't have any database with the dbUID sended"
+        }
+      })
+    }
+    return {
+      dbUID: dbUID,
+      userUID: user.uid
+    }
+  }
+  let apiDecripted = CryptoJS.AES.decrypt(reqInfo.auth, process.env.VITE_CRYPTO_KEY);
+
+  /**@type {ApiKey} */
+  let apiKey;
+  try{
+    apiKey = JSON.parse(apiDecripted.toString());
+  }catch(e){
+    res.status(STATUS_CODES.UNAUTHORIZED)
+    .json({
+      ok: false,
+      error:{
+        code: "invalid-api-key",
+        message: "This API key doesn't belong to any database or user"
+      }
+    })
+    return null;
+  }
+  
+  if(!("dbUID") in apiKey){
+
+  }
+}
+
+/**@type {AdminHandler} */
+async function CreateTable(req, res){
+  /**@type {ReqInfo} */
+  let reqInfo = req.body;
+  
+  let tableName = IsValidString(res, req.tableName, {
+    EmptyString:{
+      message: "Table name is an empty string",
+      code: "missing-table-info"
+    },
+    NotSended:{
+      message: "Table name was not sended",
+      code: "missing-table-info"
+    },
+    WrongType:{
+      message: "Table name is not a string",
+      code: "missing-table-info"
+    }
+  });
+  if(!tableName) return;
+  
+  if(!"columns" in reqInfo){
+    res.status(STATUS_CODES.BAD_REQUEST)
+    .json({
+      ok: false,
+      error: {
+        message: "Columns were not sended",
+        code: "no-columns"
+      }
+    });
+    return;
+  }else if(!Array.isArray(reqInfo.columns)){
+    res.status(STATUS_CODES.BAD_REQUEST)
+    .json({
+      ok: false,
+      error: {
+        message: "Columns need to be sent in an array",
+        code: "no-columns"
+      }
+    });
+    return;
+  }
+
+  const ColumnMissingInfoError = {
+    message: "Not all columns had all the information needed",
+    code: "missing-column-information"
+  }
+
+  function ColumnMissingInfoResponse(){
+    res.status(STATUS_CODES.BAD_REQUEST)
+    .json({
+      ok: false,
+      error: ColumnMissingInfoError
+    });
+  }
+
+  /**@type {Columns[]} */
+  let columns = reqInfo.columns;
+  let dbColumns = {};
+
+  for(let i = 0; i < columns.length; ++i){
+    let column = columns[i];
+
+    if(typeof(column) !== "object"){
+      ColumnMissingInfoResponse();
+      return;
+    }else if(!("name" in column)){
+      ColumnMissingInfoResponse();
+      return;
+    }else if(!("type" in column)){
+      ColumnMissingInfoResponse();
+      return;
+    }else if(!("notNull" in column)){
+      ColumnMissingInfoResponse();
+      return;
+    }else if(!("unique" in column)){
+      ColumnMissingInfoResponse();
+      return;
+    }
+
+    let columnName = IsValidString(res, column.name, {
+      EmptyString:ColumnMissingInfoError,
+      NotSended: ColumnMissingInfoError,
+      WrongType: ColumnMissingInfoError
+    });
+    if(!columnName) return;
+
+    column.type = IsValidString(res, column.type, {
+      EmptyString:ColumnMissingInfoError,
+      NotSended: ColumnMissingInfoError,
+      WrongType: ColumnMissingInfoError
+    });
+    if(!column.type) return;
+
+    if(columnName in dbColumns){
+      res.status(STATUS_CODES.BAD_REQUEST)
+      .json({
+        ok: false,
+        error: {
+          code: "twin-columns",
+          message: "Two or more columns have the same name"
+        }
+      });
+      return;
+    }
+
+    delete column.name;
+    dbColumns[columnName] = column;
+  }
+
+  
 }
 
 /** @type {AdminHandler} */
@@ -419,6 +620,30 @@ module.exports = function RoutesHandler(req, res){
     });
     return;
   }
+
+  let missingAuth = {
+    code: "missing-auth",
+    message: "Incomplete or no auth information was sended."
+  }
+
+  req.body.auth = IsValidString(res, req.body.auth, {
+    EmptyString: missingAuth,
+    NotSended: missingAuth,
+    WrongType: {
+      code: "wrong-auth-info",
+      message: "The auth information sended is not the rigth type"
+    }
+  });
+  if(!req.body.auth) return;
+  req.body.type = IsValidString(res, req.body.type, {
+    EmptyString: missingAuth,
+    NotSended: missingAuth,
+    WrongType: {
+      code: "wrong-auth-info",
+      message: "The auth information sended is not the rigth type"
+    }
+  });
+  if(!req.body.type) return;
 
   switch(req.originalUrl){
     case "/api/create-db":{
