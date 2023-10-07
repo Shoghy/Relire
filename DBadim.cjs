@@ -156,20 +156,10 @@ async function GetUserHandler(authId, res) {
 
 /**@type {VerifyAuth} */
 async function VerifyAuthUser(req, res) {
-
-}
-
-/**@type {VerifyAuth} */
-async function VerifyAuthKey(req, res) {
-
-}
-
-/**@type {VerifyAuth} */
-async function VerifyAuthInformation(req, res) {
   /**@type {ReqInfo} */
   let reqInfo = req.body;
 
-  req.body.dbUID = IsValidString(
+  let dbUID = IsValidString(
     res,
     reqInfo.dbUID,
     {
@@ -188,6 +178,97 @@ async function VerifyAuthInformation(req, res) {
     }
   );
   if (!dbUID) return null;
+
+  let user = await GetUserHandler(reqInfo.auth, res);
+  if(!user) return null;
+
+  let db = await database.ref(user.uid).child(dbUID).get();
+  if(!db.exists()){
+    res.status(STATUS_CODES.PAGE_NOT_FOUND)
+    .json({
+      ok: false,
+      error:{
+        code: "db-does-not-exists",
+        message: "You don't have any database with the dbUID sended"
+      }
+    })
+    return null;
+  }
+  return {
+    dbUID: dbUID,
+    userUID: user.uid
+  }
+}
+
+/**@type {VerifyAuth} */
+async function VerifyAuthKey(req, res) {
+  /**@type {ReqInfo} */
+  let reqInfo = req.body;
+
+  let apiDecripted = CryptoJS.AES.decrypt(reqInfo.auth, process.env.VITE_CRYPTO_KEY);
+
+  /**@type {ApiKey} */
+  let apiKey;
+
+  let invalidAPIkey = {
+    code: "invalid-api-key",
+    message: "The API key don't have all the information needed"
+  }
+  let apiString = apiDecripted.toString();
+  try{
+    apiKey = JSON.parse(apiString);
+  }catch(e){
+    res.status(STATUS_CODES.UNAUTHORIZED)
+    .json({
+      ok: false,
+      error: invalidAPIkey
+    })
+    return null;
+  }
+  
+  apiKey.dbUID = IsValidString(res, apiKey.dbUID,{
+    EmptyString: invalidAPIkey,
+    NotSended: invalidAPIkey,
+    WrongType: invalidAPIkey
+  });
+  if(!apiKey.dbUID) return null;
+
+  apiKey.user = IsValidString(res, apiKey.user,{
+    EmptyString: invalidAPIkey,
+    NotSended: invalidAPIkey,
+    WrongType: invalidAPIkey
+  });
+  if(!apiKey.user) return null;
+
+  let dbApiKey = await database.ref(`${apiKey.user}/${apiKey.dbUID}/api-key`).get();
+  if(!dbApiKey.exists()){
+    res.status(STATUS_CODES.UNAUTHORIZED)
+    .json({
+      ok: false,
+      error: invalidAPIkey
+    })
+    return null;
+  }
+
+  if(apiString !== dbApiKey.val()){
+    res.status(STATUS_CODES.UNAUTHORIZED)
+    .json({
+      ok: false,
+      error: invalidAPIkey
+    })
+    return null;
+  }
+
+  return {
+    dbUID: apiKey.dbUID,
+    userUID: apiKey.user
+  }
+}
+
+/**@type {VerifyAuth} */
+async function VerifyAuthInformation(req, res) {
+  /**@type {ReqInfo} */
+  let reqInfo = req.body;
 
   switch (reqInfo.type) {
     case "key": {
@@ -231,17 +312,7 @@ async function CreateTable(req, res) {
   });
   if (!tableName) return;
 
-  if (!"columns" in reqInfo) {
-    res.status(STATUS_CODES.BAD_REQUEST)
-      .json({
-        ok: false,
-        error: {
-          message: "Columns were not sended",
-          code: "no-columns"
-        }
-      });
-    return;
-  } else if (!Array.isArray(reqInfo.columns)) {
+  if (!Array.isArray(reqInfo.columns)) {
     res.status(STATUS_CODES.BAD_REQUEST)
       .json({
         ok: false,
@@ -586,6 +657,7 @@ module.exports = function RoutesHandler(req, res) {
       });
     return;
   }
+
   if (typeof (req.body) !== "object") {
     res.status(STATUS_CODES.BAD_REQUEST)
       .json({
@@ -595,16 +667,6 @@ module.exports = function RoutesHandler(req, res) {
           "code": "body-type"
         }
       });
-  } else if (!("auth" in req.body) || !("type" in req.body)) {
-    res.status(STATUS_CODES.BAD_REQUEST)
-      .json({
-        "ok": false,
-        "error": {
-          "message": "Incomplete or no auth information was sended.",
-          "code": "missing-auth"
-        }
-      });
-    return;
   }
 
   let missingAuth = {
