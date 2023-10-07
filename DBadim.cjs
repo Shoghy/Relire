@@ -36,6 +36,8 @@ const CryptoJS = require("crypto-js");
  * @prop {string} user
  * @prop {string} dbUID
  * @prop {string} random
+ * 
+ * @typedef {(req: Request, res: Response) => Promise<{dbUID: string, userUID: string} | null>} VerifyAuth
 */
 
 require('dotenv').config();
@@ -62,11 +64,11 @@ const STATUS_CODES = {
 }
 
 /**@type {<T>(func: () => Promise<T>) => Promise<[T, null] | [null, GenericError]>} */
-async function AsyncAttempter(func){
-  try{
+async function AsyncAttempter(func) {
+  try {
     let result = await func();
     return [result, null]
-  }catch(e){
+  } catch (e) {
     return [null, e]
   }
 }
@@ -81,27 +83,27 @@ async function AsyncAttempter(func){
  * }} errors
  * @returns {false | string}
  */
-function IsValidString(res, value, errors){
-  if(value === undefined) {
+function IsValidString(res, value, errors) {
+  if (value === undefined) {
     res.status(STATUS_CODES.BAD_REQUEST)
-    .json({
-      ok: false,
-      error: errors.NotSended
-    });
+      .json({
+        ok: false,
+        error: errors.NotSended
+      });
     return false;
-  }else if(typeof(value) !== "string"){
+  } else if (typeof (value) !== "string") {
     res.status(STATUS_CODES.BAD_REQUEST)
-    .json({
-      ok: false,
-      error: errors.WrongType
-    });
+      .json({
+        ok: false,
+        error: errors.WrongType
+      });
     return false;
-  }else if(!value.trim()){
+  } else if (!value.trim()) {
     res.status(STATUS_CODES.BAD_REQUEST)
-    .json({
-      ok: false,
-      error: errors.EmptyString
-    });
+      .json({
+        ok: false,
+        error: errors.EmptyString
+      });
     return false;
   }
 
@@ -113,33 +115,33 @@ function IsValidString(res, value, errors){
  * @param {Response} res
  * @returns {Promise<admin.auth.DecodedIdToken | null>}
  */
-async function GetUserHandler(authId, res){
+async function GetUserHandler(authId, res) {
   let [user, userError] = await AsyncAttempter(
     () => auth.verifyIdToken(authId, true)
   )
 
-  if(userError){
-    switch(userError.code){
-      case "auth/id-token-revoked":{
+  if (userError) {
+    switch (userError.code) {
+      case "auth/id-token-revoked": {
         res.status(STATUS_CODES.UNAUTHORIZED)
-        .json({
-          ok: false,
-          error:{
-            message: "The Id Token sended was revoked",
-            code: "id-token-revoked"
-          }
-        });
+          .json({
+            ok: false,
+            error: {
+              message: "The Id Token sended was revoked",
+              code: "id-token-revoked"
+            }
+          });
         break;
       }
-      default:{
+      default: {
         res.status(STATUS_CODES.FAILED_DEPENDENCY)
-        .json({
-          ok: false,
-          error:{
-            message: "An error occurred, try again later",
-            code: "unkwon-error"
-          }
-        });
+          .json({
+            ok: false,
+            error: {
+              message: "An error occurred, try again later",
+              code: "unkwon-error"
+            }
+          });
         break;
       }
     }
@@ -152,118 +154,102 @@ async function GetUserHandler(authId, res){
   return user
 }
 
-/**
- * @param {Request} req 
- * @param {Response} res 
- * @returns {{dbUID: string, userUID: string} | null}
- */
-async function VerifyAuthInformation(req, res){
+/**@type {VerifyAuth} */
+async function VerifyAuthUser(req, res) {
+
+}
+
+/**@type {VerifyAuth} */
+async function VerifyAuthKey(req, res) {
+
+}
+
+/**@type {VerifyAuth} */
+async function VerifyAuthInformation(req, res) {
   /**@type {ReqInfo} */
   let reqInfo = req.body;
 
-  if(reqInfo.type === "user"){
-    let dbUID = IsValidString(
-      res,
-      reqInfo.dbUID,
-      {
-        EmptyString: {
-          code: "wrong-dbUID",
-          message: "The dbUID sended was an empty string."
-        },
-        NotSended: {
-          code: "no-dbUID",
-          message: "There was no dbUID in the request sended."
-        },
-        WrongType: {
-          code: "wrong-dbUID",
-          message: "The dbUID sended was not a string."
-        }
+  req.body.dbUID = IsValidString(
+    res,
+    reqInfo.dbUID,
+    {
+      EmptyString: {
+        code: "wrong-dbUID",
+        message: "The dbUID sended was an empty string."
+      },
+      NotSended: {
+        code: "no-dbUID",
+        message: "There was no dbUID in the request sended."
+      },
+      WrongType: {
+        code: "wrong-dbUID",
+        message: "The dbUID sended was not a string."
       }
-    );
-    if(!dbUID) return null;
-
-    let user = await GetUserHandler(reqInfo.auth, res);
-    if(!user) return null;
-
-    let db = await database.ref(user.uid).child(dbUID).get();
-    if(!db.exists()){
-      res.status(STATUS_CODES.PAGE_NOT_FOUND)
-      .json({
-        ok: false,
-        error:{
-          code: "db-does-not-exists",
-          message: "You don't have any database with the dbUID sended"
-        }
-      })
     }
-    return {
-      dbUID: dbUID,
-      userUID: user.uid
+  );
+  if (!dbUID) return null;
+
+  switch (reqInfo.type) {
+    case "key": {
+      return VerifyAuthUser(req, res);
+    }
+    case "user": {
+      return VerifyAuthKey(req, res);
     }
   }
-  let apiDecripted = CryptoJS.AES.decrypt(reqInfo.auth, process.env.VITE_CRYPTO_KEY);
 
-  /**@type {ApiKey} */
-  let apiKey;
-  try{
-    apiKey = JSON.parse(apiDecripted.toString());
-  }catch(e){
-    res.status(STATUS_CODES.UNAUTHORIZED)
+  res.status(STATUS_CODES.UNAUTHORIZED)
     .json({
       ok: false,
-      error:{
-        code: "invalid-api-key",
-        message: "This API key doesn't belong to any database or user"
+      error: {
+        code: "wrong-auth-type",
+        message: "The type of auth sended is not supported"
       }
     })
-    return null;
-  }
-  
-  if(!("dbUID") in apiKey){
 
-  }
+  return null;
 }
 
 /**@type {AdminHandler} */
-async function CreateTable(req, res){
+async function CreateTable(req, res) {
   /**@type {ReqInfo} */
   let reqInfo = req.body;
-  
+
   let tableName = IsValidString(res, req.tableName, {
-    EmptyString:{
+    EmptyString: {
       message: "Table name is an empty string",
       code: "missing-table-info"
     },
-    NotSended:{
+    NotSended: {
       message: "Table name was not sended",
       code: "missing-table-info"
     },
-    WrongType:{
+    WrongType: {
       message: "Table name is not a string",
       code: "missing-table-info"
     }
   });
-  if(!tableName) return;
-  
-  if(!"columns" in reqInfo){
+  if (!tableName) return;
+
+  if (!"columns" in reqInfo) {
     res.status(STATUS_CODES.BAD_REQUEST)
-    .json({
-      ok: false,
-      error: {
-        message: "Columns were not sended",
-        code: "no-columns"
-      }
-    });
+      .json({
+        ok: false,
+        error: {
+          message: "Columns were not sended",
+          code: "no-columns"
+        }
+      });
     return;
-  }else if(!Array.isArray(reqInfo.columns)){
+  } else if (!Array.isArray(reqInfo.columns)) {
     res.status(STATUS_CODES.BAD_REQUEST)
-    .json({
-      ok: false,
-      error: {
-        message: "Columns need to be sent in an array",
-        code: "no-columns"
-      }
-    });
+      .json({
+        ok: false,
+        error: {
+          message: "Columns need to be sent in an array",
+          code: "no-columns"
+        }
+      });
     return;
   }
 
@@ -272,61 +258,61 @@ async function CreateTable(req, res){
     code: "missing-column-information"
   }
 
-  function ColumnMissingInfoResponse(){
+  function ColumnMissingInfoResponse() {
     res.status(STATUS_CODES.BAD_REQUEST)
-    .json({
-      ok: false,
-      error: ColumnMissingInfoError
-    });
+      .json({
+        ok: false,
+        error: ColumnMissingInfoError
+      });
   }
 
   /**@type {Columns[]} */
   let columns = reqInfo.columns;
   let dbColumns = {};
 
-  for(let i = 0; i < columns.length; ++i){
+  for (let i = 0; i < columns.length; ++i) {
     let column = columns[i];
 
-    if(typeof(column) !== "object"){
+    if (typeof (column) !== "object") {
       ColumnMissingInfoResponse();
       return;
-    }else if(!("name" in column)){
+    } else if (!("name" in column)) {
       ColumnMissingInfoResponse();
       return;
-    }else if(!("type" in column)){
+    } else if (!("type" in column)) {
       ColumnMissingInfoResponse();
       return;
-    }else if(!("notNull" in column)){
+    } else if (!("notNull" in column)) {
       ColumnMissingInfoResponse();
       return;
-    }else if(!("unique" in column)){
+    } else if (!("unique" in column)) {
       ColumnMissingInfoResponse();
       return;
     }
 
     let columnName = IsValidString(res, column.name, {
-      EmptyString:ColumnMissingInfoError,
+      EmptyString: ColumnMissingInfoError,
       NotSended: ColumnMissingInfoError,
       WrongType: ColumnMissingInfoError
     });
-    if(!columnName) return;
+    if (!columnName) return;
 
     column.type = IsValidString(res, column.type, {
-      EmptyString:ColumnMissingInfoError,
+      EmptyString: ColumnMissingInfoError,
       NotSended: ColumnMissingInfoError,
       WrongType: ColumnMissingInfoError
     });
-    if(!column.type) return;
+    if (!column.type) return;
 
-    if(columnName in dbColumns){
+    if (columnName in dbColumns) {
       res.status(STATUS_CODES.BAD_REQUEST)
-      .json({
-        ok: false,
-        error: {
-          code: "twin-columns",
-          message: "Two or more columns have the same name"
-        }
-      });
+        .json({
+          ok: false,
+          error: {
+            code: "twin-columns",
+            message: "Two or more columns have the same name"
+          }
+        });
       return;
     }
 
@@ -334,23 +320,23 @@ async function CreateTable(req, res){
     dbColumns[columnName] = column;
   }
 
-  
+
 }
 
 /** @type {AdminHandler} */
-async function CreateDB(req, res){
+async function CreateDB(req, res) {
   /**@type {ReqInfo} */
   let reqInfo = req.body;
 
-  if(reqInfo.type === "key"){
+  if (reqInfo.type === "key") {
     res.status(STATUS_CODES.UNAUTHORIZED)
-    .json({
-      ok: false,
-      error:{
-        message: "The API key just work on the database that was created.",
-        code: "apikey-out-of-bounds"
-      }
-    });
+      .json({
+        ok: false,
+        error: {
+          message: "The API key just work on the database that was created.",
+          code: "apikey-out-of-bounds"
+        }
+      });
     return;
   }
 
@@ -372,15 +358,15 @@ async function CreateDB(req, res){
       }
     }
   );
-  if(!dbName) return;
+  if (!dbName) return;
 
   let user = await GetUserHandler(reqInfo.auth, res);
-  if(user === null) return;
+  if (user === null) return;
 
   let userSpaceRef = database.ref(user.uid);
   let countDatabases = (await database.ref(user.uid).get()).numChildren();
 
-  if(countDatabases < 5){
+  if (countDatabases < 5) {
     /**@type {[admin.database.Reference, GenericError]} */
     let [dbResponse, pushError] = await AsyncAttempter(
       () => userSpaceRef.push({
@@ -389,71 +375,71 @@ async function CreateDB(req, res){
       })
     );
 
-    if(pushError){
+    if (pushError) {
       console.log(pushError);
       res.status(STATUS_CODES.FAILED_DEPENDENCY)
-      .json({
-        ok: false,
-        error:{
-          message: "An error occurred, try again later",
-          code: "unkwon-error"
-        }
-      });
+        .json({
+          ok: false,
+          error: {
+            message: "An error occurred, try again later",
+            code: "unkwon-error"
+          }
+        });
       return;
     }
 
     res.status(STATUS_CODES.CREATED)
-    .json({
-      ok: true,
-      dbUID: dbResponse.key
-    });
+      .json({
+        ok: true,
+        dbUID: dbResponse.key
+      });
     return;
   }
 
   res.status(STATUS_CODES.TOO_MANY_REQUESTS)
-  .json({
-    ok: false,
-    error:{
-      message: "Sorry, for now, each user is limited to 5 databases.",
-      code: "db-limit"
-    }
-  });
+    .json({
+      ok: false,
+      error: {
+        message: "Sorry, for now, each user is limited to 5 databases.",
+        code: "db-limit"
+      }
+    });
 }
 
 /** @type {AdminHandler} */
-async function GetDatabases(req, res){
+async function GetDatabases(req, res) {
   /**@type {ReqInfo} */
   let reqInfo = req.body;
 
-  if(reqInfo.type === "key"){
+  if (reqInfo.type === "key") {
     res.status(STATUS_CODES.UNAUTHORIZED)
-    .json({
-      ok: false,
-      error:{
-        message: "Each database has its own APIkey, one cannot work in others.",
-        code: "apikey-out-of-bounds"
-      }
-    });
+      .json({
+        ok: false,
+        error: {
+          message: "Each database has its own APIkey, one cannot work in others.",
+          code: "apikey-out-of-bounds"
+        }
+      });
     return;
   }
 
   let user = await GetUserHandler(reqInfo.auth, res);
-  if(user === null) return;
+  if (user === null) return;
 
   let [databases, dbError] = await AsyncAttempter(
     () => database.ref(user.uid).get()
   );
 
-  if(dbError){
+  if (dbError) {
     console.log(dbError);
     res.status(STATUS_CODES.FAILED_DEPENDENCY)
-    .json({
-      ok: false,
-      error:{
-        message: "An error occurred, try again later",
-        code: "unkwon-error"
-      }
-    });
+      .json({
+        ok: false,
+        error: {
+          message: "An error occurred, try again later",
+          code: "unkwon-error"
+        }
+      });
     return;
   }
 
@@ -467,10 +453,10 @@ async function GetDatabases(req, res){
   });
 
   res.status(STATUS_CODES.OK)
-  .json({
-    ok:true,
-    dbInfos: dbInfos
-  })
+    .json({
+      ok: true,
+      dbInfos: dbInfos
+    })
 }
 
 /**
@@ -478,10 +464,10 @@ async function GetDatabases(req, res){
  * @param {number} maxInclusive 
  * @returns {number}
  */
-function RandomInt(minInclusive, maxInclusive){
+function RandomInt(minInclusive, maxInclusive) {
   return Math.floor(
     Math.random() * (maxInclusive - minInclusive + 1)
-  )  + minInclusive;
+  ) + minInclusive;
 }
 
 /**
@@ -501,19 +487,19 @@ function RandomString(length) {
 }
 
 /**@type {AdminHandler} */
-async function CreateAPIKey(req, res){
+async function CreateAPIKey(req, res) {
   /**@type {ReqInfo} */
   let reqInfo = req.body;
 
-  if(reqInfo.type === "key"){
+  if (reqInfo.type === "key") {
     res.status(STATUS_CODES.UNAUTHORIZED)
-    .json({
-      ok: false,
-      error:{
-        message: "Holy recursion! APIkeys cannot create APIkeys.",
-        code: "apikey-out-of-bounds"
-      }
-    });
+      .json({
+        ok: false,
+        error: {
+          message: "Holy recursion! APIkeys cannot create APIkeys.",
+          code: "apikey-out-of-bounds"
+        }
+      });
     return;
   }
 
@@ -535,22 +521,22 @@ async function CreateAPIKey(req, res){
       }
     }
   );
-  if(!dbUID) return;
+  if (!dbUID) return;
 
   let user = await GetUserHandler(reqInfo.auth, res);
-  if(!user) return;
+  if (!user) return;
 
   let dbRef = database.ref(`${user.uid}/${dbUID}`);
   let dbInfo = await database.ref(`${user.uid}/${dbUID}`).get();
-  if(!dbInfo.exists()){
+  if (!dbInfo.exists()) {
     res.status(STATUS_CODES.PAGE_NOT_FOUND)
-    .json({
-      ok: false,
-      error:{
-        message: "The DataBase provided do not exists or was deleted.",
-        code: "not-a-real-db"
-      }
-    });
+      .json({
+        ok: false,
+        error: {
+          message: "The DataBase provided do not exists or was deleted.",
+          code: "not-a-real-db"
+        }
+      });
     return;
   }
 
@@ -559,65 +545,65 @@ async function CreateAPIKey(req, res){
     dbUID: dbUID,
     random: RandomString(256)
   }
-  
+
   let keyObject = CryptoJS.AES.encrypt(JSON.stringify(dbAPIkey), process.env.VITE_CRYPTO_KEY);
   let key = keyObject.toString();
 
   let [, updateError] = await AsyncAttempter(
-    () => dbRef.update({"api-key": key})
+    () => dbRef.update({ "api-key": key })
   );
 
-  if(updateError){
+  if (updateError) {
     res.status(STATUS_CODES.FAILED_DEPENDENCY)
-    .json({
-      ok: false,
-      error:{
-        message: "An error occurred, try again later",
-        code: "unkwon-error"
-      }
-    });
+      .json({
+        ok: false,
+        error: {
+          message: "An error occurred, try again later",
+          code: "unkwon-error"
+        }
+      });
     console.log(updateError);
     return;
   }
 
   res.status(STATUS_CODES.CREATED)
-  .json({
-    ok: true,
-    APIKey: key
-  });
+    .json({
+      ok: true,
+      APIKey: key
+    });
 }
 
 /** @type {AdminHandler} */
-module.exports = function RoutesHandler(req, res){
-  if(!req.is("json")){
+module.exports = function RoutesHandler(req, res) {
+  if (!req.is("json")) {
     res.status(STATUS_CODES.BAD_REQUEST)
-    .json({
-      "ok": false,
-      "error": {
-        "message": "JSON needed for authorization and context info.",
-        "code": "request-without-JSON"
-      }
-    });
+      .json({
+        "ok": false,
+        "error": {
+          "message": "JSON needed for authorization and context info.",
+          "code": "request-without-JSON"
+        }
+      });
     return;
   }
-  if(typeof(req.body) !== "object"){
+  if (typeof (req.body) !== "object") {
     res.status(STATUS_CODES.BAD_REQUEST)
-    .json({
-      "ok": false,
-      "error": {
-        "message": "The body is not an object.",
-        "code": "body-type"
-      }
-    });
-  }else if(!("auth" in req.body) || !("type" in req.body)){
+      .json({
+        "ok": false,
+        "error": {
+          "message": "The body is not an object.",
+          "code": "body-type"
+        }
+      });
+  } else if (!("auth" in req.body) || !("type" in req.body)) {
     res.status(STATUS_CODES.BAD_REQUEST)
-    .json({
-      "ok": false,
-      "error": {
-        "message": "Incomplete or no auth information was sended.",
-        "code": "missing-auth"
-      }
-    });
+      .json({
+        "ok": false,
+        "error": {
+          "message": "Incomplete or no auth information was sended.",
+          "code": "missing-auth"
+        }
+      });
     return;
   }
 
@@ -634,7 +620,7 @@ module.exports = function RoutesHandler(req, res){
       message: "The auth information sended is not the rigth type"
     }
   });
-  if(!req.body.auth) return;
+  if (!req.body.auth) return;
   req.body.type = IsValidString(res, req.body.type, {
     EmptyString: missingAuth,
     NotSended: missingAuth,
@@ -643,29 +629,29 @@ module.exports = function RoutesHandler(req, res){
       message: "The auth information sended is not the rigth type"
     }
   });
-  if(!req.body.type) return;
+  if (!req.body.type) return;
 
-  switch(req.originalUrl){
-    case "/api/create-db":{
+  switch (req.originalUrl) {
+    case "/api/create-db": {
       CreateDB(req, res);
       return;
     }
-    case "/api/create-api":{
+    case "/api/create-api": {
       CreateAPIKey(req, res);
       return;
     }
-    case "/api/get-databases":{
+    case "/api/get-databases": {
       GetDatabases(req, res);
       return;
     }
   }
 
   res.status(STATUS_CODES.PAGE_NOT_FOUND)
-  .json({
-    ok: false,
-    error:{
-      message: "Page not found",
-      code: "wrong-url"
-    }
-  })
+    .json({
+      ok: false,
+      error: {
+        message: "Page not found",
+        code: "wrong-url"
+      }
+    })
 }
