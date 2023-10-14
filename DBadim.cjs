@@ -12,6 +12,7 @@ const CryptoJS = require("crypto-js");
  *  type: "user" | "key",
  *  [key: string]: any
  * }} ReqInfo
+ *
  * @typedef {{
  *  code: string,
  *  message: string
@@ -38,6 +39,12 @@ const CryptoJS = require("crypto-js");
  * @prop {string} random
  * 
  * @typedef {(req: Request, res: Response) => Promise<{dbUID: string, userUID: string} | null>} VerifyAuth
+*/
+/**
+ * @typedef {{
+ *  [key: string]: T
+ * }} Dictionary<T>
+ * @template T
 */
 
 require('dotenv').config();
@@ -339,7 +346,10 @@ async function CreateTable(req, res) {
 
   /**@type {Columns[]} */
   let columns = reqInfo.columns;
+  /**@type {Dictionary<Columns>} */
   let dbColumns = {};
+  /**@type {string[]} */
+  let columnsWithForeingKey = [];
 
   for (let i = 0; i < columns.length; ++i) {
     let column = columns[i];
@@ -387,11 +397,66 @@ async function CreateTable(req, res) {
       return;
     }
 
+    if(column.foreingKey){
+      columnsWithForeingKey.push(columnName);
+    }else{
+      delete column.foreingKey;
+    }
     delete column.name;
     dbColumns[columnName] = column;
   }
 
+  let authInformation = await VerifyAuthInformation(res, req);
+  if(!authInformation) return;
 
+  let ForeingKeyError = {
+    code: "bad-foreingkey-info",
+    message: `This message can be sent if:
+The foreignKey field sended is not an object.
+There is no tableName or column in foreing's key object.
+The table doesn't exist or doesn't have that column.`
+  }
+
+  function MissingForeingKeyInformation(){
+    res.status(STATUS_CODES.BAD_REQUEST)
+      .json({
+        ok: false,
+        error: ForeingKeyError
+      });
+  }
+
+  let userDBReference = database.ref(`${authInformation.userUID}/${authInformation.dbUID}`);
+  if(columnsWithForeingKey.length > 0){
+    for(let i = 0; i < columnsWithForeingKey.length; ++i){
+      let columnName = columnsWithForeingKey[i];
+      let columnInfo = dbColumns[columnName];
+      let foreingKey = columnInfo.foreingKey;
+  
+      if(typeof foreingKey !== "object"){
+        MissingForeingKeyInformation();
+        return;
+      }
+  
+      foreingKey.column = IsValidString(res, foreingKey.column, {
+        EmptyString:ForeingKeyError,
+        NotSended: ForeingKeyError,
+        WrongType: {
+          code: "column-wrong-type",
+          message: "Column name is not a string"
+        }
+      });
+      if(!foreingKey.column) return;
+      foreingKey.tableName =  IsValidString(res, foreingKey.tableName, {
+        EmptyString:ForeingKeyError,
+        NotSended: ForeingKeyError,
+        WrongType: {
+          code: "table-wrong-type",
+          message: "Table name is not a string"
+        }
+      });
+      if(!foreingKey.tableName) return;
+    }
+  }
 }
 
 /** @type {AdminHandler} */
@@ -683,6 +748,7 @@ module.exports = function RoutesHandler(req, res) {
     }
   });
   if (!req.body.auth) return;
+
   req.body.type = IsValidString(res, req.body.type, {
     EmptyString: missingAuth,
     NotSended: missingAuth,
