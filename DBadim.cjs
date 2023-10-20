@@ -187,18 +187,18 @@ async function VerifyAuthUser(req, res) {
   if (!dbUID) return null;
 
   let user = await GetUserHandler(reqInfo.auth, res);
-  if(!user) return null;
+  if (!user) return null;
 
   let db = await database.ref(user.uid).child(dbUID).get();
-  if(!db.exists()){
+  if (!db.exists()) {
     res.status(STATUS_CODES.PAGE_NOT_FOUND)
-    .json({
-      ok: false,
-      error:{
-        code: "db-does-not-exists",
-        message: "You don't have any database with the dbUID sended"
-      }
-    })
+      .json({
+        ok: false,
+        error: {
+          code: "db-does-not-exists",
+          message: "You don't have any database with the dbUID sended"
+        }
+      })
     return null;
   }
   return {
@@ -222,47 +222,47 @@ async function VerifyAuthKey(req, res) {
     message: "The API key don't have all the information needed"
   }
   let apiString = apiDecripted.toString();
-  try{
+  try {
     apiKey = JSON.parse(apiString);
-  }catch(e){
+  } catch (e) {
     res.status(STATUS_CODES.UNAUTHORIZED)
-    .json({
-      ok: false,
-      error: invalidAPIkey
-    })
+      .json({
+        ok: false,
+        error: invalidAPIkey
+      })
     return null;
   }
-  
-  apiKey.dbUID = IsValidString(res, apiKey.dbUID,{
-    EmptyString: invalidAPIkey,
-    NotSended: invalidAPIkey,
-    WrongType: invalidAPIkey
-  });
-  if(!apiKey.dbUID) return null;
 
-  apiKey.user = IsValidString(res, apiKey.user,{
+  apiKey.dbUID = IsValidString(res, apiKey.dbUID, {
     EmptyString: invalidAPIkey,
     NotSended: invalidAPIkey,
     WrongType: invalidAPIkey
   });
-  if(!apiKey.user) return null;
+  if (!apiKey.dbUID) return null;
+
+  apiKey.user = IsValidString(res, apiKey.user, {
+    EmptyString: invalidAPIkey,
+    NotSended: invalidAPIkey,
+    WrongType: invalidAPIkey
+  });
+  if (!apiKey.user) return null;
 
   let dbApiKey = await database.ref(`${apiKey.user}/${apiKey.dbUID}/api-key`).get();
-  if(!dbApiKey.exists()){
+  if (!dbApiKey.exists()) {
     res.status(STATUS_CODES.UNAUTHORIZED)
-    .json({
-      ok: false,
-      error: invalidAPIkey
-    })
+      .json({
+        ok: false,
+        error: invalidAPIkey
+      })
     return null;
   }
 
-  if(apiString !== dbApiKey.val()){
+  if (apiString !== dbApiKey.val()) {
     res.status(STATUS_CODES.UNAUTHORIZED)
-    .json({
-      ok: false,
-      error: invalidAPIkey
-    })
+      .json({
+        ok: false,
+        error: invalidAPIkey
+      })
     return null;
   }
 
@@ -303,7 +303,7 @@ async function CreateTable(req, res) {
   /**@type {ReqInfo} */
   let reqInfo = req.body;
 
-  let tableName = IsValidString(res, req.tableName, {
+  const tableName = IsValidString(res, req.tableName, {
     EmptyString: {
       message: "Table name is an empty string",
       code: "missing-table-info"
@@ -397,9 +397,9 @@ async function CreateTable(req, res) {
       return;
     }
 
-    if(column.foreingKey){
+    if (column.foreingKey) {
       columnsWithForeingKey.push(columnName);
-    }else{
+    } else {
       delete column.foreingKey;
     }
     delete column.name;
@@ -407,7 +407,7 @@ async function CreateTable(req, res) {
   }
 
   let authInformation = await VerifyAuthInformation(res, req);
-  if(!authInformation) return;
+  if (!authInformation) return;
 
   let ForeingKeyError = {
     code: "bad-foreingkey-info",
@@ -417,7 +417,7 @@ There is no tableName or column in foreing's key object.
 The table doesn't exist or doesn't have that column.`
   }
 
-  function MissingForeingKeyInformation(){
+  function MissingForeingKeyInformation() {
     res.status(STATUS_CODES.BAD_REQUEST)
       .json({
         ok: false,
@@ -425,38 +425,98 @@ The table doesn't exist or doesn't have that column.`
       });
   }
 
-  let userDBReference = database.ref(`${authInformation.userUID}/${authInformation.dbUID}`);
-  if(columnsWithForeingKey.length > 0){
-    for(let i = 0; i < columnsWithForeingKey.length; ++i){
-      let columnName = columnsWithForeingKey[i];
-      let columnInfo = dbColumns[columnName];
-      let foreingKey = columnInfo.foreingKey;
-  
-      if(typeof foreingKey !== "object"){
-        MissingForeingKeyInformation();
-        return;
-      }
-  
-      foreingKey.column = IsValidString(res, foreingKey.column, {
-        EmptyString:ForeingKeyError,
-        NotSended: ForeingKeyError,
-        WrongType: {
-          code: "column-wrong-type",
-          message: "Column name is not a string"
-        }
-      });
-      if(!foreingKey.column) return;
-      foreingKey.tableName =  IsValidString(res, foreingKey.tableName, {
-        EmptyString:ForeingKeyError,
-        NotSended: ForeingKeyError,
-        WrongType: {
-          code: "table-wrong-type",
-          message: "Table name is not a string"
-        }
-      });
-      if(!foreingKey.tableName) return;
+  const userDBReference = database.ref(`${authInformation.userUID}/${authInformation.dbUID}`);
+  for (let i = 0; i < columnsWithForeingKey.length; ++i) {
+    let columnName = columnsWithForeingKey[i];
+    let columnInfo = dbColumns[columnName];
+    let foreingKey = columnInfo.foreingKey;
+
+    if (typeof foreingKey !== "object") {
+      MissingForeingKeyInformation();
+      return;
     }
+
+    foreingKey.column = IsValidString(res, foreingKey.column, {
+      EmptyString: ForeingKeyError,
+      NotSended: ForeingKeyError,
+      WrongType: {
+        code: "column-wrong-type",
+        message: "Column name is not a string"
+      }
+    });
+    if (!foreingKey.column) return;
+
+    foreingKey.tableName = IsValidString(res, foreingKey.tableName, {
+      EmptyString: ForeingKeyError,
+      NotSended: ForeingKeyError,
+      WrongType: {
+        code: "table-wrong-type",
+        message: "Table name is not a string"
+      }
+    });
+    if (!foreingKey.tableName) return;
+
+    const columnRef = await userDBReference.child(`${foreingKey.tableName}/${foreingKey.column}`).get();
+    if (!columnRef.exists()) {
+      res.status(STATUS_CODES.BAD_REQUEST)
+        .json({
+          ok: false,
+          error: {
+            code: "column-does-not-exist",
+            message: `The column ${foreingKey.column} does not exists in the table ${foreingKey.tableName}`
+          }
+        });
+      return;
+    }
+
+    /**@type {boolean} */
+    const isUnique = columnRef.child("unique").val();
+    if (!isUnique) {
+      res.status(STATUS_CODES.BAD_REQUEST)
+        .json({
+          ok: false,
+          error: {
+            code: "column-is-not-unique",
+            message: `The column ${foreingKey.column} in the table ${foreingKey.tableName} is not unique`
+          }
+        });
+      return;
+    }
+
+    /**@type {string} */
+    const columnType = columnRef.child("type").val();
+    if (columnType.toLowerCase() === columnInfo.type.toLowerCase()) continue;
+
+    res.status(STATUS_CODES.BAD_REQUEST)
+      .json({
+        ok: false,
+        error: {
+          code: "columns-are-not-the-same-type",
+          message: `The column does not have the same type as the referenced column`
+        }
+      });
+    return;
   }
+
+  let [, setTableError] = await AsyncAttempter(
+    () => userDBReference.child(tableName).set(dbColumns)
+  );
+
+  if(setTableError){
+    res.status(STATUS_CODES.FAILED_DEPENDENCY)
+    .json({
+      ok: false,
+      error: {
+        code: "unknown",
+        message: "Try again later"
+      }
+    });
+    return;
+  }
+  res.status(STATUS_CODES.CREATED)
+  .json({
+    ok: true,
+  });
 }
 
 /** @type {AdminHandler} */
