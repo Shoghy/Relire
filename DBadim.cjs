@@ -26,7 +26,7 @@ const CryptoJS = require("crypto-js");
  * @prop {string} tableName
  * @prop {string} column
  * 
- * @typedef Columns
+ * @typedef Column
  * @prop {string} type
  * @prop {string} name
  * @prop {boolean} notNull
@@ -279,10 +279,10 @@ async function VerifyAuthInformation(req, res) {
 
   switch (reqInfo.type) {
     case "key": {
-      return VerifyAuthUser(req, res);
+      return VerifyAuthKey(req, res);
     }
     case "user": {
-      return VerifyAuthKey(req, res);
+      return VerifyAuthUser(req, res);
     }
   }
 
@@ -303,7 +303,7 @@ async function CreateTable(req, res) {
   /**@type {ReqInfo} */
   let reqInfo = req.body;
 
-  const tableName = IsValidString(res, req.tableName, {
+  const tableName = IsValidString(res, reqInfo.tableName, {
     EmptyString: {
       message: "Table name is an empty string",
       code: "missing-table-info"
@@ -344,9 +344,9 @@ async function CreateTable(req, res) {
       });
   }
 
-  /**@type {Columns[]} */
+  /**@type {Column[]} */
   let columns = reqInfo.columns;
-  /**@type {Dictionary<Columns>} */
+  /**@type {Dictionary<Column>} */
   let dbColumns = {};
   /**@type {string[]} */
   let columnsWithForeingKey = [];
@@ -406,7 +406,7 @@ async function CreateTable(req, res) {
     dbColumns[columnName] = column;
   }
 
-  let authInformation = await VerifyAuthInformation(res, req);
+  let authInformation = await VerifyAuthInformation(req, res);
   if (!authInformation) return;
 
   let ForeingKeyError = {
@@ -830,6 +830,10 @@ module.exports = function RoutesHandler(req, res) {
     }
     case "/api/get-databases": {
       GetDatabases(req, res);
+      return;
+    }
+    case "/api/create-table":{
+      CreateTable(req, res);
       return;
     }
   }

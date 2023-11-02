@@ -1,9 +1,9 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
 import NavBar from "../../components/NavBar";
-import { GetDatabases, auth } from "../../utilities/DBclient";
+import { GetTables, auth } from "../../utilities/DBclient";
 import { DBTableCreate, DataInTable, LogIn } from "../../utilities/PageLocations";
 import { useState, useEffect } from "react";
-import { IApiRequest, IApiResponse, IDataBase } from "../../utilities/types";
+import { Dictionary, IApiRequest, IApiResponse, IColumn } from "../../utilities/types";
 import DBGetDefaultCath from "../../utilities/DBGetDefaultCatch";
 import { AsyncAttempter, RandomString } from "../../utilities/functions";
 import CustomAlert from "../../components/custom-alert";
@@ -29,7 +29,7 @@ export default function DescribeDB() {
 
   async function Start() {
     let [getDBResult, getDBError] = await AsyncAttempter(
-      () => GetDatabases(
+      () => GetTables(
         auth.currentUser?.uid as string,
         dbUID
       )
@@ -45,37 +45,28 @@ export default function DescribeDB() {
       return;
     }
 
-    let dbInfo: IDataBase = getDBResult?.val();
-    if (dbInfo === undefined || dbInfo.tables === undefined) {
+    let dbTables: Dictionary<Dictionary<IColumn>> = getDBResult?.val();
+    if (dbTables === undefined) {
       setDBDataElement(<h1>Aún no hay tablas, crea una</h1>)
       return;
     }
 
     let tables: React.JSX.Element[] = [];
     let key = RandomString(6);
-    let tablesNames = Object.keys(dbInfo.tables);
 
-    for (let i = 0; i < tablesNames.length; ++i) {
-      let tableName = tablesNames[i];
-      let cantEntries = 0;
-
-      if (dbInfo.tablesData !== undefined && tableName in dbInfo.tablesData) {
-        cantEntries = Object.keys(dbInfo.tablesData[tableName]).length;
-      }
-
+    for(let dbTableName in dbTables){
       tables.push(
-        <tr key={`${i}-${key}`}>
-          <td><Link to={DataInTable(dbUID, tableName)}>{tableName}</Link></td>
-          <td>{cantEntries}</td>
+        <tr key={`${dbTableName}-${key}`}>
+          <td><Link to={DataInTable(dbUID, dbTableName)}>{dbTableName}</Link></td>
         </tr>
       );
     }
+
     setDBDataElement((
       <table>
         <thead>
           <tr>
             <th>Table Name</th>
-            <th>Entries</th>
           </tr>
         </thead>
         <tbody>

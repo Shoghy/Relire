@@ -42,6 +42,7 @@ export default function Main(){
     );
 
     if(dbsError || !dbsList || !dbsList.ok){
+      console.log(dbsError);
       setErrorElement(
         <h1>
           We were not able to communicate with the database. Try again later
