@@ -59,6 +59,10 @@ export interface IColumn{
   autoIncrement?: boolean
 }
 
+export interface IColumForRequest extends IColumn{
+  name: string
+}
+
 //                     UID        Column     Value
 export type TableRow = Dictionary<Dictionary<ColumnValue>>;
 

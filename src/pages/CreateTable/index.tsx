@@ -1,9 +1,9 @@
 import NavBar from "../../components/NavBar";
 import { useNavigate, useParams } from "react-router-dom";
-import { GetTables, auth, database, GetDataInTable } from '../../utilities/DBclient';
-import { ref, update } from "firebase/database"
+import { GetTables, auth, GetDataInTable } from '../../utilities/DBclient';
+import * as DBclient from '../../utilities/DBclient';
 import { useEffect, useState } from "react"
-import { ColumnType, IForeingKey, IColumn, Dictionary, ColumnValue } from "../../utilities/types";
+import { ColumnType, IForeingKey, IColumn, Dictionary, ColumnValue, IColumForRequest } from "../../utilities/types";
 import DBGetDefaultCath from "../../utilities/DBGetDefaultCatch";
 import { AsyncAttempter, GetEnumValues, TitleCase } from "../../utilities/functions";
 import { LogIn } from "../../utilities/PageLocations";
@@ -157,13 +157,15 @@ export default function CreateTable() {
       }
     });
 
-    let tableColums: Dictionary<IColumn> = {};
+    let tableColums: Dictionary<IColumForRequest> = {};
+
     let uniqueColumnNames: string[] = [];
     columns.forEach((column, index) => {
       tableColums[column.name] = {
         type: column.type,
         notNull: column.notNull,
-        unique: column.unique
+        unique: column.unique,
+        name: column.name
       };
 
       if(!column.name){
@@ -206,15 +208,21 @@ export default function CreateTable() {
     }
 
     try {
-      await update(ref(database, `/${auth.currentUser?.uid}/${params.idDB}/tables/${tableName}`), tableColums)
-
+      let response = await DBclient.CreateTable(
+        params.idDB as string,
+        tableName,
+        Object.values(tableColums)
+      )
+      if(!response.ok){
+        console.log(response);
+        throw new Error();
+      }
       setTableName("");
       setColumns([]);
 
       alert("Table was succesfully created")
     } catch (e) {
       alert("Something went wrong, try again later.")
-      return;
     }
   }
 

@@ -1,7 +1,7 @@
 import { initializeApp, getApps, FirebaseApp, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { get, getDatabase, push, ref } from "firebase/database"
-import { IApiRequest, IApiResponse } from './types';
+import { IApiRequest, IApiResponse, IColumForRequest } from './types';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -51,6 +51,7 @@ export function GetDataInTable(userUID: string, db:string, tb: string){
 }
 
 export async function GetDatabases(): Promise<IApiResponse>{
+  await auth.authStateReady();
   let userIDToken = await auth.currentUser?.getIdToken();
 
   let requestBody: IApiRequest = {
@@ -96,6 +97,35 @@ export async function CreateDatabase(db: string): Promise<IApiResponse>{
     let userUID = auth.currentUser?.uid;
     let apiResponse: IApiResponse = await response.json();
     apiResponse.dbRef = ref(database, `${userUID}/${apiResponse.dbUID}`)
+    return apiResponse;
+  }catch(e){
+    console.log(e);
+  }
+
+  return BadAPI;
+}
+
+export async function CreateTable(db: string, tableName: string, columns: IColumForRequest[]){
+  await auth.authStateReady();
+  let userIDToken = await auth.currentUser?.getIdToken();
+
+  let requestBody: IApiRequest = {
+    auth: userIDToken as string,
+    type: "user",
+    dbUID: db,
+    tableName: tableName,
+    columns: columns
+  }
+
+  let response = await fetch(
+    `${serverURL}/api/create-table`, {
+    body: JSON.stringify(requestBody),
+    method: "POST",
+    headers: headers
+  });
+
+  try{
+    let apiResponse: IApiResponse = await response.json();
     return apiResponse;
   }catch(e){
     console.log(e);
