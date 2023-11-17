@@ -92,7 +92,7 @@ export default function ColumnInput({ column, value, setValue, props }: IColumnT
   return <input {...props} />
 }
 
-function ForeingKeyColumn({ column, props }: IColumnToInput) {
+function ForeingKeyColumn({ column, props, setValue }: IColumnToInput) {
   const [options, setOptions] = useState<React.ReactNode[]>([]);
   const params = useParams();
 
@@ -114,7 +114,16 @@ function ForeingKeyColumn({ column, props }: IColumnToInput) {
     )).val();
 
     let options: React.ReactNode[] = [];
-    for (let rowUID in tableData) {
+
+    let rowUIDs = Object.keys(tableData);
+
+    if(column.notNull){
+      setValue(
+        tableData[rowUIDs[0]][foreignKey.column]
+      )
+    }
+
+    for(let rowUID of rowUIDs){
       let row = tableData[rowUID];
       options.push(
         <option value={`${row[foreignKey.column]}`} key={rowUID}>
@@ -122,7 +131,10 @@ function ForeingKeyColumn({ column, props }: IColumnToInput) {
         </option>
       )
     }
-    setOptions(options);
+
+    setOptions((current) => {
+      return [... current.concat(options)]
+    });
   }
 
   return (
