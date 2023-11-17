@@ -706,29 +706,10 @@ module.exports = function RoutesHandler(req, res) {
       });
   }
 
-  let missingAuth = {
-    code: "missing-auth",
-    message: "Incomplete or no auth information was sended."
-  }
-
-  req.body.auth = IsValidString(res, req.body.auth, {
-    EmptyString: missingAuth,
-    NotSended: missingAuth,
-    WrongType: {
-      code: "wrong-auth-info",
-      message: "The auth information sended is not the rigth type"
-    }
-  });
+  req.body.auth = IsValidString(res, req.body.auth, "authInfo");
   if (!req.body.auth) return;
 
-  req.body.type = IsValidString(res, req.body.type, {
-    EmptyString: missingAuth,
-    NotSended: missingAuth,
-    WrongType: {
-      code: "wrong-auth-info",
-      message: "The auth information sended is not the rigth type"
-    }
-  });
+  req.body.type = IsValidString(res, req.body.type, "authInfo");
   if (!req.body.type) return;
 
   switch (req.originalUrl) {
