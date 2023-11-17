@@ -83,33 +83,39 @@ async function AsyncAttempter(func) {
 /**
  * @param {Response} res
  * @param {any} value 
- * @param {{
- *  NotSended: GenericError,
- *  WrongType: GenericError,
- *  EmptyString: GenericError
- * }} errors
+ * @param {string} field
  * @returns {false | string}
  */
-function IsValidString(res, value, errors) {
+function IsValidString(res, value, field) {
+  const code = `invalid-${field}`;
   if (value === undefined) {
     res.status(STATUS_CODES.BAD_REQUEST)
       .json({
         ok: false,
-        error: errors.NotSended
+        error: {
+          code: code,
+          message: `${field} was not sended`
+        }
       });
     return false;
   } else if (typeof (value) !== "string") {
     res.status(STATUS_CODES.BAD_REQUEST)
       .json({
         ok: false,
-        error: errors.WrongType
+        error: {
+          code: code,
+          message: `${field} was sended, but is not a string`
+        }
       });
     return false;
   } else if (!value.trim()) {
     res.status(STATUS_CODES.BAD_REQUEST)
       .json({
         ok: false,
-        error: errors.EmptyString
+        error: {
+          code: code,
+          message: `${field} is an empty string`
+        }
       });
     return false;
   }
@@ -166,24 +172,7 @@ async function VerifyAuthUser(req, res) {
   /**@type {ReqInfo} */
   let reqInfo = req.body;
 
-  let dbUID = IsValidString(
-    res,
-    reqInfo.dbUID,
-    {
-      EmptyString: {
-        code: "wrong-dbUID",
-        message: "The dbUID sended was an empty string."
-      },
-      NotSended: {
-        code: "no-dbUID",
-        message: "There was no dbUID in the request sended."
-      },
-      WrongType: {
-        code: "wrong-dbUID",
-        message: "The dbUID sended was not a string."
-      }
-    }
-  );
+  let dbUID = IsValidString(res, reqInfo.dbUID, "dbUID");
   if (!dbUID) return null;
 
   let user = await GetUserHandler(reqInfo.auth, res);
@@ -233,18 +222,10 @@ async function VerifyAuthKey(req, res) {
     return null;
   }
 
-  apiKey.dbUID = IsValidString(res, apiKey.dbUID, {
-    EmptyString: invalidAPIkey,
-    NotSended: invalidAPIkey,
-    WrongType: invalidAPIkey
-  });
+  apiKey.dbUID = IsValidString(res, apiKey.dbUID, "API Key");
   if (!apiKey.dbUID) return null;
 
-  apiKey.user = IsValidString(res, apiKey.user, {
-    EmptyString: invalidAPIkey,
-    NotSended: invalidAPIkey,
-    WrongType: invalidAPIkey
-  });
+  apiKey.user = IsValidString(res, apiKey.user, "API Key");
   if (!apiKey.user) return null;
 
   let dbApiKey = await database.ref(`${apiKey.user}/${apiKey.dbUID}/api-key`).get();
@@ -303,20 +284,7 @@ async function CreateTable(req, res) {
   /**@type {ReqInfo} */
   let reqInfo = req.body;
 
-  const tableName = IsValidString(res, reqInfo.tableName, {
-    EmptyString: {
-      message: "Table name is an empty string",
-      code: "missing-table-info"
-    },
-    NotSended: {
-      message: "Table name was not sended",
-      code: "missing-table-info"
-    },
-    WrongType: {
-      message: "Table name is not a string",
-      code: "missing-table-info"
-    }
-  });
+  const tableName = IsValidString(res, reqInfo.tableName, "tableName");
   if (!tableName) return;
 
   if (!Array.isArray(reqInfo.columns)) {
@@ -371,18 +339,10 @@ async function CreateTable(req, res) {
       return;
     }
 
-    let columnName = IsValidString(res, column.name, {
-      EmptyString: ColumnMissingInfoError,
-      NotSended: ColumnMissingInfoError,
-      WrongType: ColumnMissingInfoError
-    });
+    let columnName = IsValidString(res, column.name, "columnName");
     if (!columnName) return;
 
-    column.type = IsValidString(res, column.type, {
-      EmptyString: ColumnMissingInfoError,
-      NotSended: ColumnMissingInfoError,
-      WrongType: ColumnMissingInfoError
-    });
+    column.type = IsValidString(res, column.type, "colunmType");
     if (!column.type) return;
 
     if (columnName in dbColumns) {
@@ -436,24 +396,10 @@ The table doesn't exist or doesn't have that column.`
       return;
     }
 
-    foreingKey.column = IsValidString(res, foreingKey.column, {
-      EmptyString: ForeingKeyError,
-      NotSended: ForeingKeyError,
-      WrongType: {
-        code: "column-wrong-type",
-        message: "Column name is not a string"
-      }
-    });
+    foreingKey.column = IsValidString(res, foreingKey.column, "ForeignKey Column");
     if (!foreingKey.column) return;
 
-    foreingKey.tableName = IsValidString(res, foreingKey.tableName, {
-      EmptyString: ForeingKeyError,
-      NotSended: ForeingKeyError,
-      WrongType: {
-        code: "table-wrong-type",
-        message: "Table name is not a string"
-      }
-    });
+    foreingKey.tableName = IsValidString(res, foreingKey.tableName, "ForeignKey Table");
     if (!foreingKey.tableName) return;
 
     const columnRef = await userDBReference.child(`${foreingKey.tableName}/${foreingKey.column}`).get();
@@ -502,21 +448,21 @@ The table doesn't exist or doesn't have that column.`
     () => userDBReference.child(tableName).set(dbColumns)
   );
 
-  if(setTableError){
+  if (setTableError) {
     res.status(STATUS_CODES.FAILED_DEPENDENCY)
-    .json({
-      ok: false,
-      error: {
-        code: "unknown",
-        message: "Try again later"
-      }
-    });
+      .json({
+        ok: false,
+        error: {
+          code: "unknown",
+          message: "Try again later"
+        }
+      });
     return;
   }
   res.status(STATUS_CODES.CREATED)
-  .json({
-    ok: true,
-  });
+    .json({
+      ok: true,
+    });
 }
 
 /** @type {AdminHandler} */
@@ -536,24 +482,7 @@ async function CreateDB(req, res) {
     return;
   }
 
-  let dbName = IsValidString(
-    res,
-    reqInfo.dbName,
-    {
-      NotSended: {
-        message: "Database name was not granted.",
-        code: "missing-dbName"
-      },
-      WrongType: {
-        message: "Database name is not a string.",
-        code: "wrong-dbName"
-      },
-      EmptyString: {
-        message: "Database name is an empty string.",
-        code: "wrong-dbName"
-      }
-    }
-  );
+  let dbName = IsValidString(res, reqInfo.dbName, "dbName");
   if (!dbName) return;
 
   let user = await GetUserHandler(reqInfo.auth, res);
@@ -699,24 +628,7 @@ async function CreateAPIKey(req, res) {
     return;
   }
 
-  let dbUID = IsValidString(
-    res,
-    reqInfo.dbUID,
-    {
-      EmptyString: {
-        code: "wrong-dbUID",
-        message: "The dbUID sended was an empty string."
-      },
-      NotSended: {
-        code: "no-dbUID",
-        message: "There was no dbUID in the request sended."
-      },
-      WrongType: {
-        code: "wrong-dbUID",
-        message: "The dbUID sended was not a string."
-      }
-    }
-  );
+  let dbUID = IsValidString(res, reqInfo.dbUID, "dbName");
   if (!dbUID) return;
 
   let user = await GetUserHandler(reqInfo.auth, res);
@@ -832,7 +744,7 @@ module.exports = function RoutesHandler(req, res) {
       GetDatabases(req, res);
       return;
     }
-    case "/api/create-table":{
+    case "/api/create-table": {
       CreateTable(req, res);
       return;
     }
