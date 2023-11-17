@@ -33,6 +33,7 @@ export default function CreateTable() {
   const navigate = useNavigate();
   const params = useParams();
 
+  const [loading, setLoading] = useState(true);
   const [dbTables, setdbTables] = useState<[string, Dictionary<IColumn>][]>([]);
   const [columns, setColumns] = useState<IColumn2[]>([]);
   const [tableName, setTableName] = useState<string>("");
@@ -111,16 +112,12 @@ export default function CreateTable() {
     }
     setCanForeignKeys(Object.keys(uniqueColumns).length > 0);
     setTablesWithUniqueColumns(uniqueColumns);
+    setLoading(false);
   }
 
 
   function AddColumn() {
     setColumns((currentColumns) => {
-      let foreingKey: IForeingKey = { column: "", tableName: "" }
-      if (dbTables.length > 0) {
-        foreingKey.column = Object.keys(dbTables[0][1])[0];
-        foreingKey.tableName = dbTables[0][0];
-      }
       return [...currentColumns, {
         name: "",
         type: ColumnType.STRING,
@@ -130,7 +127,7 @@ export default function CreateTable() {
         useDefault: false,
         autoIncrement: false,
         enum: "",
-        foreingKey: foreingKey,
+        foreingKey: { column: "", tableName: "" },
         useForeingKey: false
       }]
     });
@@ -288,8 +285,6 @@ export default function CreateTable() {
 
     let tablesNames = Object.keys(tablesWithColumns);
 
-    if(tablesNames.length === 0) return <></>;
-
     if(column.foreingKey.tableName === ""){
       setColumns((currentColumns) => {
         currentColumns[index].foreingKey = {
@@ -346,6 +341,8 @@ export default function CreateTable() {
 
             let options: React.JSX.Element[] = [];
             let columnsNames = tablesWithColumns[column.foreingKey.tableName];
+
+            if(!columnsNames) return <></>;
             for(let i = 0; i < columnsNames.length; ++i){
               options.push(
                 <option
@@ -368,6 +365,8 @@ export default function CreateTable() {
   if (errorElement) {
     return errorElement;
   }
+
+  if(loading) return <h1>Loading...</h1>;
 
   return (
     <>
