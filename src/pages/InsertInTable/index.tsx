@@ -139,7 +139,6 @@ export default function InsertInTable(){
             errors[0].push(index);
             errors[1].push(`(${columnName}) Value can't be null`);
           }
-          insert[columnName] = "Null";
           continue;
         }
 

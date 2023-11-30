@@ -22,7 +22,7 @@ export enum ColumnType{
   DATE = "date",
   /**DD/MM/YYYY HH:mm */
   DATETIME = "datetime",
-  /**Confines the value of the variable to a limited number of options */
+  /**Confines the value to a limited number of options */
   ENUM = "enum"
 }
 

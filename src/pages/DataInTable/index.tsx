@@ -2,7 +2,7 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import { GetDataInTable, GetTables, auth } from "../../utilities/DBclient";
 import { LogIn } from "../../utilities/PageLocations";
 import DBGetDefaultCath from "../../utilities/DBGetDefaultCatch";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ColumnType, ColumnValue, Dictionary, IColumn, TableRow } from "../../utilities/types";
 import { AsyncAttempter, RandomString } from "../../utilities/functions";
 import NavBar from '../../components/NavBar';
@@ -19,6 +19,8 @@ export default function DataInTable(){
       <td>Loading Rows...</td>
     </tr>
   ]);
+
+  const uniqueColums = useRef<string[]>([]);
 
   useEffect(() => {
     auth.onAuthStateChanged((user) => {
@@ -99,7 +101,18 @@ export default function DataInTable(){
       JSXColumns.push(<th title={toolTip.join("\n")} key={key}>{columnName}</th>)
     }
 
+    JSXColumns.push(<th title="Delete" key={"deleteTable"}>Delete</th>);
     setColumns(JSXColumns)
+  }
+
+  async function DeleteRow(rowUID: string){
+    function Delete(){
+      
+    }
+    let _uniqueColumns = uniqueColums.current;
+    if(_uniqueColumns.length == 0){
+
+    }
   }
 
   async function DBRowsToJSXRows(dbRows: TableRow){
@@ -116,6 +129,12 @@ export default function DataInTable(){
         }
         JSXRowValues.push(<td key={`${rowUID}-${columnName}`}>{columnValue}</td>)
       }
+
+      JSXRowValues.push(
+        <td key={`Delete-${rowUID}`} style={{color: "#f00"}} onClick={() => DeleteRow(rowUID)}>
+          <i className="fa fa-trash" aria-hidden="true"></i>
+        </td>
+      );
       JSXRows.push(<tr key={`${rowUID}`} className="tr">{JSXRowValues}</tr>)
     }
     setRows(JSXRows);
