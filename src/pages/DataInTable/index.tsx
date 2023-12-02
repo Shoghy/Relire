@@ -1,10 +1,10 @@
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { GetDataInTable, GetTables, auth } from "../../utilities/DBclient";
+import { DeleteRow, GetDataInTable, GetTables, auth } from "../../utilities/DBclient";
 import { LogIn } from "../../utilities/PageLocations";
 import DBGetDefaultCath from "../../utilities/DBGetDefaultCatch";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { ColumnType, ColumnValue, Dictionary, IColumn, TableRow } from "../../utilities/types";
-import { AsyncAttempter, RandomString } from "../../utilities/functions";
+import { AsyncAttempter, RandomString, RemoveIndexOfArray } from "../../utilities/functions";
 import NavBar from "../../components/NavBar";
 import "./styles.css";
 
@@ -19,8 +19,6 @@ export default function DataInTable(){
       <td>Loading Rows...</td>
     </tr>
   ]);
-
-  const uniqueColums = useRef<string[]>([]);
 
   useEffect(() => {
     auth.onAuthStateChanged((user) => {
@@ -105,8 +103,28 @@ export default function DataInTable(){
     setColumns(JSXColumns);
   }
 
-  async function DeleteRow(rowUID: string){
-    
+  async function RemoveRow(rowUID: string){
+    const response = await DeleteRow(
+      params.idDB as string,
+      params.tbName as string,
+      rowUID
+    );
+
+    if(response.ok){
+      setRows((current) => {
+        for(let i = 0; i < current.length; ++i){
+          const row = current[i];
+
+          if(row.key !== rowUID) continue;
+        
+          current = RemoveIndexOfArray(current, i);
+          break;
+        }
+        return [... current];
+      });
+    } else {
+      alert(response.error?.message);
+    }
   }
 
   async function DBRowsToJSXRows(dbRows: TableRow){
@@ -125,8 +143,10 @@ export default function DataInTable(){
       }
 
       JSXRowValues.push(
-        <td key={`Delete-${rowUID}`} style={{color: "#f00"}} onClick={() => DeleteRow(rowUID)}>
-          <i className="fa fa-trash" aria-hidden="true"></i>
+        <td key={`Delete-${rowUID}`} onClick={() => RemoveRow(rowUID)}>
+          <center>
+            <i className="fa fa-trash" style={{color: "#f00"}} aria-hidden="true"/>
+          </center>
         </td>
       );
       JSXRows.push(<tr key={`${rowUID}`} className="tr">{JSXRowValues}</tr>);

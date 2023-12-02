@@ -370,7 +370,7 @@ async function CreateTable(req, res) {
   if (!authInformation) return;
 
   const userDBReference = database.ref(`${authInformation.userUID}/${authInformation.dbUID}/tables`);
-  let tableNameExists = await userDBReference.child(tableName).get().exists();
+  let tableNameExists = (await userDBReference.child(tableName).get()).exists();
   if (tableNameExists) {
     SendAnswer(res, STATUS_CODES.BAD_REQUEST, {
       ok: false,
@@ -678,13 +678,6 @@ async function CreateAPIKey(req, res) {
     });
 }
 
-/**
- * @param {number} ms 
- */
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 /** @type {AdminHandler} */
 async function DeleteRow(req, res) {
   /**@type {ReqInfo} */
@@ -730,10 +723,6 @@ async function DeleteRow(req, res) {
       error = response;
     });
 
-    while (error == undefined) {
-      await sleep(1);
-    }
-
     if (!error) {
       SendAnswer(res, STATUS_CODES.OK, { ok: true });
     } else {
@@ -756,6 +745,7 @@ async function DeleteRow(req, res) {
   const rowValue = (await database.ref(`${authInfo.userUID}/${authInfo.dbUID}/tablesData/${tableName}/${rowUID}`).get()).val();
 
   const tables = await database.ref(`${authInfo.userUID}/${authInfo.dbUID}/tables`).get();
+  /**@type {Dictionary<Dictionary<Column>>} */
   const tablesValue = tables.val();
   /**@type {string[]} */
   let tablesWithReference = [];
@@ -771,16 +761,16 @@ async function DeleteRow(req, res) {
       /**@type {Column} */
       let column = tableColumns[columnName];
 
-      if (column.foreingKey == undefined) continue;
-      if (column.foreingKey.tableName != tableName) continue;
+      if (column.foreingKey === undefined) continue;
+      if (column.foreingKey.tableName !== tableName) continue;
 
       columnsWithReference.push([columnName, column]);
     }
 
-    if (columnsWithReference.length == 0) continue;
+    if (columnsWithReference.length === 0) continue;
 
     /**@type {Dictionary<Dictionary<any>>} */
-    let tableRows = (await database.ref(`${authInfo.userUID}/${authInfo.dbUID}/tablesData/${tableName}`).get()).val();
+    let tableRows = (await database.ref(`${authInfo.userUID}/${authInfo.dbUID}/tablesData/${tableID}`).get()).val();
     for (let rowUID in tableRows) {
       let row = tableRows[rowUID];
       let preiousLength = tablesWithReference.length;

@@ -61,3 +61,9 @@ export async function AsyncAttempter<E = DefaultReturnedError, T = any>(func: As
 export function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+export function RemoveIndexOfArray<T>(arr: Array<T>, index: number){
+  const copyOfArray = [... arr];
+  copyOfArray.splice(index, 1);
+  return copyOfArray;
+}

@@ -70,9 +70,7 @@ export async function GetDatabases(): Promise<IApiResponse>{
   try{
     const apiResponse: IApiResponse = await response.json();
     return apiResponse;
-  }catch(e){
-    console.log(e);
-  }
+  }catch(e){}
 
   return BadAPI;
 }
@@ -98,9 +96,7 @@ export async function CreateDatabase(db: string): Promise<IApiResponse>{
     const apiResponse: IApiResponse = await response.json();
     apiResponse.dbRef = ref(database, `${userUID}/${apiResponse.dbUID}`);
     return apiResponse;
-  }catch(e){
-    console.log(e);
-  }
+  }catch(e){}
 
   return BadAPI;
 }
@@ -127,9 +123,7 @@ export async function CreateTable(db: string, tableName: string, columns: IColum
   try{
     const apiResponse: IApiResponse = await response.json();
     return apiResponse;
-  }catch(e){
-    console.log(e);
-  }
+  }catch(e){}
 
   return BadAPI;
 }
@@ -142,6 +136,31 @@ export function InsertRow(
 ){
   const reference = ref(database, `${userUID}/${db}/tablesData/${tb}`);
   return push(reference, data);
+}
+
+export async function DeleteRow(db: string, tableName: string, rowUID: string){
+  await auth.authStateReady();
+  const userIDToken = await auth.currentUser?.getIdToken();
+
+  const requestBody: IApiRequest = {
+    auth: userIDToken as string,
+    type: "user",
+    tableName,
+    rowUID,
+    dbUID: db
+  };
+
+  const response = await fetch(`${serverURL}/api/delete-row`, {
+    body: JSON.stringify(requestBody),
+    method: "POST",
+    headers: headers
+  });
+
+  try{
+    return await response.json() as IApiResponse;
+  }catch(e){}
+  
+  return BadAPI;
 }
 
 export { app, auth, database };
