@@ -1,5 +1,5 @@
-import ReactDOMServer from 'react-dom/server'
-import App from './App.tsx';
+import ReactDOMServer from "react-dom/server";
+import App from "./App.tsx";
 import { StaticRouter } from "react-router-dom/server";
 
 
@@ -9,6 +9,6 @@ export function render(url: string) {
     <StaticRouter location={url}>
       <App />
     </StaticRouter>
-  )
-  return { html }
+  );
+  return { html };
 }

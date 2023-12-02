@@ -1,7 +1,7 @@
 import { initializeApp, getApps, FirebaseApp, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { get, getDatabase, push, ref } from "firebase/database"
-import { IApiRequest, IApiResponse, IColumForRequest } from './types';
+import { get, getDatabase, push, ref } from "firebase/database";
+import { IApiRequest, IApiResponse, IColumForRequest } from "./types";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -26,8 +26,8 @@ const database = getDatabase(app);
 const serverURL = import.meta.env.VITE_SERVER_URL;
 const headers = {
   "Content-Type": "application/json; charset=utf-8",
-  'Accept': 'application/json'
-}
+  "Accept": "application/json"
+};
 const BadAPI: IApiResponse = {
   ok: false,
   error: {
@@ -35,68 +35,68 @@ const BadAPI: IApiResponse = {
     code: "bad-api-programmer",
     name: ""
   }
-}
+};
 
 export function GetTables(userUID: string, db: string, tb?:string){
   let reference = `${userUID}/${db}/tables`;
   if(tb){
-    reference += `/${tb}`
+    reference += `/${tb}`;
   }
   return get(ref(database, reference));
 }
 
 export function GetDataInTable(userUID: string, db:string, tb: string){
-  let reference = ref(database, `${userUID}/${db}/tablesData/${tb}`);
+  const reference = ref(database, `${userUID}/${db}/tablesData/${tb}`);
   return get(reference);
 }
 
 export async function GetDatabases(): Promise<IApiResponse>{
   await auth.authStateReady();
-  let userIDToken = await auth.currentUser?.getIdToken();
+  const userIDToken = await auth.currentUser?.getIdToken();
 
-  let requestBody: IApiRequest = {
+  const requestBody: IApiRequest = {
     auth: userIDToken as string,
     type: "user"
-  }
+  };
 
-  let response = await fetch(
+  const response = await fetch(
     `${serverURL}/api/get-databases`, {
       body: JSON.stringify(requestBody),
       method: "POST",
       headers: headers
     }
-  )
+  );
 
   try{
-    let apiResponse: IApiResponse = await response.json();
+    const apiResponse: IApiResponse = await response.json();
     return apiResponse;
   }catch(e){
-    console.log(e)
+    console.log(e);
   }
 
   return BadAPI;
 }
 
 export async function CreateDatabase(db: string): Promise<IApiResponse>{
-  let userIDToken = await auth.currentUser?.getIdToken();
+  const userIDToken = await auth.currentUser?.getIdToken();
 
-  let requestBody: IApiRequest = {
+  const requestBody: IApiRequest = {
     auth: userIDToken as string,
     type: "user",
     dbName: db
-  }
+  };
 
-  let response = await fetch(
+  const response = await fetch(
     `${serverURL}/api/create-db`, {
-    body: JSON.stringify(requestBody),
-    method: "POST",
-    headers: headers
-  });
+      body: JSON.stringify(requestBody),
+      method: "POST",
+      headers: headers
+    });
 
   try{
-    let userUID = auth.currentUser?.uid;
-    let apiResponse: IApiResponse = await response.json();
-    apiResponse.dbRef = ref(database, `${userUID}/${apiResponse.dbUID}`)
+    const userUID = auth.currentUser?.uid;
+    const apiResponse: IApiResponse = await response.json();
+    apiResponse.dbRef = ref(database, `${userUID}/${apiResponse.dbUID}`);
     return apiResponse;
   }catch(e){
     console.log(e);
@@ -107,25 +107,25 @@ export async function CreateDatabase(db: string): Promise<IApiResponse>{
 
 export async function CreateTable(db: string, tableName: string, columns: IColumForRequest[]){
   await auth.authStateReady();
-  let userIDToken = await auth.currentUser?.getIdToken();
+  const userIDToken = await auth.currentUser?.getIdToken();
 
-  let requestBody: IApiRequest = {
+  const requestBody: IApiRequest = {
     auth: userIDToken as string,
     type: "user",
     dbUID: db,
     tableName: tableName,
     columns: columns
-  }
+  };
 
-  let response = await fetch(
+  const response = await fetch(
     `${serverURL}/api/create-table`, {
-    body: JSON.stringify(requestBody),
-    method: "POST",
-    headers: headers
-  });
+      body: JSON.stringify(requestBody),
+      method: "POST",
+      headers: headers
+    });
 
   try{
-    let apiResponse: IApiResponse = await response.json();
+    const apiResponse: IApiResponse = await response.json();
     return apiResponse;
   }catch(e){
     console.log(e);
@@ -140,8 +140,8 @@ export function InsertRow(
   tb: string,
   data: unknown
 ){
-  let reference = ref(database, `${userUID}/${db}/tablesData/${tb}`);
+  const reference = ref(database, `${userUID}/${db}/tablesData/${tb}`);
   return push(reference, data);
 }
 
-export { app, auth, database }
+export { app, auth, database };

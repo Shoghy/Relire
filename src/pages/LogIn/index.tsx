@@ -4,7 +4,7 @@ import { auth } from "../../utilities/DBclient";
 import { AuthErrorCodes, AuthError } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import { MainPage } from "../../utilities/PageLocations";
-import { signInWithEmailAndPassword } from "firebase/auth"
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { AsyncAttempter } from "../../utilities/functions";
 
 interface ILogIn{
@@ -24,10 +24,10 @@ export default function LogInForm(){
         navigate(MainPage);
       }
     });
-  }, [])
+  }, []);
 
   function validate(values:ILogIn){
-    let errors: ILogIn = {};
+    const errors: ILogIn = {};
 
     //Validar email
     if(values.email === undefined || !values.email.match(validEmailRegex)){
@@ -54,8 +54,8 @@ export default function LogInForm(){
     }
 
 
-    let logIn = signInWithEmailAndPassword(auth, values.email, values.password);
-    let [, logInError] = await AsyncAttempter<AuthError>(() => logIn)
+    const logIn = signInWithEmailAndPassword(auth, values.email, values.password);
+    const [, logInError] = await AsyncAttempter<AuthError>(() => logIn);
 
     if(!logInError){
       changeSendedForm(false);
@@ -95,5 +95,5 @@ export default function LogInForm(){
         <button type="submit" className="btn">Submit</button>
       </Form>
     )}
-  </Formik>
+  </Formik>;
 }

@@ -18,7 +18,7 @@ export default function ColumnInput({ column, value, setValue, props }: IColumnT
   }
 
   props.value = value as string;
-  props.onChange = (e) => setValue((e as React.ChangeEvent<HTMLInputElement>).target.value)
+  props.onChange = (e) => setValue((e as React.ChangeEvent<HTMLInputElement>).target.value);
 
   if (column.foreingKey) {
     return ForeingKeyColumn({ column, value, setValue, props });
@@ -29,7 +29,7 @@ export default function ColumnInput({ column, value, setValue, props }: IColumnT
       props.type = "checkbox";
       props.checked = value as boolean;
       props.value = undefined;
-      props.onChange = (e) => setValue((e as React.ChangeEvent<HTMLInputElement>).target.checked)
+      props.onChange = (e) => setValue((e as React.ChangeEvent<HTMLInputElement>).target.checked);
       break;
     }
     case ColumnType.DATE: {
@@ -42,22 +42,22 @@ export default function ColumnInput({ column, value, setValue, props }: IColumnT
     }
     case ColumnType.ENUM: {
       props.type = undefined;
-      let key = RandomString(6);
+      const key = RandomString(6);
       return (
         <select {...props} key={key}>
           {!column.notNull && <option value="" key={`$Nada-${key}`}></option>}
           {(() => {
             if (column.enum === undefined) return <></>;
-            let options: React.JSX.Element[] = [];
+            const options: React.JSX.Element[] = [];
 
             column.enum.forEach((value, index) => {
-              options.push(<option value={value} key={`${index}-${key}`}>{TitleCase(value)}</option>)
+              options.push(<option value={value} key={`${index}-${key}`}>{TitleCase(value)}</option>);
             });
 
-            return options
+            return options;
           })()}
         </select>
-      )
+      );
     }
     case ColumnType.FLOAT: {
       props.type = "number";
@@ -66,11 +66,11 @@ export default function ColumnInput({ column, value, setValue, props }: IColumnT
         if (e.target.value === "") setValue(e.target.value);
 
         if (isNaN(parseFloat(e.target.value))) {
-          let character = e.target.value[e.target.value.length - 1];
+          const character = e.target.value[e.target.value.length - 1];
           if (character !== ".") return;
         }
         setValue(e.target.valueAsNumber);
-      }
+      };
       break;
     }
     case ColumnType.INT: {
@@ -78,10 +78,10 @@ export default function ColumnInput({ column, value, setValue, props }: IColumnT
       props.onChange = (e) => {
         e = e as React.ChangeEvent<HTMLInputElement>;
         if (e.target.value === "") setValue(e.target.value);
-        let value = parseInt(e.target.value);
+        const value = parseInt(e.target.value);
         if (isNaN(value)) return;
         setValue(value);
-      }
+      };
       break;
     }
     case ColumnType.STRING: {
@@ -89,7 +89,7 @@ export default function ColumnInput({ column, value, setValue, props }: IColumnT
       break;
     }
   }
-  return <input {...props} />
+  return <input {...props} />;
 }
 
 function ForeingKeyColumn({ column, props, setValue }: IColumnToInput) {
@@ -99,7 +99,7 @@ function ForeingKeyColumn({ column, props, setValue }: IColumnToInput) {
   useEffect(() => {
     if (!column.notNull) {
       setOptions((current) => {
-        current.push(<option value={""} key={"nullValue"}></option>)
+        current.push(<option value={""} key={"nullValue"}></option>);
         return [...current];
       });
     }
@@ -108,32 +108,32 @@ function ForeingKeyColumn({ column, props, setValue }: IColumnToInput) {
 
   async function Start() {
     await auth.authStateReady();
-    let foreignKey = column.foreingKey as IForeingKey;
-    let tableData: TableRow = (await get(
+    const foreignKey = column.foreingKey as IForeingKey;
+    const tableData: TableRow = (await get(
       ref(database, `${auth.currentUser?.uid}/${params.idDB}/tablesData/${foreignKey.tableName}`)
     )).val();
 
-    let options: React.ReactNode[] = [];
+    const options: React.ReactNode[] = [];
 
-    let rowUIDs = Object.keys(tableData);
+    const rowUIDs = Object.keys(tableData);
 
     if(column.notNull){
       setValue(
         tableData[rowUIDs[0]][foreignKey.column]
-      )
+      );
     }
 
-    for(let rowUID of rowUIDs){
-      let row = tableData[rowUID];
+    for(const rowUID of rowUIDs){
+      const row = tableData[rowUID];
       options.push(
         <option value={`${row[foreignKey.column]}`} key={rowUID}>
           {row[foreignKey.column]}
         </option>
-      )
+      );
     }
 
     setOptions((current) => {
-      return [... current.concat(options)]
+      return [... current.concat(options)];
     });
   }
 
@@ -141,5 +141,5 @@ function ForeingKeyColumn({ column, props, setValue }: IColumnToInput) {
     <select {...props} >
       {options}
     </select>
-  )
+  );
 }

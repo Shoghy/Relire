@@ -2,34 +2,34 @@ import { AsyncFunc, DefaultReturnedError } from "./types";
 
 export function TitleCase(val: string): string {
   val = val.toLowerCase();
-  let words = val.split(" ");
+  const words = val.split(" ");
 
   let text: string = "";
   words.forEach((value, index) => {
     text += value.charAt(0).toUpperCase() + value.slice(1);
     if (index + 1 < words.length) text += " ";
-  })
+  });
   return text;
 }
 
 export function GetEnumValues(val: string): string[] {
   if (!val) return [];
 
-  let vals = val.split(",");
-  let uniqueVals: string[] = [];
+  const vals = val.split(",");
+  const uniqueVals: string[] = [];
   vals.forEach((value) => {
     while (value.startsWith(" ")) {
       value = value.substring(1);
     }
     if(value === "") return;
-    if (uniqueVals.indexOf(value) === -1) uniqueVals.push(value)
-  })
+    if (uniqueVals.indexOf(value) === -1) uniqueVals.push(value);
+  });
   return uniqueVals;
 }
 
 export function RandomString(length: number) {
-  let result = '';
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = "";
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   const charactersLength = characters.length - 1;
   let counter = 0;
   while (counter < length) {
@@ -51,7 +51,7 @@ export function IsValidDate(dateString : string) {
 
 export async function AsyncAttempter<E = DefaultReturnedError, T = any>(func: AsyncFunc<T>): Promise<[T, null] | [null, E]>{
   try{
-    let result = await func();
+    const result = await func();
     return [result, null];
   }catch(e: any){
     return [null, e];

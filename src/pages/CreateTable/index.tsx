@@ -1,14 +1,14 @@
 import NavBar from "../../components/NavBar";
 import { useNavigate, useParams } from "react-router-dom";
-import { GetTables, auth, GetDataInTable } from '../../utilities/DBclient';
-import * as DBclient from '../../utilities/DBclient';
-import { useEffect, useState } from "react"
+import { GetTables, auth, GetDataInTable } from "../../utilities/DBclient";
+import * as DBclient from "../../utilities/DBclient";
+import { useEffect, useState } from "react";
 import { ColumnType, IForeingKey, IColumn, Dictionary, ColumnValue, IColumForRequest } from "../../utilities/types";
 import DBGetDefaultCath from "../../utilities/DBGetDefaultCatch";
 import { AsyncAttempter, GetEnumValues, TitleCase } from "../../utilities/functions";
 import { LogIn } from "../../utilities/PageLocations";
 import ColumnInput from "../../components/ColumnInput";
-import "./styles.css"
+import "./styles.css";
 
 interface IColumn2 {
   name: string,
@@ -52,10 +52,10 @@ export default function CreateTable() {
       }
       Start();
     });
-  }, [])
+  }, []);
 
   async function Start() {
-    let [response, error] = await AsyncAttempter(
+    const [response, error] = await AsyncAttempter(
       () => GetTables(
         auth.currentUser?.uid as string,
         params.idDB as string
@@ -67,19 +67,19 @@ export default function CreateTable() {
       return;
     }
 
-    let tables: Dictionary<Dictionary<IColumn>> = response.val();
+    const tables: Dictionary<Dictionary<IColumn>> = response.val();
     if (!tables) return;
     setdbTables(Object.entries<Dictionary<IColumn>>(tables));
     GetUniqueColumns(tables);
   }
 
   async function GetUniqueColumns(tables: Dictionary<Dictionary<IColumn>>) {
-    let uniqueColumns: Dictionary<Dictionary<IUniqueColumsWithValues>> = {};
+    const uniqueColumns: Dictionary<Dictionary<IUniqueColumsWithValues>> = {};
 
-    for (let tableName in tables) {
-      let table = tables[tableName];
+    for (const tableName in tables) {
+      const table = tables[tableName];
 
-      let [tableRows, getDataError] = await AsyncAttempter(
+      const [tableRows, getDataError] = await AsyncAttempter(
         () => GetDataInTable(
           auth.currentUser?.uid as string,
           params.idDB as string,
@@ -89,18 +89,18 @@ export default function CreateTable() {
       if (getDataError) continue;
       if (!tableRows) continue;
 
-      let columnsInfo: Dictionary<IUniqueColumsWithValues> = {};
+      const columnsInfo: Dictionary<IUniqueColumsWithValues> = {};
       let tableHasUnique = false;
       tableRows.forEach((value) => {
-        for (let columnName in table) {
-          let column = table[columnName];
+        for (const columnName in table) {
+          const column = table[columnName];
           if (!column.unique) continue;
           tableHasUnique = true;
           if (columnsInfo[columnName] === undefined) {
             columnsInfo[columnName] = {
               type: column.type,
               rows: []
-            }
+            };
           }
           columnsInfo[columnName].rows.push(value.child(columnName).val());
         }
@@ -129,7 +129,7 @@ export default function CreateTable() {
         enum: "",
         foreingKey: { column: "", tableName: "" },
         useForeingKey: false
-      }]
+      }];
     });
   }
 
@@ -141,10 +141,10 @@ export default function CreateTable() {
   }
 
   async function CrearTable() {
-    let errors: string[] = [];
+    const errors: string[] = [];
 
     if (!tableName) {
-      errors.push("Table has no name")
+      errors.push("Table has no name");
     }
 
     dbTables.forEach((table) => {
@@ -154,9 +154,9 @@ export default function CreateTable() {
       }
     });
 
-    let tableColums: Dictionary<IColumForRequest> = {};
+    const tableColums: Dictionary<IColumForRequest> = {};
 
-    let uniqueColumnNames: string[] = [];
+    const uniqueColumnNames: string[] = [];
     columns.forEach((column, index) => {
       tableColums[column.name] = {
         type: column.type,
@@ -205,11 +205,11 @@ export default function CreateTable() {
     }
 
     try {
-      let response = await DBclient.CreateTable(
+      const response = await DBclient.CreateTable(
         params.idDB as string,
         tableName,
         Object.values(tableColums)
-      )
+      );
       if(!response.ok){
         console.log(response);
         throw new Error();
@@ -217,9 +217,9 @@ export default function CreateTable() {
       setTableName("");
       setColumns([]);
 
-      alert("Table was succesfully created")
+      alert("Table was succesfully created");
     } catch (e) {
-      alert("Something went wrong, try again later.")
+      alert("Something went wrong, try again later.");
     }
   }
 
@@ -236,16 +236,16 @@ export default function CreateTable() {
           />
         </center>
       </>
-    )
+    );
   }
 
   function CanUseForeignKeys(column: IColumn2, index: number) {
     if (!canForeignKeys) return <></>;
 
-    for (let tableName in tablesWithUniqueColumns) {
-      let table = tablesWithUniqueColumns[tableName];
-      for (let columnName in table) {
-        let dbColumn = table[columnName];
+    for (const tableName in tablesWithUniqueColumns) {
+      const table = tablesWithUniqueColumns[tableName];
+      for (const columnName in table) {
+        const dbColumn = table[columnName];
         if (dbColumn.type !== column.type) continue;
         return (
           <>
@@ -257,7 +257,7 @@ export default function CreateTable() {
               />
             </center>
           </>
-        )
+        );
       }
     }
 
@@ -267,12 +267,12 @@ export default function CreateTable() {
   function PosiblesForeignKeys(column: IColumn2, index: number){
     if(!column.useForeingKey) return <></>;
 
-    let tablesWithColumns: Dictionary<string[]> = {};
-    for (let tableName in tablesWithUniqueColumns) {
-      let table = tablesWithUniqueColumns[tableName];
+    const tablesWithColumns: Dictionary<string[]> = {};
+    for (const tableName in tablesWithUniqueColumns) {
+      const table = tablesWithUniqueColumns[tableName];
 
-      for (let columnName in table) {
-        let dbColumn = table[columnName];
+      for (const columnName in table) {
+        const dbColumn = table[columnName];
         if(dbColumn.type !== column.type) continue;
   
         if(tableName in tablesWithColumns){
@@ -283,7 +283,7 @@ export default function CreateTable() {
       }
     }
 
-    let tablesNames = Object.keys(tablesWithColumns);
+    const tablesNames = Object.keys(tablesWithColumns);
 
     if(column.foreingKey.tableName === ""){
       setColumns((currentColumns) => {
@@ -292,32 +292,32 @@ export default function CreateTable() {
           column: tablesWithColumns[tablesNames[0]][0]
         };
         return [...currentColumns];
-      })
+      });
     }
 
     return (
       <>
         <span>ForeignKey Table</span>
         <select
-        value={column.foreingKey.tableName}
-        onChange={(e) => {
-          setColumns((current) => {
-            current[index].foreingKey ={
-              tableName: e.target.value,
-              column: tablesWithColumns[e.target.value][0]
-            }
-            return [... current]
-          });
-        }}
+          value={column.foreingKey.tableName}
+          onChange={(e) => {
+            setColumns((current) => {
+              current[index].foreingKey ={
+                tableName: e.target.value,
+                column: tablesWithColumns[e.target.value][0]
+              };
+              return [... current];
+            });
+          }}
         >
           {(() => {
-            let options: React.JSX.Element[] = [];
+            const options: React.JSX.Element[] = [];
             for(let i = 0; i < tablesNames.length; ++i){
               options.push(
                 <option value={tablesNames[i]} key={`${tablesNames[i]}-${i}`}>
                   {tablesNames[i]}
                 </option>
-              )
+              );
             }
             return options;
           })()}
@@ -325,40 +325,40 @@ export default function CreateTable() {
 
         <span>ForeignKey Column</span>
         <select
-        value={column.foreingKey.column}
-        onChange={(e) => {
-          setColumns((current) => {
-            current[index].foreingKey ={
-              tableName: current[index].foreingKey.tableName,
-              column: e.target.value
-            }
-            return [...current]
-          });
-        }}
+          value={column.foreingKey.column}
+          onChange={(e) => {
+            setColumns((current) => {
+              current[index].foreingKey ={
+                tableName: current[index].foreingKey.tableName,
+                column: e.target.value
+              };
+              return [...current];
+            });
+          }}
         >
           {(() => {
-            if(column.foreingKey.tableName === "") return <option value=""></option>
+            if(column.foreingKey.tableName === "") return <option value=""></option>;
 
-            let options: React.JSX.Element[] = [];
-            let columnsNames = tablesWithColumns[column.foreingKey.tableName];
+            const options: React.JSX.Element[] = [];
+            const columnsNames = tablesWithColumns[column.foreingKey.tableName];
 
             if(!columnsNames) return <></>;
             for(let i = 0; i < columnsNames.length; ++i){
               options.push(
                 <option
-                value={columnsNames[i]}
-                key={`${column.foreingKey.tableName}-${columnsNames[i]}-${i}`}
+                  value={columnsNames[i]}
+                  key={`${column.foreingKey.tableName}-${columnsNames[i]}-${i}`}
                 >
                   {columnsNames[i]}
                 </option>
-              )
+              );
             }
 
-            return options
+            return options;
           })()}
         </select>
       </>
-    )
+    );
 
   }
 
@@ -372,7 +372,7 @@ export default function CreateTable() {
     <>
       <NavBar />
       <label htmlFor="tableName">
-        Table Name: <input type="text" name="tableName" value={tableName} onChange={(e) => { setTableName(e.target.value) }} />
+        Table Name: <input type="text" name="tableName" value={tableName} onChange={(e) => { setTableName(e.target.value); }} />
       </label>
       <br />
       <br />
@@ -382,7 +382,7 @@ export default function CreateTable() {
       <button className="btn" onClick={CrearTable}>Crear</button>
       <div className="container">
         {(() => {
-          let columnsJSX: React.JSX.Element[] = [];
+          const columnsJSX: React.JSX.Element[] = [];
 
           columns.forEach((column, index) => {
             columnsJSX.push(
@@ -417,9 +417,9 @@ export default function CreateTable() {
                     }
                   }}>
                     {(() => {
-                      let options: React.JSX.Element[] = [];
+                      const options: React.JSX.Element[] = [];
                       ColumTypeArray.forEach((tipo) => {
-                        options.push(<option value={tipo} key={`type-select-${index}-${tipo}`}>{TitleCase(tipo)}</option>)
+                        options.push(<option value={tipo} key={`type-select-${index}-${tipo}`}>{TitleCase(tipo)}</option>);
                       });
                       return options;
                     })()}
@@ -463,7 +463,7 @@ export default function CreateTable() {
                     <>
                       <span>Default</span>
                       {(() => {
-                        let columnInput = <ColumnInput
+                        const columnInput = <ColumnInput
                           column={{
                             notNull: true,
                             type: column.type,
@@ -472,9 +472,9 @@ export default function CreateTable() {
                             enum: GetEnumValues(column.enum)
                           }}
                           value={column.default}
-                          setValue={(e) => setColumnPropertie(index, "default", e)} />
+                          setValue={(e) => setColumnPropertie(index, "default", e)} />;
 
-                        if (column.type === ColumnType.BOOL) return <center>{columnInput}</center>
+                        if (column.type === ColumnType.BOOL) return <center>{columnInput}</center>;
                         return columnInput;
                       })()}
                     </>
@@ -483,12 +483,12 @@ export default function CreateTable() {
                   {PosiblesForeignKeys(column, index)}
                 </div>
               </div>
-            )
+            );
           });
 
           return columnsJSX;
         })()}
       </div>
     </>
-  )
+  );
 }

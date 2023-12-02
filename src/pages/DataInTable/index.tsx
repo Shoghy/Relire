@@ -5,8 +5,8 @@ import DBGetDefaultCath from "../../utilities/DBGetDefaultCatch";
 import { useEffect, useRef, useState } from "react";
 import { ColumnType, ColumnValue, Dictionary, IColumn, TableRow } from "../../utilities/types";
 import { AsyncAttempter, RandomString } from "../../utilities/functions";
-import NavBar from '../../components/NavBar';
-import "./styles.css"
+import NavBar from "../../components/NavBar";
+import "./styles.css";
 
 export default function DataInTable(){
   const navigate = useNavigate();
@@ -33,7 +33,7 @@ export default function DataInTable(){
   }, []);
 
   async function Start(){
-    let [tableStructure, tableStrunctureError] = await AsyncAttempter(
+    const [tableStructure, tableStrunctureError] = await AsyncAttempter(
       () => GetTables(
         auth.currentUser?.uid as string,
         params.idDB as string,
@@ -51,13 +51,13 @@ export default function DataInTable(){
       return;
     }
 
-    let [tableData, tableDataError] = await AsyncAttempter(
+    const [tableData, tableDataError] = await AsyncAttempter(
       () => GetDataInTable(
         auth.currentUser?.uid as string,
         params.idDB as string,
         params.tbName as string
       )
-    )
+    );
 
     if(tableDataError){
       DBGetDefaultCath(
@@ -65,20 +65,20 @@ export default function DataInTable(){
         errorElement,
         setErrorElement,
         navigate
-      )
+      );
       return;
     }
 
     DBColumnsToJSXColumns(tableStructure.val());
-    DBRowsToJSXRows(tableData?.val())
+    DBRowsToJSXRows(tableData?.val());
   }
 
   async function DBColumnsToJSXColumns(dbColumns: Dictionary<IColumn>){
-    let JSXColumns: React.JSX.Element[] = [];
+    const JSXColumns: React.JSX.Element[] = [];
 
-    for(let columnName in dbColumns){
-      let dbColumn = dbColumns[columnName];
-      let toolTip:string[] = [];
+    for(const columnName in dbColumns){
+      const dbColumn = dbColumns[columnName];
+      const toolTip:string[] = [];
       toolTip.push(`Type: ${dbColumn.type}`);
       toolTip.push(`Unique: ${dbColumn.unique}`);
       toolTip.push(`Not-Null: ${dbColumn.notNull}`);
@@ -97,37 +97,31 @@ export default function DataInTable(){
       if(dbColumn.default !== undefined){
         toolTip.push(`Default: ${dbColumn.default}`);
       }
-      let key = RandomString(8);
-      JSXColumns.push(<th title={toolTip.join("\n")} key={key}>{columnName}</th>)
+      const key = RandomString(8);
+      JSXColumns.push(<th title={toolTip.join("\n")} key={key}>{columnName}</th>);
     }
 
     JSXColumns.push(<th title="Delete" key={"deleteTable"}>Delete</th>);
-    setColumns(JSXColumns)
+    setColumns(JSXColumns);
   }
 
   async function DeleteRow(rowUID: string){
-    function Delete(){
-      
-    }
-    let _uniqueColumns = uniqueColums.current;
-    if(_uniqueColumns.length == 0){
-
-    }
+    
   }
 
   async function DBRowsToJSXRows(dbRows: TableRow){
-    let JSXRows: React.JSX.Element[] = [];
+    const JSXRows: React.JSX.Element[] = [];
 
-    for(let rowUID in dbRows){
-      let dbRow = dbRows[rowUID];
+    for(const rowUID in dbRows){
+      const dbRow = dbRows[rowUID];
 
-      let JSXRowValues: React.JSX.Element[] = [];
-      for(let columnName in dbRow){
+      const JSXRowValues: React.JSX.Element[] = [];
+      for(const columnName in dbRow){
         let columnValue: ColumnValue = "Null";
         if(columnName in dbRow){
-          columnValue = `${dbRow[columnName]}`
+          columnValue = `${dbRow[columnName]}`;
         }
-        JSXRowValues.push(<td key={`${rowUID}-${columnName}`}>{columnValue}</td>)
+        JSXRowValues.push(<td key={`${rowUID}-${columnName}`}>{columnValue}</td>);
       }
 
       JSXRowValues.push(
@@ -135,7 +129,7 @@ export default function DataInTable(){
           <i className="fa fa-trash" aria-hidden="true"></i>
         </td>
       );
-      JSXRows.push(<tr key={`${rowUID}`} className="tr">{JSXRowValues}</tr>)
+      JSXRows.push(<tr key={`${rowUID}`} className="tr">{JSXRowValues}</tr>);
     }
     setRows(JSXRows);
   }
@@ -146,20 +140,20 @@ export default function DataInTable(){
 
   return (
     <>
-    <NavBar />
-    <Link to="insert">Insert Data</Link>
-    <table id="table" className="mask" cellSpacing="0">
-      <thead id="thead">
-        <tr>
-          {columns}
-        </tr>
-      </thead>
-      <tbody id="tbody">
+      <NavBar />
+      <Link to="insert">Insert Data</Link>
+      <table id="table" className="mask" cellSpacing="0">
+        <thead id="thead">
+          <tr>
+            {columns}
+          </tr>
+        </thead>
+        <tbody id="tbody">
           {rows}
-      </tbody>
-    </table>
-    <br />
-    <br />
+        </tbody>
+      </table>
+      <br />
+      <br />
     </>
   );
 }

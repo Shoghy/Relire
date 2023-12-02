@@ -4,44 +4,44 @@ import NavBar from "../../components/NavBar";
 import { DB, LogIn } from "../../utilities/PageLocations";
 import React, { useEffect, useState } from "react";
 import { AsyncAttempter } from "../../utilities/functions";
-import "./styles.css"
+import "./styles.css";
 import { DatabaseListResponse, IApiResponse } from "../../utilities/types";
 
-interface BasicDBInfo{
+interface BasicDBInfo {
   name: string,
   uid: string
 }
 
-export default function Main(){
+export default function Main() {
   const navigate = useNavigate();
   const [errorElement, setErrorElement] = useState<React.JSX.Element>();
-  const [userDBsElement, setUserDBsElement] = useState<React.JSX.Element | null>(<h1>Loading databases...</h1>)
+  const [userDBsElement, setUserDBsElement] = useState<React.JSX.Element | null>(<h1>Loading databases...</h1>);
   const [userDBs, setUserDBs] = useState<BasicDBInfo[]>([]);
   const createDBButton = (
     <button
-    className="db-button"
-    onClick={() => CreateDB()}
-    key={"Crear DB"}
+      className="db-button"
+      onClick={() => CreateDB()}
+      key={"Crear DB"}
     >
       <i className="fa fa-plus" aria-hidden="true"></i>
     </button>
-  )
+  );
 
   useEffect(() => {
     auth.onAuthStateChanged((user) => {
-      if(user === undefined || user === null){
+      if (user === undefined || user === null) {
         navigate(LogIn);
       }
       GetUserDataBases();
     });
-  }, [])
+  }, []);
 
-  async function GetUserDataBases(){
-    let [dbsList, dbsError] = await AsyncAttempter(
+  async function GetUserDataBases() {
+    const [dbsList, dbsError] = await AsyncAttempter(
       () => GetDatabases()
     );
 
-    if(dbsError || !dbsList || !dbsList.ok){
+    if (dbsError || !dbsList || !dbsList.ok) {
       console.log(dbsError);
       setErrorElement(
         <h1>
@@ -51,12 +51,12 @@ export default function Main(){
       return;
     }
 
-    if((dbsList as DatabaseListResponse).dbInfos.length === 0){
+    if ((dbsList as DatabaseListResponse).dbInfos.length === 0) {
       setUserDBsElement(
         <center>
           <h1>You still don't have any database, create one</h1>
         </center>
-      )
+      );
       return;
     }
 
@@ -64,38 +64,38 @@ export default function Main(){
 
     setUserDBs((current) => {
       (dbsList as DatabaseListResponse).dbInfos
-      .forEach((value) => {
-        current.push({
-          uid: value.dbUID,
-          name: value.dbName
-        })
-      });
-      return [... current];
-    })
+        .forEach((value) => {
+          current.push({
+            uid: value.dbUID,
+            name: value.dbName
+          });
+        });
+      return [...current];
+    });
   }
 
-  async function CreateDB(){
-    let dbName = prompt("Insert the name of the database");
-    if(!dbName) return;
-    let cdbAsync = CreateDatabase(
+  async function CreateDB() {
+    const dbName = prompt("Insert the name of the database");
+    if (!dbName) return;
+    const cdbAsync = CreateDatabase(
       dbName
-    )
+    );
 
     let newDB: IApiResponse;
-    try{
+    try {
       newDB = await cdbAsync;
-    }catch(error){
+    } catch (error) {
       console.error(error);
       return;
     }
 
-    if(!newDB.ok){
-      switch(newDB.error?.code){
-        case "db-limit":{
+    if (!newDB.ok) {
+      switch (newDB.error?.code) {
+        case "db-limit": {
           alert(newDB.error.message);
           break;
         }
-        default:{
+        default: {
           alert("We were not able to process yor request");
           break;
         }
@@ -105,39 +105,39 @@ export default function Main(){
 
     setUserDBsElement(null);
     setUserDBs((current) => {
-      current.push({name: dbName as string, uid: newDB.dbUID});
-      return [... current]
-    })
+      current.push({ name: dbName as string, uid: newDB.dbUID });
+      return [...current];
+    });
   }
 
-  if(errorElement){
+  if (errorElement) {
     return errorElement;
   }
 
   return (
     <>
-      <NavBar/>
+      <NavBar />
       {userDBsElement}
       <div className="dbs-container">
         {(() => {
-          if(userDBs.length === 0) return createDBButton;
+          if (userDBs.length === 0) return createDBButton;
 
-          let dbList: React.JSX.Element[] = [];
-          for(let i = 0; i < userDBs.length; ++i){
-            let userDB = userDBs[i];
+          const dbList: React.JSX.Element[] = [];
+          for (let i = 0; i < userDBs.length; ++i) {
+            const userDB = userDBs[i];
             dbList.push(
               <Link to={DB(userDB.uid as string)} className="db-button" key={i}>
                 <span>{userDB.name}</span>
                 <span>{userDB.uid}</span>
               </Link>
-            )
+            );
           }
 
-          if(dbList.length < 5) dbList.push(createDBButton);
+          if (dbList.length < 5) dbList.push(createDBButton);
 
           return dbList;
         })()}
       </div>
     </>
-  )
+  );
 }

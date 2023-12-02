@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 const admin = require("firebase-admin");
 const serviceAccount = require("./RelireFirebaseAdmin.json");
-const express = require("express");
 const CryptoJS = require("crypto-js");
 
 /**
@@ -51,7 +51,7 @@ const CryptoJS = require("crypto-js");
  * @template T
 */
 
-require('dotenv').config();
+require("dotenv").config();
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -73,15 +73,15 @@ const STATUS_CODES = {
   TOO_MANY_REQUESTS: 429,
   FAILED_DEPENDENCY: 424,
   IDK: 69420
-}
+};
 
 /**@type {<T>(func: () => Promise<T>) => Promise<[T, null] | [null, GenericError]>} */
 async function AsyncAttempter(func) {
   try {
     let result = await func();
-    return [result, null]
+    return [result, null];
   } catch (e) {
-    return [null, e]
+    return [null, e];
   }
 }
 
@@ -142,7 +142,7 @@ function IsValidString(res, value, field) {
 async function GetUserHandler(authId, res) {
   let [user, userError] = await AsyncAttempter(
     () => auth.verifyIdToken(authId, true)
-  )
+  );
 
   if (userError) {
     switch (userError.code) {
@@ -169,11 +169,10 @@ async function GetUserHandler(authId, res) {
     }
     console.log(userError.code);
     console.log(userError.message);
-    console.log(reqInfo);
     return null;
   }
 
-  return user
+  return user;
 }
 
 /**@type {VerifyAuth} */
@@ -201,7 +200,7 @@ async function VerifyAuthUser(req, res) {
   return {
     dbUID: dbUID,
     userUID: user.uid
-  }
+  };
 }
 
 /**@type {VerifyAuth} */
@@ -217,7 +216,7 @@ async function VerifyAuthKey(req, res) {
   let invalidAPIkey = {
     code: "invalid-api-key",
     message: "The API key don't have all the information needed"
-  }
+  };
   let apiString = apiDecripted.toString();
   try {
     apiKey = JSON.parse(apiString);
@@ -255,7 +254,7 @@ async function VerifyAuthKey(req, res) {
   return {
     dbUID: apiKey.dbUID,
     userUID: apiKey.user
-  }
+  };
 }
 
 /**@type {VerifyAuth} */
@@ -305,7 +304,7 @@ async function CreateTable(req, res) {
   const ColumnMissingInfoError = {
     message: "Not all columns had all the information needed",
     code: "missing-column-information"
-  }
+  };
 
   function ColumnMissingInfoResponse() {
     SendAnswer(res, STATUS_CODES.BAD_REQUEST, {
@@ -389,7 +388,7 @@ async function CreateTable(req, res) {
 The foreignKey field sended is not an object.
 There is no tableName or column in foreing's key object.
 The table doesn't exist or doesn't have that column.`
-  }
+  };
 
   function MissingForeingKeyInformation() {
     SendAnswer(res, STATUS_CODES.BAD_REQUEST, {
@@ -447,7 +446,7 @@ The table doesn't exist or doesn't have that column.`
       ok: false,
       error: {
         code: "columns-are-not-the-same-type",
-        message: `The column does not have the same type as the referenced column`
+        message: "The column does not have the same type as the referenced column"
       }
     });
     return;
@@ -576,7 +575,7 @@ async function GetDatabases(req, res) {
     dbInfos.push({
       dbName: db.child("dbName").val(),
       dbUID: db.key
-    })
+    });
   });
 
   SendAnswer(res, STATUS_CODES.OK, {
@@ -601,8 +600,8 @@ function RandomInt(minInclusive, maxInclusive) {
  * @returns {string}
  */
 function RandomString(length) {
-  let result = '';
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = "";
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   const charactersLength = characters.length - 1;
   let counter = 0;
   while (counter < length) {
@@ -651,7 +650,7 @@ async function CreateAPIKey(req, res) {
     user: user.uid,
     dbUID: dbUID,
     random: RandomString(256)
-  }
+  };
 
   let keyObject = CryptoJS.AES.encrypt(JSON.stringify(dbAPIkey), process.env.VITE_CRYPTO_KEY);
   let key = keyObject.toString();
@@ -700,8 +699,8 @@ async function DeleteRow(req, res) {
   if (!authInfo) return;
 
   const tableInfo = await database.ref(`${authInfo.userUID}/${authInfo.dbUID}/tables/${tableName}`).get();
-  
-  if(!tableInfo.exists()){
+
+  if (!tableInfo.exists()) {
     SendAnswer(res, STATUS_CODES.PAGE_NOT_FOUND, {
       ok: false,
       error: {
@@ -711,32 +710,105 @@ async function DeleteRow(req, res) {
     });
     return;
   }
-  
+
   /**@type {Dictionary<Column>} */
   const tableData = tableInfo.val();
   /**@type {string[]} */
   let uniqueColumns = [];
 
-  for(let columnName in tableData){
+  for (let columnName in tableData) {
     let column = tableData[columnName];
-    if(column.unique){
+    if (column.unique) {
       uniqueColumns.push(columnName);
     }
   }
 
-  if(uniqueColumns.length == 0){
+  async function deleteRow() {
     /**@type {Error} */
     let error = undefined;
-    database.ref(`${authInfo.userUID}/${authInfo.dbUID}/tablesData/${rowUID}`).remove((response) => {
+    await database.ref(`${authInfo.userUID}/${authInfo.dbUID}/tablesData/${tableName}/${rowUID}`).remove((response) => {
       error = response;
     });
-    while(error == undefined){
+
+    while (error == undefined) {
       await sleep(1);
     }
-    if(!error){
-      SendAnswer(res, STATUS_CODES.OK)
+
+    if (!error) {
+      SendAnswer(res, STATUS_CODES.OK, { ok: true });
+    } else {
+      SendAnswer(res, STATUS_CODES.FAILED_DEPENDENCY, {
+        ok: false,
+        error: {
+          code: "unknown-error",
+          message: "Something went wrong"
+        }
+      });
     }
   }
+
+  if (uniqueColumns.length == 0) {
+    deleteRow();
+    return;
+  }
+
+  /**@type {Dictionary<any>} */
+  const rowValue = (await database.ref(`${authInfo.userUID}/${authInfo.dbUID}/tablesData/${tableName}/${rowUID}`).get()).val();
+
+  const tables = await database.ref(`${authInfo.userUID}/${authInfo.dbUID}/tables`).get();
+  const tablesValue = tables.val();
+  /**@type {string[]} */
+  let tablesWithReference = [];
+
+  for (let tableID in tablesValue) {
+    if (tableID == tableName) continue;
+
+    let tableColumns = tablesValue[tableID];
+    /**@type {[string, Column][]} */
+    let columnsWithReference = [];
+
+    for (let columnName in tableColumns) {
+      /**@type {Column} */
+      let column = tableColumns[columnName];
+
+      if (column.foreingKey == undefined) continue;
+      if (column.foreingKey.tableName != tableName) continue;
+
+      columnsWithReference.push([columnName, column]);
+    }
+
+    if (columnsWithReference.length == 0) continue;
+
+    /**@type {Dictionary<Dictionary<any>>} */
+    let tableRows = (await database.ref(`${authInfo.userUID}/${authInfo.dbUID}/tablesData/${tableName}`).get()).val();
+    for (let rowUID in tableRows) {
+      let row = tableRows[rowUID];
+      let preiousLength = tablesWithReference.length;
+
+      for (let columnInfo of columnsWithReference) {
+        let foreignKeyValue = row[columnInfo[0]];
+        let originalColumnValue = rowValue[columnInfo[1].foreingKey.column];
+        if (foreignKeyValue != originalColumnValue) continue;
+
+        tablesWithReference.push(tableID);
+        break;
+      }
+
+      if (preiousLength < tablesWithReference.length) break;
+    }
+  }
+
+  if(tablesWithReference.length > 0){
+    SendAnswer(res, STATUS_CODES.UNAUTHORIZED, {
+      ok: false, error:{
+        code: "delete-prevention",
+        message: `The row you're trying to delete is referenced in the tables: \`${tablesWithReference.join(", ")}\``
+      }
+    });
+    return;
+  }
+
+  deleteRow();
 }
 
 /** @type {AdminHandler} */
@@ -787,7 +859,7 @@ module.exports = function RoutesHandler(req, res) {
       return;
     }
     case "/api/delete-row": {
-      CreateTable(req, res);
+      DeleteRow(req, res);
       return;
     }
   }
@@ -799,4 +871,4 @@ module.exports = function RoutesHandler(req, res) {
       code: "wrong-url"
     }
   });
-}
+};
