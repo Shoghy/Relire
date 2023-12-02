@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 const admin = require("firebase-admin");
 const serviceAccount = require("./RelireFirebaseAdmin.json");
-const express = require("express");
 const CryptoJS = require("crypto-js");
 
 /**
@@ -39,6 +39,10 @@ const CryptoJS = require("crypto-js");
  * @prop {string} random
  * 
  * @typedef {(req: Request, res: Response) => Promise<{dbUID: string, userUID: string} | null>} VerifyAuth
+ * 
+ * @typedef Answer
+ * @prop {boolean} ok
+ * @prop {GenericError?} error
 */
 /**
  * @typedef {{
@@ -47,7 +51,7 @@ const CryptoJS = require("crypto-js");
  * @template T
 */
 
-require('dotenv').config();
+require("dotenv").config();
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -57,6 +61,7 @@ admin.initializeApp({
 const auth = admin.auth();
 const database = admin.database();
 
+/**@enum {number}*/
 const STATUS_CODES = {
   BAD_REQUEST: 400,
   PAGE_NOT_FOUND: 404,
@@ -68,49 +73,61 @@ const STATUS_CODES = {
   TOO_MANY_REQUESTS: 429,
   FAILED_DEPENDENCY: 424,
   IDK: 69420
-}
+};
 
 /**@type {<T>(func: () => Promise<T>) => Promise<[T, null] | [null, GenericError]>} */
 async function AsyncAttempter(func) {
   try {
     let result = await func();
-    return [result, null]
+    return [result, null];
   } catch (e) {
-    return [null, e]
+    return [null, e];
   }
+}
+
+/**
+ * @param {Response} res 
+ * @param {STATUS_CODES} status 
+ * @param {Answer} jsonValue 
+ */
+function SendAnswer(res, status, jsonValue) {
+  res.status(status).json(jsonValue);
 }
 
 /**
  * @param {Response} res
  * @param {any} value 
- * @param {{
- *  NotSended: GenericError,
- *  WrongType: GenericError,
- *  EmptyString: GenericError
- * }} errors
+ * @param {string} field
  * @returns {false | string}
  */
-function IsValidString(res, value, errors) {
+function IsValidString(res, value, field) {
+  const code = `invalid-${field}`;
   if (value === undefined) {
-    res.status(STATUS_CODES.BAD_REQUEST)
-      .json({
-        ok: false,
-        error: errors.NotSended
-      });
+    SendAnswer(res, STATUS_CODES.BAD_REQUEST, {
+      ok: false,
+      error: {
+        code: code,
+        message: `${field} was not sended`
+      }
+    });
     return false;
   } else if (typeof (value) !== "string") {
-    res.status(STATUS_CODES.BAD_REQUEST)
-      .json({
-        ok: false,
-        error: errors.WrongType
-      });
+    SendAnswer(res, STATUS_CODES.BAD_REQUEST, {
+      ok: false,
+      error: {
+        code: code,
+        message: `${field} was sended, but is not a string`
+      }
+    });
     return false;
   } else if (!value.trim()) {
-    res.status(STATUS_CODES.BAD_REQUEST)
-      .json({
-        ok: false,
-        error: errors.EmptyString
-      });
+    SendAnswer(res, STATUS_CODES.BAD_REQUEST, {
+      ok: false,
+      error: {
+        code: code,
+        message: `${field} is an empty string`
+      }
+    });
     return false;
   }
 
@@ -125,40 +142,37 @@ function IsValidString(res, value, errors) {
 async function GetUserHandler(authId, res) {
   let [user, userError] = await AsyncAttempter(
     () => auth.verifyIdToken(authId, true)
-  )
+  );
 
   if (userError) {
     switch (userError.code) {
       case "auth/id-token-revoked": {
-        res.status(STATUS_CODES.UNAUTHORIZED)
-          .json({
-            ok: false,
-            error: {
-              message: "The Id Token sended was revoked",
-              code: "id-token-revoked"
-            }
-          });
+        SendAnswer(res, STATUS_CODES.UNAUTHORIZED, {
+          ok: false,
+          error: {
+            message: "The Id Token sended was revoked",
+            code: "id-token-revoked"
+          }
+        });
         break;
       }
       default: {
-        res.status(STATUS_CODES.FAILED_DEPENDENCY)
-          .json({
-            ok: false,
-            error: {
-              message: "An error occurred, try again later",
-              code: "unkwon-error"
-            }
-          });
+        SendAnswer(res, STATUS_CODES.FAILED_DEPENDENCY, {
+          ok: false,
+          error: {
+            message: "An error occurred, try again later",
+            code: "unkwon-error"
+          }
+        });
         break;
       }
     }
     console.log(userError.code);
     console.log(userError.message);
-    console.log(reqInfo);
     return null;
   }
 
-  return user
+  return user;
 }
 
 /**@type {VerifyAuth} */
@@ -166,24 +180,7 @@ async function VerifyAuthUser(req, res) {
   /**@type {ReqInfo} */
   let reqInfo = req.body;
 
-  let dbUID = IsValidString(
-    res,
-    reqInfo.dbUID,
-    {
-      EmptyString: {
-        code: "wrong-dbUID",
-        message: "The dbUID sended was an empty string."
-      },
-      NotSended: {
-        code: "no-dbUID",
-        message: "There was no dbUID in the request sended."
-      },
-      WrongType: {
-        code: "wrong-dbUID",
-        message: "The dbUID sended was not a string."
-      }
-    }
-  );
+  let dbUID = IsValidString(res, reqInfo.dbUID, "dbUID");
   if (!dbUID) return null;
 
   let user = await GetUserHandler(reqInfo.auth, res);
@@ -191,20 +188,19 @@ async function VerifyAuthUser(req, res) {
 
   let db = await database.ref(user.uid).child(dbUID).get();
   if (!db.exists()) {
-    res.status(STATUS_CODES.PAGE_NOT_FOUND)
-      .json({
-        ok: false,
-        error: {
-          code: "db-does-not-exists",
-          message: "You don't have any database with the dbUID sended"
-        }
-      })
+    SendAnswer(res, STATUS_CODES.PAGE_NOT_FOUND, {
+      ok: false,
+      error: {
+        code: "db-does-not-exists",
+        message: "You don't have any database with the dbUID sended"
+      }
+    });
     return null;
   }
   return {
     dbUID: dbUID,
     userUID: user.uid
-  }
+  };
 }
 
 /**@type {VerifyAuth} */
@@ -220,56 +216,45 @@ async function VerifyAuthKey(req, res) {
   let invalidAPIkey = {
     code: "invalid-api-key",
     message: "The API key don't have all the information needed"
-  }
+  };
   let apiString = apiDecripted.toString();
   try {
     apiKey = JSON.parse(apiString);
   } catch (e) {
-    res.status(STATUS_CODES.UNAUTHORIZED)
-      .json({
-        ok: false,
-        error: invalidAPIkey
-      })
+    SendAnswer(res, STATUS_CODES.UNAUTHORIZED, {
+      ok: false,
+      error: invalidAPIkey
+    });
     return null;
   }
 
-  apiKey.dbUID = IsValidString(res, apiKey.dbUID, {
-    EmptyString: invalidAPIkey,
-    NotSended: invalidAPIkey,
-    WrongType: invalidAPIkey
-  });
+  apiKey.dbUID = IsValidString(res, apiKey.dbUID, "API Key");
   if (!apiKey.dbUID) return null;
 
-  apiKey.user = IsValidString(res, apiKey.user, {
-    EmptyString: invalidAPIkey,
-    NotSended: invalidAPIkey,
-    WrongType: invalidAPIkey
-  });
+  apiKey.user = IsValidString(res, apiKey.user, "API Key");
   if (!apiKey.user) return null;
 
   let dbApiKey = await database.ref(`${apiKey.user}/${apiKey.dbUID}/api-key`).get();
   if (!dbApiKey.exists()) {
-    res.status(STATUS_CODES.UNAUTHORIZED)
-      .json({
-        ok: false,
-        error: invalidAPIkey
-      })
+    SendAnswer(res, STATUS_CODES.UNAUTHORIZED, {
+      ok: false,
+      error: invalidAPIkey
+    });
     return null;
   }
 
   if (apiString !== dbApiKey.val()) {
-    res.status(STATUS_CODES.UNAUTHORIZED)
-      .json({
-        ok: false,
-        error: invalidAPIkey
-      })
+    SendAnswer(res, STATUS_CODES.UNAUTHORIZED, {
+      ok: false,
+      error: invalidAPIkey
+    });
     return null;
   }
 
   return {
     dbUID: apiKey.dbUID,
     userUID: apiKey.user
-  }
+  };
 }
 
 /**@type {VerifyAuth} */
@@ -286,14 +271,13 @@ async function VerifyAuthInformation(req, res) {
     }
   }
 
-  res.status(STATUS_CODES.UNAUTHORIZED)
-    .json({
-      ok: false,
-      error: {
-        code: "wrong-auth-type",
-        message: "The type of auth sended is not supported"
-      }
-    })
+  SendAnswer(res, STATUS_CODES.UNAUTHORIZED, {
+    ok: false,
+    error: {
+      code: "wrong-auth-type",
+      message: "The type of auth sended is not supported"
+    }
+  });
 
   return null;
 }
@@ -303,45 +287,30 @@ async function CreateTable(req, res) {
   /**@type {ReqInfo} */
   let reqInfo = req.body;
 
-  const tableName = IsValidString(res, reqInfo.tableName, {
-    EmptyString: {
-      message: "Table name is an empty string",
-      code: "missing-table-info"
-    },
-    NotSended: {
-      message: "Table name was not sended",
-      code: "missing-table-info"
-    },
-    WrongType: {
-      message: "Table name is not a string",
-      code: "missing-table-info"
-    }
-  });
+  const tableName = IsValidString(res, reqInfo.tableName, "tableName");
   if (!tableName) return;
 
   if (!Array.isArray(reqInfo.columns)) {
-    res.status(STATUS_CODES.BAD_REQUEST)
-      .json({
-        ok: false,
-        error: {
-          message: "Columns need to be sent in an array",
-          code: "no-columns"
-        }
-      });
+    SendAnswer(res, STATUS_CODES.BAD_REQUEST, {
+      ok: false,
+      error: {
+        message: "Columns need to be sent in an array",
+        code: "no-columns"
+      }
+    });
     return;
   }
 
   const ColumnMissingInfoError = {
     message: "Not all columns had all the information needed",
     code: "missing-column-information"
-  }
+  };
 
   function ColumnMissingInfoResponse() {
-    res.status(STATUS_CODES.BAD_REQUEST)
-      .json({
-        ok: false,
-        error: ColumnMissingInfoError
-      });
+    SendAnswer(res, STATUS_CODES.BAD_REQUEST, {
+      ok: false,
+      error: ColumnMissingInfoError
+    });
   }
 
   /**@type {Column[]} */
@@ -371,29 +340,20 @@ async function CreateTable(req, res) {
       return;
     }
 
-    let columnName = IsValidString(res, column.name, {
-      EmptyString: ColumnMissingInfoError,
-      NotSended: ColumnMissingInfoError,
-      WrongType: ColumnMissingInfoError
-    });
+    let columnName = IsValidString(res, column.name, "columnName");
     if (!columnName) return;
 
-    column.type = IsValidString(res, column.type, {
-      EmptyString: ColumnMissingInfoError,
-      NotSended: ColumnMissingInfoError,
-      WrongType: ColumnMissingInfoError
-    });
+    column.type = IsValidString(res, column.type, "colunmType");
     if (!column.type) return;
 
     if (columnName in dbColumns) {
-      res.status(STATUS_CODES.BAD_REQUEST)
-        .json({
-          ok: false,
-          error: {
-            code: "twin-columns",
-            message: "Two or more columns have the same name"
-          }
-        });
+      SendAnswer(res, STATUS_CODES.BAD_REQUEST, {
+        ok: false,
+        error: {
+          code: "twin-columns",
+          message: "Two or more columns have the same name"
+        }
+      });
       return;
     }
 
@@ -409,23 +369,34 @@ async function CreateTable(req, res) {
   let authInformation = await VerifyAuthInformation(req, res);
   if (!authInformation) return;
 
+  const userDBReference = database.ref(`${authInformation.userUID}/${authInformation.dbUID}/tables`);
+  let tableNameExists = (await userDBReference.child(tableName).get()).exists();
+  if (tableNameExists) {
+    SendAnswer(res, STATUS_CODES.BAD_REQUEST, {
+      ok: false,
+      error: {
+        code: "table-already-exists",
+        message: `The is a table with the name of "${tableName}" in your database`
+      }
+    });
+    return;
+  }
+
   let ForeingKeyError = {
     code: "bad-foreingkey-info",
     message: `This message can be sent if:
 The foreignKey field sended is not an object.
 There is no tableName or column in foreing's key object.
 The table doesn't exist or doesn't have that column.`
-  }
+  };
 
   function MissingForeingKeyInformation() {
-    res.status(STATUS_CODES.BAD_REQUEST)
-      .json({
-        ok: false,
-        error: ForeingKeyError
-      });
+    SendAnswer(res, STATUS_CODES.BAD_REQUEST, {
+      ok: false,
+      error: ForeingKeyError
+    });
   }
 
-  const userDBReference = database.ref(`${authInformation.userUID}/${authInformation.dbUID}`);
   for (let i = 0; i < columnsWithForeingKey.length; ++i) {
     let columnName = columnsWithForeingKey[i];
     let columnInfo = dbColumns[columnName];
@@ -436,50 +407,34 @@ The table doesn't exist or doesn't have that column.`
       return;
     }
 
-    foreingKey.column = IsValidString(res, foreingKey.column, {
-      EmptyString: ForeingKeyError,
-      NotSended: ForeingKeyError,
-      WrongType: {
-        code: "column-wrong-type",
-        message: "Column name is not a string"
-      }
-    });
+    foreingKey.column = IsValidString(res, foreingKey.column, "ForeignKey Column");
     if (!foreingKey.column) return;
 
-    foreingKey.tableName = IsValidString(res, foreingKey.tableName, {
-      EmptyString: ForeingKeyError,
-      NotSended: ForeingKeyError,
-      WrongType: {
-        code: "table-wrong-type",
-        message: "Table name is not a string"
-      }
-    });
+    foreingKey.tableName = IsValidString(res, foreingKey.tableName, "ForeignKey Table");
     if (!foreingKey.tableName) return;
 
     const columnRef = await userDBReference.child(`${foreingKey.tableName}/${foreingKey.column}`).get();
     if (!columnRef.exists()) {
-      res.status(STATUS_CODES.BAD_REQUEST)
-        .json({
-          ok: false,
-          error: {
-            code: "column-does-not-exist",
-            message: `The column ${foreingKey.column} does not exists in the table ${foreingKey.tableName}`
-          }
-        });
+      SendAnswer(res, STATUS_CODES.BAD_REQUEST, {
+        ok: false,
+        error: {
+          code: "column-does-not-exist",
+          message: `The column "${foreingKey.column}" does not exists in the table "${foreingKey.tableName}"`
+        }
+      });
       return;
     }
 
     /**@type {boolean} */
     const isUnique = columnRef.child("unique").val();
     if (!isUnique) {
-      res.status(STATUS_CODES.BAD_REQUEST)
-        .json({
-          ok: false,
-          error: {
-            code: "column-is-not-unique",
-            message: `The column ${foreingKey.column} in the table ${foreingKey.tableName} is not unique`
-          }
-        });
+      SendAnswer(res, STATUS_CODES.BAD_REQUEST, {
+        ok: false,
+        error: {
+          code: "column-is-not-unique",
+          message: `The column "${foreingKey.column}" in the table "${foreingKey.tableName}" is not unique`
+        }
+      });
       return;
     }
 
@@ -487,14 +442,13 @@ The table doesn't exist or doesn't have that column.`
     const columnType = columnRef.child("type").val();
     if (columnType.toLowerCase() === columnInfo.type.toLowerCase()) continue;
 
-    res.status(STATUS_CODES.BAD_REQUEST)
-      .json({
-        ok: false,
-        error: {
-          code: "columns-are-not-the-same-type",
-          message: `The column does not have the same type as the referenced column`
-        }
-      });
+    SendAnswer(res, STATUS_CODES.BAD_REQUEST, {
+      ok: false,
+      error: {
+        code: "columns-are-not-the-same-type",
+        message: "The column does not have the same type as the referenced column"
+      }
+    });
     return;
   }
 
@@ -502,9 +456,8 @@ The table doesn't exist or doesn't have that column.`
     () => userDBReference.child(tableName).set(dbColumns)
   );
 
-  if(setTableError){
-    res.status(STATUS_CODES.FAILED_DEPENDENCY)
-    .json({
+  if (setTableError) {
+    SendAnswer(res, STATUS_CODES.FAILED_DEPENDENCY, {
       ok: false,
       error: {
         code: "unknown",
@@ -514,9 +467,9 @@ The table doesn't exist or doesn't have that column.`
     return;
   }
   res.status(STATUS_CODES.CREATED)
-  .json({
-    ok: true,
-  });
+    .json({
+      ok: true,
+    });
 }
 
 /** @type {AdminHandler} */
@@ -525,35 +478,17 @@ async function CreateDB(req, res) {
   let reqInfo = req.body;
 
   if (reqInfo.type === "key") {
-    res.status(STATUS_CODES.UNAUTHORIZED)
-      .json({
-        ok: false,
-        error: {
-          message: "The API key just work on the database that was created.",
-          code: "apikey-out-of-bounds"
-        }
-      });
+    SendAnswer(res, STATUS_CODES.UNAUTHORIZED, {
+      ok: false,
+      error: {
+        message: "The API key just work on the database that was created.",
+        code: "apikey-out-of-bounds"
+      }
+    });
     return;
   }
 
-  let dbName = IsValidString(
-    res,
-    reqInfo.dbName,
-    {
-      NotSended: {
-        message: "Database name was not granted.",
-        code: "missing-dbName"
-      },
-      WrongType: {
-        message: "Database name is not a string.",
-        code: "wrong-dbName"
-      },
-      EmptyString: {
-        message: "Database name is an empty string.",
-        code: "wrong-dbName"
-      }
-    }
-  );
+  let dbName = IsValidString(res, reqInfo.dbName, "dbName");
   if (!dbName) return;
 
   let user = await GetUserHandler(reqInfo.auth, res);
@@ -573,33 +508,30 @@ async function CreateDB(req, res) {
 
     if (pushError) {
       console.log(pushError);
-      res.status(STATUS_CODES.FAILED_DEPENDENCY)
-        .json({
-          ok: false,
-          error: {
-            message: "An error occurred, try again later",
-            code: "unkwon-error"
-          }
-        });
+      SendAnswer(res, STATUS_CODES.FAILED_DEPENDENCY, {
+        ok: false,
+        error: {
+          message: "An error occurred, try again later",
+          code: "unkwon-error"
+        }
+      });
       return;
     }
 
-    res.status(STATUS_CODES.CREATED)
-      .json({
-        ok: true,
-        dbUID: dbResponse.key
-      });
+    SendAnswer(res, STATUS_CODES.CREATED, {
+      ok: true,
+      dbUID: dbResponse.key
+    });
     return;
   }
 
-  res.status(STATUS_CODES.TOO_MANY_REQUESTS)
-    .json({
-      ok: false,
-      error: {
-        message: "Sorry, for now, each user is limited to 5 databases.",
-        code: "db-limit"
-      }
-    });
+  SendAnswer(res, STATUS_CODES.TOO_MANY_REQUESTS, {
+    ok: false,
+    error: {
+      message: "Sorry, for now, each user is limited to 5 databases.",
+      code: "db-limit"
+    }
+  });
 }
 
 /** @type {AdminHandler} */
@@ -608,14 +540,13 @@ async function GetDatabases(req, res) {
   let reqInfo = req.body;
 
   if (reqInfo.type === "key") {
-    res.status(STATUS_CODES.UNAUTHORIZED)
-      .json({
-        ok: false,
-        error: {
-          message: "Each database has its own APIkey, one cannot work in others.",
-          code: "apikey-out-of-bounds"
-        }
-      });
+    SendAnswer(res, STATUS_CODES.UNAUTHORIZED, {
+      ok: false,
+      error: {
+        message: "Each database has its own APIkey, one cannot work in others.",
+        code: "apikey-out-of-bounds"
+      }
+    });
     return;
   }
 
@@ -628,14 +559,13 @@ async function GetDatabases(req, res) {
 
   if (dbError) {
     console.log(dbError);
-    res.status(STATUS_CODES.FAILED_DEPENDENCY)
-      .json({
-        ok: false,
-        error: {
-          message: "An error occurred, try again later",
-          code: "unkwon-error"
-        }
-      });
+    SendAnswer(res, STATUS_CODES.UNAUTHORIZED, {
+      ok: false,
+      error: {
+        message: "An error occurred, try again later",
+        code: "unkwon-error"
+      }
+    });
     return;
   }
 
@@ -645,14 +575,13 @@ async function GetDatabases(req, res) {
     dbInfos.push({
       dbName: db.child("dbName").val(),
       dbUID: db.key
-    })
+    });
   });
 
-  res.status(STATUS_CODES.OK)
-    .json({
-      ok: true,
-      dbInfos: dbInfos
-    })
+  SendAnswer(res, STATUS_CODES.OK, {
+    ok: true,
+    dbInfos: dbInfos
+  });
 }
 
 /**
@@ -671,8 +600,8 @@ function RandomInt(minInclusive, maxInclusive) {
  * @returns {string}
  */
 function RandomString(length) {
-  let result = '';
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = "";
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   const charactersLength = characters.length - 1;
   let counter = 0;
   while (counter < length) {
@@ -688,35 +617,17 @@ async function CreateAPIKey(req, res) {
   let reqInfo = req.body;
 
   if (reqInfo.type === "key") {
-    res.status(STATUS_CODES.UNAUTHORIZED)
-      .json({
-        ok: false,
-        error: {
-          message: "Holy recursion! APIkeys cannot create APIkeys.",
-          code: "apikey-out-of-bounds"
-        }
-      });
+    SendAnswer(res, STATUS_CODES.UNAUTHORIZED, {
+      ok: false,
+      error: {
+        message: "Holy recursion! APIkeys cannot create APIkeys.",
+        code: "apikey-out-of-bounds"
+      }
+    });
     return;
   }
 
-  let dbUID = IsValidString(
-    res,
-    reqInfo.dbUID,
-    {
-      EmptyString: {
-        code: "wrong-dbUID",
-        message: "The dbUID sended was an empty string."
-      },
-      NotSended: {
-        code: "no-dbUID",
-        message: "There was no dbUID in the request sended."
-      },
-      WrongType: {
-        code: "wrong-dbUID",
-        message: "The dbUID sended was not a string."
-      }
-    }
-  );
+  let dbUID = IsValidString(res, reqInfo.dbUID, "dbName");
   if (!dbUID) return;
 
   let user = await GetUserHandler(reqInfo.auth, res);
@@ -725,14 +636,13 @@ async function CreateAPIKey(req, res) {
   let dbRef = database.ref(`${user.uid}/${dbUID}`);
   let dbInfo = await database.ref(`${user.uid}/${dbUID}`).get();
   if (!dbInfo.exists()) {
-    res.status(STATUS_CODES.PAGE_NOT_FOUND)
-      .json({
-        ok: false,
-        error: {
-          message: "The DataBase provided do not exists or was deleted.",
-          code: "not-a-real-db"
-        }
-      });
+    SendAnswer(res, STATUS_CODES.PAGE_NOT_FOUND, {
+      ok: false,
+      error: {
+        message: "The DataBase provided do not exists or was deleted.",
+        code: "not-a-real-db"
+      }
+    });
     return;
   }
 
@@ -740,7 +650,7 @@ async function CreateAPIKey(req, res) {
     user: user.uid,
     dbUID: dbUID,
     random: RandomString(256)
-  }
+  };
 
   let keyObject = CryptoJS.AES.encrypt(JSON.stringify(dbAPIkey), process.env.VITE_CRYPTO_KEY);
   let key = keyObject.toString();
@@ -750,14 +660,13 @@ async function CreateAPIKey(req, res) {
   );
 
   if (updateError) {
-    res.status(STATUS_CODES.FAILED_DEPENDENCY)
-      .json({
-        ok: false,
-        error: {
-          message: "An error occurred, try again later",
-          code: "unkwon-error"
-        }
-      });
+    SendAnswer(res, STATUS_CODES.FAILED_DEPENDENCY, {
+      ok: false,
+      error: {
+        message: "An error occurred, try again later",
+        code: "unkwon-error"
+      }
+    });
     console.log(updateError);
     return;
   }
@@ -770,53 +679,156 @@ async function CreateAPIKey(req, res) {
 }
 
 /** @type {AdminHandler} */
-module.exports = function RoutesHandler(req, res) {
-  if (!req.is("json")) {
-    res.status(STATUS_CODES.BAD_REQUEST)
-      .json({
-        "ok": false,
-        "error": {
-          "message": "JSON needed for authorization and context info.",
-          "code": "request-without-JSON"
+async function DeleteRow(req, res) {
+  /**@type {ReqInfo} */
+  let reqInfo = req.body;
+
+  const tableName = IsValidString(res, reqInfo.tableName, "tableName");
+  if (!tableName) return;
+  const rowUID = IsValidString(res, reqInfo.rowUID, "rowUID");
+  if (!rowUID) return;
+
+  const authInfo = await VerifyAuthInformation(req, res);
+  if (!authInfo) return;
+
+  const tableInfo = await database.ref(`${authInfo.userUID}/${authInfo.dbUID}/tables/${tableName}`).get();
+
+  if (!tableInfo.exists()) {
+    SendAnswer(res, STATUS_CODES.PAGE_NOT_FOUND, {
+      ok: false,
+      error: {
+        code: "table-not-found",
+        message: `The tableName sended "${tableName}" is not a table of your database`
+      }
+    });
+    return;
+  }
+
+  /**@type {Dictionary<Column>} */
+  const tableData = tableInfo.val();
+  /**@type {string[]} */
+  let uniqueColumns = [];
+
+  for (let columnName in tableData) {
+    let column = tableData[columnName];
+    if (column.unique) {
+      uniqueColumns.push(columnName);
+    }
+  }
+
+  async function deleteRow() {
+    /**@type {Error} */
+    let error = undefined;
+    await database.ref(`${authInfo.userUID}/${authInfo.dbUID}/tablesData/${tableName}/${rowUID}`).remove((response) => {
+      error = response;
+    });
+
+    if (!error) {
+      SendAnswer(res, STATUS_CODES.OK, { ok: true });
+    } else {
+      SendAnswer(res, STATUS_CODES.FAILED_DEPENDENCY, {
+        ok: false,
+        error: {
+          code: "unknown-error",
+          message: "Something went wrong"
         }
       });
+    }
+  }
+
+  if (uniqueColumns.length == 0) {
+    deleteRow();
+    return;
+  }
+
+  /**@type {Dictionary<any>} */
+  const rowValue = (await database.ref(`${authInfo.userUID}/${authInfo.dbUID}/tablesData/${tableName}/${rowUID}`).get()).val();
+
+  const tables = await database.ref(`${authInfo.userUID}/${authInfo.dbUID}/tables`).get();
+  /**@type {Dictionary<Dictionary<Column>>} */
+  const tablesValue = tables.val();
+  /**@type {string[]} */
+  let tablesWithReference = [];
+
+  for (let tableID in tablesValue) {
+    if (tableID == tableName) continue;
+
+    let tableColumns = tablesValue[tableID];
+    /**@type {[string, Column][]} */
+    let columnsWithReference = [];
+
+    for (let columnName in tableColumns) {
+      /**@type {Column} */
+      let column = tableColumns[columnName];
+
+      if (column.foreingKey === undefined) continue;
+      if (column.foreingKey.tableName !== tableName) continue;
+
+      columnsWithReference.push([columnName, column]);
+    }
+
+    if (columnsWithReference.length === 0) continue;
+
+    /**@type {Dictionary<Dictionary<any>>} */
+    let tableRows = (await database.ref(`${authInfo.userUID}/${authInfo.dbUID}/tablesData/${tableID}`).get()).val();
+    for (let rowUID in tableRows) {
+      let row = tableRows[rowUID];
+      let preiousLength = tablesWithReference.length;
+
+      for (let columnInfo of columnsWithReference) {
+        let foreignKeyValue = row[columnInfo[0]];
+        let originalColumnValue = rowValue[columnInfo[1].foreingKey.column];
+        if (foreignKeyValue != originalColumnValue) continue;
+
+        tablesWithReference.push(tableID);
+        break;
+      }
+
+      if (preiousLength < tablesWithReference.length) break;
+    }
+  }
+
+  if(tablesWithReference.length > 0){
+    SendAnswer(res, STATUS_CODES.UNAUTHORIZED, {
+      ok: false, error:{
+        code: "delete-prevention",
+        message: `The row you're trying to delete is referenced in the tables: \`${tablesWithReference.join(", ")}\``
+      }
+    });
+    return;
+  }
+
+  deleteRow();
+}
+
+/** @type {AdminHandler} */
+module.exports = function RoutesHandler(req, res) {
+  if (!req.is("json")) {
+    SendAnswer(res, STATUS_CODES.BAD_REQUEST, {
+      ok: false,
+      error: {
+        message: "JSON needed for authorization and context info.",
+        code: "request-without-JSON"
+      }
+    });
     return;
   }
 
   if (typeof (req.body) !== "object") {
-    res.status(STATUS_CODES.BAD_REQUEST)
-      .json({
-        "ok": false,
-        "error": {
-          "message": "The body is not an object.",
-          "code": "body-type"
-        }
-      });
+    SendAnswer(res, STATUS_CODES.BAD_REQUEST, {
+      ok: false,
+      error: {
+        message: "The body is not an object.",
+        code: "body-type"
+      }
+    });
+    return;
   }
 
-  let missingAuth = {
-    code: "missing-auth",
-    message: "Incomplete or no auth information was sended."
-  }
-
-  req.body.auth = IsValidString(res, req.body.auth, {
-    EmptyString: missingAuth,
-    NotSended: missingAuth,
-    WrongType: {
-      code: "wrong-auth-info",
-      message: "The auth information sended is not the rigth type"
-    }
-  });
+  req.body.auth = IsValidString(res, req.body.auth, "authInfo");
   if (!req.body.auth) return;
 
-  req.body.type = IsValidString(res, req.body.type, {
-    EmptyString: missingAuth,
-    NotSended: missingAuth,
-    WrongType: {
-      code: "wrong-auth-info",
-      message: "The auth information sended is not the rigth type"
-    }
-  });
+  req.body.type = IsValidString(res, req.body.type, "authInfo");
   if (!req.body.type) return;
 
   switch (req.originalUrl) {
@@ -832,18 +844,21 @@ module.exports = function RoutesHandler(req, res) {
       GetDatabases(req, res);
       return;
     }
-    case "/api/create-table":{
+    case "/api/create-table": {
       CreateTable(req, res);
+      return;
+    }
+    case "/api/delete-row": {
+      DeleteRow(req, res);
       return;
     }
   }
 
-  res.status(STATUS_CODES.PAGE_NOT_FOUND)
-    .json({
-      ok: false,
-      error: {
-        message: "Page not found",
-        code: "wrong-url"
-      }
-    })
-}
+  SendAnswer(res, STATUS_CODES.PAGE_NOT_FOUND, {
+    ok: false,
+    error: {
+      message: "Page not found",
+      code: "wrong-url"
+    }
+  });
+};

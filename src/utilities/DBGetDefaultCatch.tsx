@@ -9,11 +9,11 @@ export default function DBGetDefaultCath(
 ){
   if(errorElement) return;
 
-  let message = error ? error.message : "";
+  const message = error ? error.message : "";
   let contenido: React.JSX.Element | undefined = undefined;
   switch(message){
     case "Permission denied":{
-      contenido = <h1>No tienes permiso para acceder a esta base de datos</h1>
+      contenido = <h1>No tienes permiso para acceder a esta base de datos</h1>;
       break;
     }
     default:{

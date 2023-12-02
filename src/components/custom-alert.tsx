@@ -37,16 +37,16 @@ export default function CustomAlert(props: CustomAlertProperties){
         }}>
           <h3 style={{color: "black"}}>{props.title}</h3>
           <h3
-          style={{color: "black", cursor: "pointer"}}
-          onClick={() => {
-            if(props.onClose){
-              props.onClose();
-            }
-          }}
+            style={{color: "black", cursor: "pointer"}}
+            onClick={() => {
+              if(props.onClose){
+                props.onClose();
+              }
+            }}
           >X</h3>
         </div>
         {props.children}
       </div>
     </div>
-  )
+  );
 }

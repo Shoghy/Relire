@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { GetDataInTable, GetTables, auth, InsertRow } from '../../utilities/DBclient';
+import { GetDataInTable, GetTables, auth, InsertRow } from "../../utilities/DBclient";
 import { LogIn } from "../../utilities/PageLocations";
 import { ColumnType, ColumnValue, Dictionary, IColumn } from "../../utilities/types";
 import React, { useEffect, useState } from "react";
@@ -26,15 +26,15 @@ export default function InsertInTable(){
   }, []);
 
   async function Start(){
-    let [tableData, tableDataError] = await AsyncAttempter(
+    const [tableData, tableDataError] = await AsyncAttempter(
       () => GetTables(
         auth.currentUser?.uid as string,
         params.idDB as string,
         params.tbName
       )
-    )
+    );
     if(tableDataError){
-      DBGetDefaultCath(tableDataError, errorElement, setErrorElement, navigate)
+      DBGetDefaultCath(tableDataError, errorElement, setErrorElement, navigate);
       return;
     }
 
@@ -48,11 +48,11 @@ export default function InsertInTable(){
 
   function AddRow(){
     setInserts((currentInsert) => {
-      let newInsert : Dictionary<ColumnValue> = {};
+      const newInsert : Dictionary<ColumnValue> = {};
   
-      for(let columnName in columns){
+      for(const columnName in columns){
         let value : ColumnValue = "";
-        let column = columns[columnName];
+        const column = columns[columnName];
 
         if(column.enum !== undefined && column.notNull){
           value = column.enum[0];
@@ -65,16 +65,16 @@ export default function InsertInTable(){
         newInsert[columnName] = value;
       }
   
-      return [... currentInsert, newInsert]
+      return [... currentInsert, newInsert];
     });
   }
 
   async function GetAutoIncrementsLastValues(){
-    let columnsWithAutoIncrement: Dictionary<ColumnValue> = {};
-    let columnsName: string[] = [];
+    const columnsWithAutoIncrement: Dictionary<ColumnValue> = {};
+    const columnsName: string[] = [];
 
-    for(let columnName in columns){
-      let column = columns[columnName];
+    for(const columnName in columns){
+      const column = columns[columnName];
       if(!column.autoIncrement) continue;
 
       columnsWithAutoIncrement[columnName] = -1;
@@ -85,13 +85,13 @@ export default function InsertInTable(){
       return columnsWithAutoIncrement;
     }
 
-    let [table, tableError] = await AsyncAttempter(
+    const [table, tableError] = await AsyncAttempter(
       () => GetDataInTable(
         auth.currentUser?.uid as string,
         params.idDB as string,
         params.tbName as string
       )
-    )
+    );
 
     if(tableError){
       DBGetDefaultCath(
@@ -99,17 +99,17 @@ export default function InsertInTable(){
         errorElement,
         setErrorElement,
         navigate
-      )
+      );
       return;
     }
 
     if(!(table instanceof Object)){
-      setErrorElement(<h1>Something went wrong</h1>)
+      setErrorElement(<h1>Something went wrong</h1>);
       return;
     }
 
     table.forEach((insert) => {
-      let insertValue: Dictionary<ColumnValue> = insert.val();
+      const insertValue: Dictionary<ColumnValue> = insert.val();
       columnsName.forEach((columnName) => {
         if(insertValue[columnName] > columnsWithAutoIncrement[columnName]){
           columnsWithAutoIncrement[columnName] = insertValue[columnName];
@@ -121,14 +121,14 @@ export default function InsertInTable(){
   }
 
   async function InsertValues(){
-    let removeIndices: number[] = [];
-    let errors: [number[], string[]] = [[], []];
-    let autoIncrements = (await GetAutoIncrementsLastValues()) as Dictionary<ColumnValue>;
+    const removeIndices: number[] = [];
+    const errors: [number[], string[]] = [[], []];
+    const autoIncrements = (await GetAutoIncrementsLastValues()) as Dictionary<ColumnValue>;
 
     inserts.forEach((rowValues, index) => {
-      let insert: Dictionary<ColumnValue> = {};
-      for(let columnName in columns){
-        let column = columns[columnName];
+      const insert: Dictionary<ColumnValue> = {};
+      for(const columnName in columns){
+        const column = columns[columnName];
         let value = rowValues[columnName];
 
         if(value === undefined || value === null || value === ""){
@@ -220,8 +220,8 @@ export default function InsertInTable(){
       ).catch(() => {
         setErrorElement(
           <h1>No fue posible insertar los datos en la base de datos</h1>
-        )
-      })
+        );
+      });
     });
 
     removeIndices.reverse();
@@ -229,7 +229,7 @@ export default function InsertInTable(){
       removeIndices.forEach((i) => {
         currentInsert.splice(i, 1);
       });
-      return [... currentInsert]
+      return [... currentInsert];
     });
 
     let errorMessage: string = "";
@@ -238,7 +238,7 @@ export default function InsertInTable(){
     errors[1].forEach((value, index) => {
       if(index !== lastIndex){
         lastIndex = index;
-        errorMessage += `\n(${index}): `
+        errorMessage += `\n(${index}): `;
       }
       errorMessage += `${value}, `;
     });
@@ -252,7 +252,7 @@ export default function InsertInTable(){
         currentInsert[index][columnName] = value;
         return [... currentInsert];
       });
-    }
+    };
   }
 
   if(errorElement){
@@ -261,53 +261,53 @@ export default function InsertInTable(){
 
   return (
     <>
-    <table>
-      <thead>
-        <tr>
+      <table>
+        <thead>
+          <tr>
+            {(() => {
+              const tableColumns : React.JSX.Element[] = [];
+              for(const columnName in columns){
+                tableColumns.push(<th key={columnName}>{columnName}</th>);
+              }
+              tableColumns.push(<th key={RandomString(6)}>btnDelete</th>);
+              return tableColumns;
+            })()}
+          </tr>
+        </thead>
+        <tbody>
           {(() => {
-            let tableColumns : React.JSX.Element[] = [];
-            for(let columnName in columns){
-              tableColumns.push(<th key={columnName}>{columnName}</th>)
-            }
-            tableColumns.push(<th key={RandomString(6)}>btnDelete</th>);
-            return tableColumns;
+            const tableRows : React.JSX.Element[] = [];
+            inserts.forEach((rowValue, index) => {
+              tableRows.push(<tr key={index}>
+                {(() => {
+                  const rowsValue : React.JSX.Element[] = [];
+                  for(const columnName in columns){
+                    const column = columns[columnName];
+                    rowsValue.push(
+                      <td key={`${index}-${columnName}`}>
+                        <ColumnInput
+                          column={column}
+                          value={rowValue[columnName]}
+                          setValue={CreateSetValue(index, columnName)}
+                        />
+                      </td>
+                    );
+                  }
+                  rowsValue.push(<td key={`${index}-btnDelete-${index}`}><button className="btn">Delete</button></td>);
+                  return rowsValue;
+                })()}
+              </tr>);
+            });
+            return tableRows;
           })()}
-        </tr>
-      </thead>
-      <tbody>
-        {(() => {
-          let tableRows : React.JSX.Element[] = [];
-          inserts.forEach((rowValue, index) => {
-            tableRows.push(<tr key={index}>
-              {(() => {
-                let rowsValue : React.JSX.Element[] = [];
-                for(let columnName in columns){
-                  let column = columns[columnName];
-                  rowsValue.push(
-                    <td key={`${index}-${columnName}`}>
-                      <ColumnInput
-                      column={column}
-                      value={rowValue[columnName]}
-                      setValue={CreateSetValue(index, columnName)}
-                      />
-                    </td>
-                  );
-                }
-                rowsValue.push(<td key={`${index}-btnDelete-${index}`}><button className="btn">Delete</button></td>);
-                return rowsValue
-              })()}
-            </tr>);
-          });
-          return tableRows;
-        })()}
-      </tbody>
-    </table>
-    <br />
-    <br />
-    <button onClick={AddRow} className="btn">Add Row</button>
-    <br />
-    <br />
-    <button onClick={InsertValues} className="btn">Insert Values</button>
+        </tbody>
+      </table>
+      <br />
+      <br />
+      <button onClick={AddRow} className="btn">Add Row</button>
+      <br />
+      <br />
+      <button onClick={InsertValues} className="btn">Insert Values</button>
     </>
-  )
+  );
 }

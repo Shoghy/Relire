@@ -23,12 +23,12 @@ export default function DescribeDB() {
         navigate(LogIn);
         return;
       }
-      Start()
+      Start();
     });
   }, []);
 
   async function Start() {
-    let [getDBResult, getDBError] = await AsyncAttempter(
+    const [getDBResult, getDBError] = await AsyncAttempter(
       () => GetTables(
         auth.currentUser?.uid as string,
         dbUID
@@ -45,16 +45,16 @@ export default function DescribeDB() {
       return;
     }
 
-    let dbTables: Dictionary<Dictionary<IColumn>> = getDBResult?.val();
+    const dbTables: Dictionary<Dictionary<IColumn>> = getDBResult?.val();
     if (dbTables === undefined) {
-      setDBDataElement(<h1>Aún no hay tablas, crea una</h1>)
+      setDBDataElement(<h1>Aún no hay tablas, crea una</h1>);
       return;
     }
 
-    let tables: React.JSX.Element[] = [];
-    let key = RandomString(6);
+    const tables: React.JSX.Element[] = [];
+    const key = RandomString(6);
 
-    for(let dbTableName in dbTables){
+    for(const dbTableName in dbTables){
       tables.push(
         <tr key={`${dbTableName}-${key}`}>
           <td><Link to={DataInTable(dbUID, dbTableName)}>{dbTableName}</Link></td>
@@ -78,22 +78,22 @@ export default function DescribeDB() {
 
   async function CreateAPIKey(){
     const userIDToken = await auth.currentUser?.getIdToken();
-    let requestBody: IApiRequest = {
+    const requestBody: IApiRequest = {
       auth: userIDToken as string,
       type: "user",
       dbUID: dbUID
-    }
+    };
 
     const serverURL = import.meta.env.VITE_SERVER_URL;
-    let response = await fetch(
+    const response = await fetch(
       `${serverURL}/api/create-api`, {
-      body: JSON.stringify(requestBody),
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        'Accept': 'application/json'
-      }
-    });
+        body: JSON.stringify(requestBody),
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+          "Accept": "application/json"
+        }
+      });
 
     let apiResponse: IApiResponse;
 
@@ -136,7 +136,7 @@ export default function DescribeDB() {
         <Link to={DBTableCreate(dbUID)} className="btn">Crear Tabla</Link>
       </center>
       {
-      APIKey &&
+        APIKey &&
       <CustomAlert title="API KEY" onClose={() => {
         setAPIkey("");
       }}>
@@ -155,5 +155,5 @@ export default function DescribeDB() {
       </CustomAlert>
       }
     </>
-  )
+  );
 }

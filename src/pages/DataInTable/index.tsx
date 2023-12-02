@@ -1,12 +1,12 @@
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { GetDataInTable, GetTables, auth } from "../../utilities/DBclient";
+import { DeleteRow, GetDataInTable, GetTables, auth } from "../../utilities/DBclient";
 import { LogIn } from "../../utilities/PageLocations";
 import DBGetDefaultCath from "../../utilities/DBGetDefaultCatch";
 import { useEffect, useState } from "react";
 import { ColumnType, ColumnValue, Dictionary, IColumn, TableRow } from "../../utilities/types";
-import { AsyncAttempter, RandomString } from "../../utilities/functions";
-import NavBar from '../../components/NavBar';
-import "./styles.css"
+import { AsyncAttempter, RandomString, RemoveIndexOfArray } from "../../utilities/functions";
+import NavBar from "../../components/NavBar";
+import "./styles.css";
 
 export default function DataInTable(){
   const navigate = useNavigate();
@@ -31,7 +31,7 @@ export default function DataInTable(){
   }, []);
 
   async function Start(){
-    let [tableStructure, tableStrunctureError] = await AsyncAttempter(
+    const [tableStructure, tableStrunctureError] = await AsyncAttempter(
       () => GetTables(
         auth.currentUser?.uid as string,
         params.idDB as string,
@@ -49,13 +49,13 @@ export default function DataInTable(){
       return;
     }
 
-    let [tableData, tableDataError] = await AsyncAttempter(
+    const [tableData, tableDataError] = await AsyncAttempter(
       () => GetDataInTable(
         auth.currentUser?.uid as string,
         params.idDB as string,
         params.tbName as string
       )
-    )
+    );
 
     if(tableDataError){
       DBGetDefaultCath(
@@ -63,20 +63,20 @@ export default function DataInTable(){
         errorElement,
         setErrorElement,
         navigate
-      )
+      );
       return;
     }
 
     DBColumnsToJSXColumns(tableStructure.val());
-    DBRowsToJSXRows(tableData?.val())
+    DBRowsToJSXRows(tableData?.val());
   }
 
   async function DBColumnsToJSXColumns(dbColumns: Dictionary<IColumn>){
-    let JSXColumns: React.JSX.Element[] = [];
+    const JSXColumns: React.JSX.Element[] = [];
 
-    for(let columnName in dbColumns){
-      let dbColumn = dbColumns[columnName];
-      let toolTip:string[] = [];
+    for(const columnName in dbColumns){
+      const dbColumn = dbColumns[columnName];
+      const toolTip:string[] = [];
       toolTip.push(`Type: ${dbColumn.type}`);
       toolTip.push(`Unique: ${dbColumn.unique}`);
       toolTip.push(`Not-Null: ${dbColumn.notNull}`);
@@ -95,28 +95,61 @@ export default function DataInTable(){
       if(dbColumn.default !== undefined){
         toolTip.push(`Default: ${dbColumn.default}`);
       }
-      let key = RandomString(8);
-      JSXColumns.push(<th title={toolTip.join("\n")} key={key}>{columnName}</th>)
+      const key = RandomString(8);
+      JSXColumns.push(<th title={toolTip.join("\n")} key={key}>{columnName}</th>);
     }
 
-    setColumns(JSXColumns)
+    JSXColumns.push(<th title="Delete" key={"deleteTable"}>Delete</th>);
+    setColumns(JSXColumns);
+  }
+
+  async function RemoveRow(rowUID: string){
+    const response = await DeleteRow(
+      params.idDB as string,
+      params.tbName as string,
+      rowUID
+    );
+
+    if(response.ok){
+      setRows((current) => {
+        for(let i = 0; i < current.length; ++i){
+          const row = current[i];
+
+          if(row.key !== rowUID) continue;
+        
+          current = RemoveIndexOfArray(current, i);
+          break;
+        }
+        return [... current];
+      });
+    } else {
+      alert(response.error?.message);
+    }
   }
 
   async function DBRowsToJSXRows(dbRows: TableRow){
-    let JSXRows: React.JSX.Element[] = [];
+    const JSXRows: React.JSX.Element[] = [];
 
-    for(let rowUID in dbRows){
-      let dbRow = dbRows[rowUID];
+    for(const rowUID in dbRows){
+      const dbRow = dbRows[rowUID];
 
-      let JSXRowValues: React.JSX.Element[] = [];
-      for(let columnName in dbRow){
+      const JSXRowValues: React.JSX.Element[] = [];
+      for(const columnName in dbRow){
         let columnValue: ColumnValue = "Null";
         if(columnName in dbRow){
-          columnValue = `${dbRow[columnName]}`
+          columnValue = `${dbRow[columnName]}`;
         }
-        JSXRowValues.push(<td key={`${rowUID}-${columnName}`}>{columnValue}</td>)
+        JSXRowValues.push(<td key={`${rowUID}-${columnName}`}>{columnValue}</td>);
       }
-      JSXRows.push(<tr key={`${rowUID}`} className="tr">{JSXRowValues}</tr>)
+
+      JSXRowValues.push(
+        <td key={`Delete-${rowUID}`} onClick={() => RemoveRow(rowUID)}>
+          <center>
+            <i className="fa fa-trash" style={{color: "#f00"}} aria-hidden="true"/>
+          </center>
+        </td>
+      );
+      JSXRows.push(<tr key={`${rowUID}`} className="tr">{JSXRowValues}</tr>);
     }
     setRows(JSXRows);
   }
@@ -127,20 +160,20 @@ export default function DataInTable(){
 
   return (
     <>
-    <NavBar />
-    <Link to="insert">Insert Data</Link>
-    <table id="table" className="mask" cellSpacing="0">
-      <thead id="thead">
-        <tr>
-          {columns}
-        </tr>
-      </thead>
-      <tbody id="tbody">
+      <NavBar />
+      <Link to="insert">Insert Data</Link>
+      <table id="table" className="mask" cellSpacing="0">
+        <thead id="thead">
+          <tr>
+            {columns}
+          </tr>
+        </thead>
+        <tbody id="tbody">
           {rows}
-      </tbody>
-    </table>
-    <br />
-    <br />
+        </tbody>
+      </table>
+      <br />
+      <br />
     </>
   );
 }
