@@ -801,6 +801,100 @@ async function DeleteRow(req, res) {
   deleteRow();
 }
 
+/**@type {AdminHandler} */
+async function DeleteTable(req, res){
+  /**@type {ReqInfo} */
+  let reqInfo = req.body;
+  
+  const tableName = IsValidString(res, reqInfo.tableName, "tableName");
+  if(!tableName) return;
+  const authInfo = await VerifyAuthInformation(req, res);
+  if (!authInfo) return;
+  
+  const userDBRef = database.ref(`${authInfo.userUID}/${authInfo.dbUID}`);
+  const table = await userDBRef.child(`tables/${tableName}`).get();
+
+  if(!table.exists()){
+    SendAnswer(res, STATUS_CODES.PAGE_NOT_FOUND, {
+      ok: false,
+      error: {
+        code: "table-do-not-exists",
+        message: `You don't have a table with the name \`${tableName}\``
+      }
+    });
+    return;
+  }
+
+  /**@type {Dictionary<Column>} */
+  const tableValue = table.val();
+  let hasUniqueColumns = false;
+
+  for(let columnName in tableValue){
+    const column = tableValue[columnName];
+    if(column.unique){
+      hasUniqueColumns = true;
+      break;
+    }
+  }
+
+  async function deleteTable(){
+    /**@type {Error | null} */
+    let error = null;
+    await userDBRef.child(`tables/${tableName}`).remove((e) => {
+      error = e;
+    });
+
+    if (!error) {
+      SendAnswer(res, STATUS_CODES.OK, { ok: true });
+    } else {
+      SendAnswer(res, STATUS_CODES.FAILED_DEPENDENCY, {
+        ok: false,
+        error: {
+          code: "unknown-error",
+          message: "Something went wrong"
+        }
+      });
+    }
+  }
+
+  if(!hasUniqueColumns){
+    deleteTable();
+    return;
+  }
+
+  /**@type {Dictionary<Dictionary<Column>>} */
+  const allTables = (await userDBRef.child("tables").get()).val();
+  /**@type {string[]} */
+  let tableWithReference = [];
+
+  for(let tableName2 in allTables){
+    if(tableName2 === tableName) continue;
+
+    const table2 = allTables[tableName2];
+    for(let columnName in table2){
+      const column = table2[columnName];
+
+      if(!column.foreingKey) continue;
+      if(column.foreingKey.tableName !== tableName) continue;
+
+      tableWithReference.push(tableName2);
+    }
+  }
+
+  if(tableWithReference.length === 0){
+    deleteTable();
+    return;
+  }
+
+  SendAnswer(res, STATUS_CODES.UNAUTHORIZED, {
+    ok: false,
+    error: {
+      code: "delete-prevention",
+      message: `The table cannot be deleted, because is referenced in the tables: \`${tableWithReference.join(", ")}\`.`
+    }
+  });
+}
+
 /** @type {AdminHandler} */
 module.exports = function RoutesHandler(req, res) {
   if (!req.is("json")) {
@@ -850,6 +944,10 @@ module.exports = function RoutesHandler(req, res) {
     }
     case "/api/delete-row": {
       DeleteRow(req, res);
+      return;
+    }
+    case "/api/delete-table":{
+      DeleteTable(req, res);
       return;
     }
   }
