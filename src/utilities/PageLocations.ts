@@ -2,6 +2,8 @@ export const LogIn = "/login";
 
 export const MainPage = "/";
 
+export const Registro = "/registro";
+
 export function DB(db: string) {
   if (!db) return "";
   return `/db/${db}`;
