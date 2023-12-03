@@ -128,6 +128,9 @@ export default function Main() {
             dbList.push(
               <Link to={DB(userDB.uid as string)} className="db-button" key={i}>
                 <span>{userDB.name}</span>
+                <button className="remove-columna">
+                  <i className="fa fa-trash" aria-hidden="true"></i>
+                </button>
                 <span>{userDB.uid}</span>
               </Link>
             );
