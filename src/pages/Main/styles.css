@@ -12,6 +12,7 @@
   display: flex;
   justify-content: space-between;
   flex-direction: column;
+  position: relative;
 }
 .db-button > *:last-child{
   font-size: 0.65em;

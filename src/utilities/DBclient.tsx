@@ -187,4 +187,28 @@ export async function DeleteTable(db: string, tableName: string){
   return BadAPI;
 }
 
+export async function DeleteDatabase(dbUID: string, dbName: string){
+  await auth.authStateReady();
+  const userIDToken = await auth.currentUser?.getIdToken();
+
+  const requestBody: IApiRequest = {
+    auth: userIDToken as string,
+    type: "user",
+    dbUID,
+    dbName
+  };
+
+  const response = await fetch(`${serverURL}/api/delete-database`, {
+    body: JSON.stringify(requestBody),
+    method: "POST",
+    headers: headers
+  });
+
+  try{
+    return await response.json() as IApiResponse;
+  }catch(e){}
+
+  return BadAPI;
+}
+
 export { app, auth, database };
