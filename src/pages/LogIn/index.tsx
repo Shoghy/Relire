@@ -2,8 +2,8 @@ import { Formik, Form, Field, ErrorMessage, FormikHelpers } from "formik";
 import { useEffect, useState } from "react";
 import { auth } from "../../utilities/DBclient";
 import { AuthErrorCodes, AuthError } from "firebase/auth";
-import { useNavigate } from "react-router-dom";
-import { MainPage } from "../../utilities/PageLocations";
+import { Link, useNavigate } from "react-router-dom";
+import { MainPage, Registro } from "../../utilities/PageLocations";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { AsyncAttempter } from "../../utilities/functions";
 
@@ -84,17 +84,20 @@ export default function LogInForm() {
 
   const initialValues: ILogIn = { email: "", password: "" };
   return (
-    <Formik initialValues={initialValues} onSubmit={onSubmit} validate={validate}>
-      {({ errors }) => (
-        <Form>
-          {authError && <p>{authError}</p>}
-          <Field type="email" name="email" disabled={sendedForm} /><br />
-          <ErrorMessage name="email" component={() => <p>{errors.email}</p>} />
-          <Field type="password" name="password" disabled={sendedForm} /><br />
-          <ErrorMessage name="password" component={() => <p>{errors.password}</p>} />
-          <button type="submit" className="btn">Submit</button>
-        </Form>
-      )}
-    </Formik>
+    <>
+      <Formik initialValues={initialValues} onSubmit={onSubmit} validate={validate}>
+        {({ errors }) => (
+          <Form>
+            {authError && <p>{authError}</p>}
+            <Field type="email" name="email" disabled={sendedForm} /><br />
+            <ErrorMessage name="email" component={() => <p>{errors.email}</p>} />
+            <Field type="password" name="password" disabled={sendedForm} /><br />
+            <ErrorMessage name="password" component={() => <p>{errors.password}</p>} />
+            <button type="submit" className="btn">Submit</button>
+          </Form>
+        )}
+      </Formik>
+      <h4>Don't have an account? <Link to={Registro}>Sign in</Link></h4>
+    </>
   );
 }

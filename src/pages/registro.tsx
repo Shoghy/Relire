@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { auth } from "../utilities/DBclient";
-import { useNavigate } from "react-router-dom";
-import { MainPage } from "../utilities/PageLocations";
+import { Link, useNavigate } from "react-router-dom";
+import { LogIn, MainPage } from "../utilities/PageLocations";
 import { Formik, Form, Field, ErrorMessage, FormikHelpers } from "formik";
 import { AuthError, AuthErrorCodes, createUserWithEmailAndPassword } from "firebase/auth";
 import { AsyncAttempter } from "../utilities/functions";
@@ -31,19 +31,19 @@ export default function RegistroPage() {
     if (values.email === undefined || values.password === undefined || values.confirmPassword === undefined) {
       changeSendedForm(false);
       return;
-    } 
+    }
 
     const creatingUser = createUserWithEmailAndPassword(auth, values.email, values.password);
-    const [, creatingUserError] = await AsyncAttempter<AuthError>(() =>  creatingUser);
+    const [, creatingUserError] = await AsyncAttempter<AuthError>(() => creatingUser);
 
-    if(!creatingUserError){
+    if (!creatingUserError) {
       return;
     }
 
-    if(creatingUserError.code === AuthErrorCodes.EMAIL_EXISTS){
+    if (creatingUserError.code === AuthErrorCodes.EMAIL_EXISTS) {
       helpers.resetForm();
       alert("That email is already in our databse. Please use another one.");
-    }else{
+    } else {
       alert("An error ocurr, try again later.");
     }
 
@@ -65,7 +65,7 @@ export default function RegistroPage() {
       errors.password = "Passwords are at least 6 characters long";
     }
 
-    if(values.password !== values.confirmPassword){
+    if (values.password !== values.confirmPassword) {
       errors.confirmPassword = "Passwords must be equals";
     }
 
@@ -75,21 +75,24 @@ export default function RegistroPage() {
   const initialValues: IRegistro = { email: "", password: "", confirmPassword: "" };
 
   return (
-    <Formik initialValues={initialValues} onSubmit={onSubmit} validate={validate}>
-      {({ errors }) => (
-        <Form>
-          <Field type="email" name="email" disabled={sendedForm} /><br />
-          <ErrorMessage name="email" component={() => <p>{errors.email}</p>} />
+    <>
+      <Formik initialValues={initialValues} onSubmit={onSubmit} validate={validate}>
+        {({ errors }) => (
+          <Form>
+            <Field type="email" name="email" disabled={sendedForm} /><br />
+            <ErrorMessage name="email" component={() => <p>{errors.email}</p>} />
 
-          <Field type="password" name="password" disabled={sendedForm} /><br />
-          <ErrorMessage name="password" component={() => <p>{errors.password}</p>} />
+            <Field type="password" name="password" disabled={sendedForm} /><br />
+            <ErrorMessage name="password" component={() => <p>{errors.password}</p>} />
 
-          <Field type="password" name="confirmPassword" disabled={sendedForm} /><br />
-          <ErrorMessage name="confirmPassword" component={() => <p>{errors.confirmPassword}</p>} />
-  
-          <button type="submit" className="btn">Submit</button>
-        </Form>
-      )}
-    </Formik>
+            <Field type="password" name="confirmPassword" disabled={sendedForm} /><br />
+            <ErrorMessage name="confirmPassword" component={() => <p>{errors.confirmPassword}</p>} />
+
+            <button type="submit" className="btn">Submit</button>
+          </Form>
+        )}
+      </Formik>
+      <h4>Do you already have an account? <Link to={LogIn}>Log In</Link></h4>
+    </>
   );
 }
