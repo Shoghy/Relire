@@ -54,10 +54,15 @@ export default function DescribeDB() {
     const tables: React.JSX.Element[] = [];
     const key = RandomString(6);
 
-    for(const dbTableName in dbTables){
+    for (const dbTableName in dbTables) {
       tables.push(
         <tr key={`${dbTableName}-${key}`}>
           <td><Link to={DataInTable(dbUID, dbTableName)}>{dbTableName}</Link></td>
+          <td style={{cursor: "pointer"}}>
+            <center>
+              <i className="fa fa-trash" style={{ color: "#f00" }} aria-hidden="true" />
+            </center>
+          </td>
         </tr>
       );
     }
@@ -67,6 +72,7 @@ export default function DescribeDB() {
         <thead>
           <tr>
             <th>Table Name</th>
+            <th>Delete</th>
           </tr>
         </thead>
         <tbody>
@@ -76,7 +82,7 @@ export default function DescribeDB() {
     ));
   }
 
-  async function CreateAPIKey(){
+  async function CreateAPIKey() {
     const userIDToken = await auth.currentUser?.getIdToken();
     const requestBody: IApiRequest = {
       auth: userIDToken as string,
@@ -97,16 +103,14 @@ export default function DescribeDB() {
 
     let apiResponse: IApiResponse;
 
-    try{
+    try {
       apiResponse = await response.json();
-    }catch(e){
+    } catch (e) {
       alert("An error ocurred");
-      console.log(e);
       return;
     }
 
-    if(!apiResponse.ok){
-      console.log(apiResponse.error);
+    if (!apiResponse.ok) {
       alert("An error ocurred");
       return;
     }
@@ -137,22 +141,22 @@ export default function DescribeDB() {
       </center>
       {
         APIKey &&
-      <CustomAlert title="API KEY" onClose={() => {
-        setAPIkey("");
-      }}>
-        <h4 style={{color: "black"}}>
-          Warning once you close this, the API key will not be shown again, and if you re-create it, this one will be deleted.
-        </h4>
-        <p style={{
-          backgroundColor: "rgba(0, 0, 0, 0.3)",
-          color: "black",
-          wordWrap: "break-word",
-          padding: "8px",
-          borderRadius: "10px"
+        <CustomAlert title="API KEY" onClose={() => {
+          setAPIkey("");
         }}>
-          {APIKey}
-        </p>
-      </CustomAlert>
+          <h4 style={{ color: "black" }}>
+            Warning once you close this, the API key will not be shown again, and if you re-create it, this one will be deleted.
+          </h4>
+          <p style={{
+            backgroundColor: "rgba(0, 0, 0, 0.3)",
+            color: "black",
+            wordWrap: "break-word",
+            padding: "8px",
+            borderRadius: "10px"
+          }}>
+            {APIKey}
+          </p>
+        </CustomAlert>
       }
     </>
   );
