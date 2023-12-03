@@ -163,4 +163,28 @@ export async function DeleteRow(db: string, tableName: string, rowUID: string){
   return BadAPI;
 }
 
+export async function DeleteTable(db: string, tableName: string){
+  await auth.authStateReady();
+  const userIDToken = await auth.currentUser?.getIdToken();
+
+  const requestBody: IApiRequest = {
+    auth: userIDToken as string,
+    type: "user",
+    tableName,
+    dbUID: db
+  };
+
+  const response = await fetch(`${serverURL}/api/delete-table`, {
+    body: JSON.stringify(requestBody),
+    method: "POST",
+    headers: headers
+  });
+
+  try{
+    return await response.json() as IApiResponse;
+  }catch(e){}
+
+  return BadAPI;
+}
+
 export { app, auth, database };

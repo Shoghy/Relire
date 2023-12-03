@@ -1,11 +1,11 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
 import NavBar from "../../components/NavBar";
-import { GetTables, auth } from "../../utilities/DBclient";
+import { DeleteTable, GetTables, auth } from "../../utilities/DBclient";
 import { DBTableCreate, DataInTable, LogIn } from "../../utilities/PageLocations";
 import { useState, useEffect } from "react";
 import { Dictionary, IApiRequest, IApiResponse, IColumn } from "../../utilities/types";
 import DBGetDefaultCath from "../../utilities/DBGetDefaultCatch";
-import { AsyncAttempter, RandomString } from "../../utilities/functions";
+import { AsyncAttempter } from "../../utilities/functions";
 import CustomAlert from "../../components/custom-alert";
 
 export default function DescribeDB() {
@@ -26,6 +26,17 @@ export default function DescribeDB() {
       Start();
     });
   }, []);
+
+  async function RemoveTable(tableName: string){
+    const response = await DeleteTable(dbUID, tableName);
+
+    if(!response.ok){
+      alert(response.error?.message);
+      return;
+    }
+    
+    await Start();
+  }
 
   async function Start() {
     const [getDBResult, getDBError] = await AsyncAttempter(
@@ -52,13 +63,12 @@ export default function DescribeDB() {
     }
 
     const tables: React.JSX.Element[] = [];
-    const key = RandomString(6);
 
     for (const dbTableName in dbTables) {
       tables.push(
-        <tr key={`${dbTableName}-${key}`}>
+        <tr key={`${dbTableName}`}>
           <td><Link to={DataInTable(dbUID, dbTableName)}>{dbTableName}</Link></td>
-          <td style={{cursor: "pointer"}}>
+          <td style={{cursor: "pointer"}} onClick={() => RemoveTable(dbTableName)}>
             <center>
               <i className="fa fa-trash" style={{ color: "#f00" }} aria-hidden="true" />
             </center>
