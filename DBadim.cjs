@@ -895,6 +895,69 @@ async function DeleteTable(req, res) {
   });
 }
 
+/**@type {AdminHandler} */
+async function DeleteDatabase(req, res) {
+  /**@type {ReqInfo} */
+  const reqInfo = req.body;
+
+  const dbName = IsValidString(res, reqInfo.dbName, "dbName");
+  if (!dbName) return;
+
+  if (reqInfo.type === "key") {
+    SendAnswer(res, STATUS_CODES.UNAUTHORIZED, {
+      ok: false,
+      error: {
+        message: "API keys cannot delete databases.",
+        code: "apikey-out-of-bounds"
+      }
+    });
+    return;
+  }
+
+  const authInfo = await VerifyAuthInformation(req, res);
+  if (!authInfo) return;
+
+  const databaseName = await database.ref(`${authInfo.userUID}/${authInfo.dbUID}/dbName`).get();
+  if (!databaseName.exists()) {
+    SendAnswer(res, STATUS_CODES.PAGE_NOT_FOUND, {
+      ok: false,
+      error: {
+        message: "The database you're trying to remove does not exists.",
+        code: "database-do-not-exists"
+      }
+    });
+  }
+
+  if (databaseName.val() !== dbName) {
+    SendAnswer(res, STATUS_CODES.UNAUTHORIZED, {
+      ok: false,
+      error: {
+        message: "You sent the wrong databse name.",
+        code: "databases-names-do-not-match"
+      }
+    });
+    return;
+  }
+
+  /**@type {Error | null} */
+  let error = null;
+  database.ref(`${authInfo.userUID}/${authInfo.dbUID}`).remove((response) => {
+    error = response;
+  });
+
+  if (!error) {
+    SendAnswer(res, STATUS_CODES.OK, { ok: true });
+  } else {
+    SendAnswer(res, STATUS_CODES.FAILED_DEPENDENCY, {
+      ok: false,
+      error: {
+        code: "unknown-error",
+        message: "Something went wrong"
+      }
+    });
+  }
+}
+
 /** @type {AdminHandler} */
 module.exports = function RoutesHandler(req, res) {
   if (!req.is("json")) {
@@ -948,6 +1011,10 @@ module.exports = function RoutesHandler(req, res) {
     }
     case "/api/delete-table": {
       DeleteTable(req, res);
+      return;
+    }
+    case "/api/delete-database": {
+      DeleteDatabase(req, res);
       return;
     }
   }
