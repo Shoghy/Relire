@@ -58,7 +58,6 @@ export default function LogInForm() {
     const [, logInError] = await AsyncAttempter<AuthError>(() => logIn);
 
     if (!logInError) {
-      changeSendedForm(false);
       return;
     }
 
@@ -84,16 +83,18 @@ export default function LogInForm() {
   }
 
   const initialValues: ILogIn = { email: "", password: "" };
-  return <Formik initialValues={initialValues} onSubmit={onSubmit} validate={validate}>
-    {({ errors }) => (
-      <Form>
-        {authError && <p>{authError}</p>}
-        <Field type="email" name="email" disabled={sendedForm} /><br />
-        <ErrorMessage name="email" component={() => <p>{errors.email}</p>} />
-        <Field type="password" name="password" disabled={sendedForm} /><br />
-        <ErrorMessage name="password" component={() => <p>{errors.password}</p>} />
-        <button type="submit" className="btn">Submit</button>
-      </Form>
-    )}
-  </Formik>;
+  return (
+    <Formik initialValues={initialValues} onSubmit={onSubmit} validate={validate}>
+      {({ errors }) => (
+        <Form>
+          {authError && <p>{authError}</p>}
+          <Field type="email" name="email" disabled={sendedForm} /><br />
+          <ErrorMessage name="email" component={() => <p>{errors.email}</p>} />
+          <Field type="password" name="password" disabled={sendedForm} /><br />
+          <ErrorMessage name="password" component={() => <p>{errors.password}</p>} />
+          <button type="submit" className="btn">Submit</button>
+        </Form>
+      )}
+    </Formik>
+  );
 }

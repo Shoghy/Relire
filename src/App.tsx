@@ -5,6 +5,7 @@ import DescribeDB from "./pages/DescribeDB";
 import CreateTable from "./pages/CreateTable";
 import DataInTable from "./pages/DataInTable";
 import InsertInTable from "./pages/InsertInTable";
+import RegistroPage from "./pages/registro";
 
 export default function App(){
   return(
@@ -16,6 +17,10 @@ export default function App(){
       <Route
         path="/login"
         element={<LogInForm/>}
+      />
+      <Route
+        path="/registro"
+        element={<RegistroPage/>}
       />
       <Route
         path="/db/:idDB"
