@@ -1,9 +1,9 @@
 import { Link, useNavigate } from "react-router-dom";
-import { CreateDatabase, GetDatabases, auth } from "../../utilities/DBclient";
+import { CreateDatabase, DeleteDatabase, GetDatabases, auth } from "../../utilities/DBclient";
 import NavBar from "../../components/NavBar";
 import { DB, LogIn } from "../../utilities/PageLocations";
 import React, { useEffect, useState } from "react";
-import { AsyncAttempter } from "../../utilities/functions";
+import { AsyncAttempter, RemoveIndexOfArray } from "../../utilities/functions";
 import "./styles.css";
 import { DatabaseListResponse, IApiResponse } from "../../utilities/types";
 
@@ -110,6 +110,28 @@ export default function Main() {
     });
   }
 
+  async function RemoveDatabase(dbUID: string){
+    const dbName = prompt("Insert the name of the database");
+    if (!dbName) return;
+    const response = await DeleteDatabase(dbUID, dbName);
+
+    if(!response.ok){
+      alert(response.error?.message);
+      return;
+    }
+
+    setUserDBs((current) => {
+      for(let i = 0; i < current.length; ++i){
+        const dbInfo = current[i];
+        if(dbInfo.uid !== dbUID) continue;
+        current = RemoveIndexOfArray(current, i);
+        break;
+      }
+
+      return [... current];
+    });
+  }
+
   if (errorElement) {
     return errorElement;
   }
@@ -128,7 +150,13 @@ export default function Main() {
             dbList.push(
               <Link to={DB(userDB.uid as string)} className="db-button" key={i}>
                 <span>{userDB.name}</span>
-                <button className="remove-columna">
+                <button
+                  className="remove-columna"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    RemoveDatabase(userDB.uid);
+                  }}
+                >
                   <i className="fa fa-trash" aria-hidden="true"></i>
                 </button>
                 <span>{userDB.uid}</span>
