@@ -68,7 +68,10 @@ export default function CreateTable() {
     }
 
     const tables: Dictionary<Dictionary<IColumn>> = response.val();
-    if (!tables) return;
+    if (!tables){
+      setLoading(false);
+      return;
+    }
     setdbTables(Object.entries<Dictionary<IColumn>>(tables));
     GetUniqueColumns(tables);
   }
