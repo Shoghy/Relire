@@ -844,9 +844,7 @@ async function DeleteTable(req, res) {
       error = e;
     });
 
-    if (!error) {
-      SendAnswer(res, STATUS_CODES.OK, { ok: true });
-    } else {
+    if(error){
       SendAnswer(res, STATUS_CODES.FAILED_DEPENDENCY, {
         ok: false,
         error: {
@@ -854,7 +852,14 @@ async function DeleteTable(req, res) {
           message: "Something went wrong"
         }
       });
+      return;
     }
+
+    await userDBRef.child(`tablesData/${tableName}`).remove((e) => {
+      error = e;
+    });
+
+    SendAnswer(res, STATUS_CODES.OK, { ok: true });
   }
 
   if (!hasUniqueColumns) {
