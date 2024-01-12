@@ -5,6 +5,18 @@
   color: #fff;
 }
 
+:root{
+  --peach: #F1BF98;
+  --nyanza: #E1F4CB;
+  --sage: #BACBA9;
+  --dim-gray: #717568;
+  --black-olive: #3F4739;
+}
+
+body{
+  background-color: var(--black-olive);
+}
+
 input, select, select > option{
   color: #000;
 }
@@ -29,8 +41,10 @@ input, select, select > option{
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  align-items: stretch;
+  align-items: center;
   padding: 6px;
+  background-color: var(--dim-gray);
+  margin-bottom: 10px;
 }
 
 .column-table{
