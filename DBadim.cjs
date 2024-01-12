@@ -167,8 +167,6 @@ async function GetUserHandler(authId, res) {
         break;
       }
     }
-    console.log(userError.code);
-    console.log(userError.message);
     return null;
   }
 
@@ -507,7 +505,6 @@ async function CreateDB(req, res) {
     );
 
     if (pushError) {
-      console.log(pushError);
       SendAnswer(res, STATUS_CODES.FAILED_DEPENDENCY, {
         ok: false,
         error: {
@@ -558,7 +555,6 @@ async function GetDatabases(req, res) {
   );
 
   if (dbError) {
-    console.log(dbError);
     SendAnswer(res, STATUS_CODES.UNAUTHORIZED, {
       ok: false,
       error: {
@@ -667,7 +663,6 @@ async function CreateAPIKey(req, res) {
         code: "unkwon-error"
       }
     });
-    console.log(updateError);
     return;
   }
 
