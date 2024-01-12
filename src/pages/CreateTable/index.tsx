@@ -8,7 +8,7 @@ import DBGetDefaultCath from "../../utilities/DBGetDefaultCatch";
 import { AsyncAttempter, GetEnumValues, TitleCase } from "../../utilities/functions";
 import { LogIn } from "../../utilities/PageLocations";
 import ColumnInput from "../../components/ColumnInput";
-import "./styles.css";
+import styles from "./styles.module.css";
 
 interface IColumn2 {
   name: string,
@@ -214,7 +214,6 @@ export default function CreateTable() {
         Object.values(tableColums)
       );
       if(!response.ok){
-        console.log(response);
         throw new Error();
       }
       setTableName("");
@@ -383,7 +382,7 @@ export default function CreateTable() {
       <br />
       <br />
       <button className="btn" onClick={CrearTable}>Crear</button>
-      <div className="container">
+      <div className={styles.container}>
         {(() => {
           const columnsJSX: React.JSX.Element[] = [];
 
@@ -391,7 +390,7 @@ export default function CreateTable() {
             columnsJSX.push(
               <div style={{ position: "relative" }} key={index}>
                 <button
-                  className="remove-columna"
+                  className="btn-remove"
                   onClick={() => {
                     setColumns((currentColumns) => {
                       currentColumns.splice(index, 1);
@@ -401,7 +400,7 @@ export default function CreateTable() {
                 >
                   <i className="fa fa-trash" aria-hidden="true"></i>
                 </button>
-                <div className="columna mask">
+                <div className={`${styles.columna} mask`}>
                   <span>#</span>
                   <center>{index}</center>
                   <span>Column Name</span>

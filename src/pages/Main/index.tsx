@@ -4,8 +4,8 @@ import NavBar from "../../components/NavBar";
 import { DB, LogIn } from "../../utilities/PageLocations";
 import React, { useEffect, useState } from "react";
 import { AsyncAttempter, RemoveIndexOfArray } from "../../utilities/functions";
-import "./styles.css";
 import { DatabaseListResponse, IApiResponse } from "../../utilities/types";
+import styles from "./styles.module.css";
 
 interface BasicDBInfo {
   name: string,
@@ -19,7 +19,7 @@ export default function Main() {
   const [userDBs, setUserDBs] = useState<BasicDBInfo[]>([]);
   const createDBButton = (
     <button
-      className="db-button"
+      className={styles["db-button"]}
       onClick={() => CreateDB()}
       key={"Crear DB"}
     >
@@ -42,7 +42,6 @@ export default function Main() {
     );
 
     if (dbsError || !dbsList || !dbsList.ok) {
-      console.log(dbsError);
       setErrorElement(
         <h1>
           We were not able to communicate with the database. Try again later
@@ -85,7 +84,6 @@ export default function Main() {
     try {
       newDB = await cdbAsync;
     } catch (error) {
-      console.error(error);
       return;
     }
 
@@ -140,7 +138,7 @@ export default function Main() {
     <>
       <NavBar />
       {userDBsElement}
-      <div className="dbs-container">
+      <div className={styles["dbs-container"]}>
         {(() => {
           if (userDBs.length === 0) return createDBButton;
 
@@ -148,10 +146,10 @@ export default function Main() {
           for (let i = 0; i < userDBs.length; ++i) {
             const userDB = userDBs[i];
             dbList.push(
-              <Link to={DB(userDB.uid as string)} className="db-button" key={i}>
+              <Link to={DB(userDB.uid as string)} className={styles["db-button"]} key={i}>
                 <span>{userDB.name}</span>
                 <button
-                  className="remove-columna"
+                  className="btn-remove"
                   onClick={(e) => {
                     e.preventDefault();
                     RemoveDatabase(userDB.uid);

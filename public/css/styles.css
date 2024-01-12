@@ -43,3 +43,27 @@ input, select, select > option{
   -webkit-mask-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAA5JREFUeNpiYGBgAAgwAAAEAAGbA+oJAAAAAElFTkSuQmCC);
   mask-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAA5JREFUeNpiYGBgAAgwAAAEAAGbA+oJAAAAAElFTkSuQmCC);
 }
+
+.btn-remove{
+  position: absolute;
+  color: #000;
+  z-index: 1;
+  right: -5px;
+  top: -5px;
+  border-radius: 50%;
+  aspect-ratio: 1/1;
+  min-height: 29px;
+  cursor: pointer;
+  color: white;
+  background-color: #ff0000;
+  border: none;
+  font-weight: bolder;
+  font-size: 1.2em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.btn-remove:hover{
+  background-color: #ff3e3e;
+}

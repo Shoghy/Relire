@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { ColumnType, ColumnValue, Dictionary, IColumn, TableRow } from "../../utilities/types";
 import { AsyncAttempter, RandomString, RemoveIndexOfArray } from "../../utilities/functions";
 import NavBar from "../../components/NavBar";
-import "./styles.css";
+import styles from "./styles.module.css";
 
 export default function DataInTable(){
   const navigate = useNavigate();
@@ -15,7 +15,7 @@ export default function DataInTable(){
   const [errorElement, setErrorElement] = useState<React.JSX.Element>();
   const [columns, setColumns] = useState<React.JSX.Element[]>([<th key="Loading Columns">Loading columns...</th>]);
   const [rows, setRows] = useState<React.JSX.Element[]>([
-    <tr key="Loading Rows" className="tr">
+    <tr key="Loading Rows" className={styles.row}>
       <td>Loading Rows...</td>
     </tr>
   ]);
@@ -149,7 +149,7 @@ export default function DataInTable(){
           </center>
         </td>
       );
-      JSXRows.push(<tr key={`${rowUID}`} className="tr">{JSXRowValues}</tr>);
+      JSXRows.push(<tr key={`${rowUID}`} className={styles.row}>{JSXRowValues}</tr>);
     }
     setRows(JSXRows);
   }
@@ -162,13 +162,13 @@ export default function DataInTable(){
     <>
       <NavBar />
       <Link to="insert">Insert Data</Link>
-      <table id="table" className="mask" cellSpacing="0">
-        <thead id="thead">
+      <table className={`${styles.table} mask`} cellSpacing="0">
+        <thead className={styles["table-header"]}>
           <tr>
             {columns}
           </tr>
         </thead>
-        <tbody id="tbody">
+        <tbody className={styles["table-data"]}>
           {rows}
         </tbody>
       </table>
