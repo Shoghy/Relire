@@ -1,4 +1,4 @@
 # Relire
-This is a Web App with React that use Firebase Realtime as a relational database.
+This is a React Web App that makes Firebase Realtime database behave like a relational database.
 
 Still a work in process.
