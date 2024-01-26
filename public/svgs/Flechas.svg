@@ -1,0 +1,24 @@
+<svg viewBox="0 0 512 256" xmlns="http://www.w3.org/2000/svg">
+  <rect
+    width="260"
+    height="249"
+    x="248"
+    y="3"
+    fill="#222925"
+    stroke="#E1F4CB"
+    stroke-width="8"
+  />
+  <rect
+    width="256"
+    height="256"
+    fill="#E1F4CB"
+  />
+  <polygon
+    points="156,56 156,96 256,96 256,160 156,160 156,200 60,128"
+    fill="#222925"
+  />
+  <polygon
+    points="356,56 356,96 256,96 256,160 356,160 356,200 452,128"
+    fill="#E1F4CB"
+  />
+</svg>
