@@ -1,0 +1,73 @@
+.background{
+  background-color: var(--dark-green);
+  height: calc(100vh - 120px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.container{
+  height: clamp(0px, 100%, 28.8em);
+  width: clamp(0px, 100%, 35em);
+  background-color: var(--fern-green);
+  border-radius: 14px;
+  box-shadow: rgba(0, 0, 0, 0.25) 0px 25px 10px 5px;
+  border: var(--nyanza) solid 2px;
+  padding: 25px 40px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  *{
+    color: var(--nyanza);
+  }
+}
+
+.footer{
+  margin-top: auto;
+  font-weight: 100;
+  font-size: 1.5em;
+  a{
+    font-weight: 500;
+  }
+}
+
+.field{
+  margin-top: 25px;
+  position: relative;
+  label{
+    font-weight: 100;
+    font-size: 1.3em;
+  }
+  input{
+    margin-top: 5px;
+  }
+  p{
+    position: absolute;
+  }
+}
+
+.form{
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  flex: 1;
+}
+
+.submit-btn{
+  margin: 0 auto;
+  margin-top: auto;
+  margin-bottom: 40px;
+  width: 70%;
+  height: 2.5em;
+  color: var(--nyanza);
+  background-color: unset;
+  border: var(--nyanza) solid 2px;
+  border-radius: 500px;
+  font-weight: 500;
+  transition: background-color 100ms, color 100ms;
+}
+
+.submit-btn:hover{
+  background-color: var(--nyanza);
+  color:var(--fern-green);
+}

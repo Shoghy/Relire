@@ -1,4 +1,4 @@
-import { Formik, Form, Field, ErrorMessage, FormikHelpers } from "formik";
+import { Formik, Form, ErrorMessage, FormikHelpers } from "formik";
 import { useEffect, useState } from "react";
 import { auth } from "../../utilities/DBclient";
 import { AuthErrorCodes, AuthError } from "firebase/auth";
@@ -7,6 +7,8 @@ import { MainPage, Registro } from "../../utilities/PageLocations";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { AsyncAttempter } from "../../utilities/functions";
 import NavBar from "../../components/NavBar";
+import style from "./login.module.css";
+import TextInput from "@/components/TextInput";
 
 interface ILogIn {
   email?: string,
@@ -54,7 +56,6 @@ export default function LogInForm() {
       return;
     }
 
-
     const logIn = signInWithEmailAndPassword(auth, values.email, values.password);
     const [, logInError] = await AsyncAttempter<AuthError>(() => logIn);
 
@@ -86,20 +87,31 @@ export default function LogInForm() {
   const initialValues: ILogIn = { email: "", password: "" };
   return (
     <>
-      <NavBar/>
-      <Formik initialValues={initialValues} onSubmit={onSubmit} validate={validate}>
-        {({ errors }) => (
-          <Form>
-            {authError && <p>{authError}</p>}
-            <Field type="email" name="email" disabled={sendedForm} /><br />
-            <ErrorMessage name="email" component={() => <p>{errors.email}</p>} />
-            <Field type="password" name="password" disabled={sendedForm} /><br />
-            <ErrorMessage name="password" component={() => <p>{errors.password}</p>} />
-            <button type="submit" className="btn">Submit</button>
-          </Form>
-        )}
-      </Formik>
-      <h4>Don't have an account? <Link to={Registro}>Sign in</Link></h4>
+      <NavBar />
+      <div className={style.background}>
+        <div className={style.container}>
+          <h1>Log In</h1>
+          <Formik initialValues={initialValues} onSubmit={onSubmit} validate={validate}>
+            {({ errors }) => (
+              <Form className={style.form}>
+                {authError && <p>{authError}</p>}
+                <div className={style.field}>
+                  <label htmlFor="email">e-mail</label>
+                  <TextInput type="email" name="email" disabled={sendedForm}/><br />
+                  <ErrorMessage name="email" component={() => <p>{errors.email}</p>} />
+                </div>
+                <div className={style.field}>
+                  <label htmlFor="email">password</label>
+                  <TextInput type="password" name="password" disabled={sendedForm} /><br />
+                  <ErrorMessage name="password" component={() => <p>{errors.password}</p>} />
+                </div>
+                <button type="submit" className={"btn "+style["submit-btn"]}>Submit</button>
+              </Form>
+            )}
+          </Formik>
+          <span className={style.footer}>Don't have an account? <Link to={Registro}>Sign in</Link></span>
+        </div>
+      </div>
     </>
   );
 }
