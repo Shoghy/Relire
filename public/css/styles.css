@@ -14,6 +14,12 @@
   --white: #fff;
 }
 
+.peach-circle{
+  border-radius: 100%;
+  background-color: var(--peach);
+  aspect-ratio: 1;
+}
+
 input, select, select > option{
   color: #000;
 }
@@ -49,7 +55,20 @@ input, select, select > option{
 }
 
 .logo-container{
+  display: flex;
+  align-items: center;
+  max-height: 100%;
+  span{
+    font-size: 5rem;
+    font-weight: 900;
+    color: var(--nyanza);
+    font-family: Inter;
+    margin-right: 5px;
+  }
+}
 
+.log-out{
+  height: 100%;
 }
 
 .column-table{
