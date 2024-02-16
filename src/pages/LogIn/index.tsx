@@ -6,6 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { MainPage, Registro } from "../../utilities/PageLocations";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { AsyncAttempter } from "../../utilities/functions";
+import NavBar from "../../components/NavBar";
 
 interface ILogIn {
   email?: string,
@@ -85,6 +86,7 @@ export default function LogInForm() {
   const initialValues: ILogIn = { email: "", password: "" };
   return (
     <>
+      <NavBar/>
       <Formik initialValues={initialValues} onSubmit={onSubmit} validate={validate}>
         {({ errors }) => (
           <Form>

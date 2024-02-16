@@ -8,17 +8,10 @@ export default function NavBar(){
   return (
     <nav
       className="nav-bar"
-      title="Despite everything, it's still You."
     >
-      <i
-        className="fa fa-user-circle-o"
-        aria-hidden="true"
-        style={{
-          fontSize: "1.7em",
-          color: "var(--peach)"
-        }}
-      />
-      <button onClick={btnLogOut} className="btn">Log Out</button>
+      <div className="logo-container">
+        
+      </div>
     </nav>
   );
 }
