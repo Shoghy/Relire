@@ -3,54 +3,6 @@ const admin = require("firebase-admin");
 const serviceAccount = require("./RelireFirebaseAdmin.json");
 const CryptoJS = require("crypto-js");
 
-/**
- * @typedef {express.Request<{}, any, any, QueryString.ParsedQs, Record<string, any>>} Request
- * @typedef {express.Response<any, Record<string, any>, number>} Response
- * @typedef {(req: Request, res: Response) => void} AdminHandler
- * @typedef {{
- *  auth: string
- *  type: "user" | "key",
- *  [key: string]: any
- * }} ReqInfo
- *
- * @typedef {{
- *  code: string,
- *  message: string
- * }} GenericError
- * 
- * @typedef dbInfo
- * @prop {string} dbUID
- * @prop {string} dbName
- * 
- * @typedef ForeingKey
- * @prop {string} tableName
- * @prop {string} column
- * 
- * @typedef Column
- * @prop {string} type
- * @prop {string} name
- * @prop {boolean} notNull
- * @prop {boolean} unique
- * @prop {ForeingKey | undefined} foreingKey
- * 
- * @typedef ApiKey
- * @prop {string} user
- * @prop {string} dbUID
- * @prop {string} random
- * 
- * @typedef {(req: Request, res: Response) => Promise<{dbUID: string, userUID: string} | null>} VerifyAuth
- * 
- * @typedef Answer
- * @prop {boolean} ok
- * @prop {GenericError?} error
-*/
-/**
- * @typedef {{
- *  [key: string]: T
- * }} Dictionary<T>
- * @template T
-*/
-
 require("dotenv").config();
 
 admin.initializeApp({
@@ -86,7 +38,7 @@ async function AsyncAttempter(func) {
 }
 
 /**
- * @param {Response} res 
+ * @param {CRequest} res 
  * @param {STATUS_CODES} status 
  * @param {Answer} jsonValue 
  */
@@ -95,7 +47,7 @@ function SendAnswer(res, status, jsonValue) {
 }
 
 /**
- * @param {Response} res
+ * @param {CResponse} res
  * @param {any} value 
  * @param {string} field
  * @returns {false | string}
@@ -136,7 +88,7 @@ function IsValidString(res, value, field) {
 
 /**
  * @param {string} authId
- * @param {Response} res
+ * @param {CResponse} res
  * @returns {Promise<admin.auth.DecodedIdToken | null>}
  */
 async function GetUserHandler(authId, res) {
@@ -565,7 +517,7 @@ async function GetDatabases(req, res) {
     return;
   }
 
-  /**@type {dbInfo[]} */
+  /**@type {DBInfo[]} */
   let dbInfos = [];
   databases.forEach((db) => {
     dbInfos.push({

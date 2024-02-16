@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import fs from "node:fs/promises";
 import express from "express";
-import RoutesHandler from "./DBadim.cjs";
+import RoutesHandler from "./DBadmin.cjs";
 
 // Constants
 const isProduction = process.env.NODE_ENV === "production";
