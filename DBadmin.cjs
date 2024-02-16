@@ -38,7 +38,7 @@ async function AsyncAttempter(func) {
 }
 
 /**
- * @param {CRequest} res 
+ * @param {CResponse} res 
  * @param {STATUS_CODES} status 
  * @param {Answer} jsonValue 
  */
