@@ -91,7 +91,7 @@ export default function DataInTable(){
           break;
         }
       }
-      
+
       if(dbColumn.default !== undefined){
         toolTip.push(`Default: ${dbColumn.default}`);
       }
@@ -116,7 +116,7 @@ export default function DataInTable(){
           const row = current[i];
 
           if(row.key !== rowUID) continue;
-        
+
           current = RemoveIndexOfArray(current, i);
           break;
         }

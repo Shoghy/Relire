@@ -49,7 +49,7 @@ export default function InsertInTable(){
   function AddRow(){
     setInserts((currentInsert) => {
       const newInsert : Dictionary<ColumnValue> = {};
-  
+
       for(const columnName in columns){
         let value : ColumnValue = "";
         const column = columns[columnName];
@@ -64,7 +64,7 @@ export default function InsertInTable(){
         }
         newInsert[columnName] = value;
       }
-  
+
       return [... currentInsert, newInsert];
     });
   }
@@ -234,7 +234,7 @@ export default function InsertInTable(){
 
     let errorMessage: string = "";
     let lastIndex = -1;
-  
+
     errors[1].forEach((value, index) => {
       if(index !== lastIndex){
         lastIndex = index;

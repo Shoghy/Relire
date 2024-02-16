@@ -34,7 +34,7 @@ export default function DescribeDB() {
       alert(response.error?.message);
       return;
     }
-    
+
     await Start();
   }
 

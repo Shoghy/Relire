@@ -159,7 +159,7 @@ export async function DeleteRow(db: string, tableName: string, rowUID: string){
   try{
     return await response.json() as IApiResponse;
   }catch(e){}
-  
+
   return BadAPI;
 }
 

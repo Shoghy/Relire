@@ -276,7 +276,7 @@ export default function CreateTable() {
       for (const columnName in table) {
         const dbColumn = table[columnName];
         if(dbColumn.type !== column.type) continue;
-  
+
         if(tableName in tablesWithColumns){
           tablesWithColumns[tableName].push(columnName);
         }else{
