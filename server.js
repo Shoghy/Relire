@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import fs from "node:fs/promises";
 import express from "express";
 import RoutesHandler from "./DBadim.cjs";
