@@ -71,6 +71,9 @@ input, select, select > option{
 
 .log-out{
   height: 100%;
+  span{
+    color: white;
+  }
 }
 
 .column-table{
