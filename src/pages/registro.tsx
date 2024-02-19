@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { auth } from "../utilities/DBclient";
+import { auth } from "@/utilities/DBclient";
 import { Link, useNavigate } from "react-router-dom";
-import { LogIn, MainPage } from "../utilities/PageLocations";
+import { LogIn, MainPage } from "@/utilities/PageLocations";
 import { Formik, Form, ErrorMessage, FormikHelpers, Field } from "formik";
 import { AuthError, AuthErrorCodes, createUserWithEmailAndPassword } from "firebase/auth";
-import { AsyncAttempter } from "../utilities/functions";
+import { AsyncAttempter } from "@/utilities/functions";
 import NavBar from "@/components/NavBar";
 import styles from "./account.module.css";
 

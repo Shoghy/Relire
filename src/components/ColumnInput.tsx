@@ -1,7 +1,7 @@
-import { ColumnType, ColumnValue, IColumn, IForeingKey, TableRow } from "../utilities/types";
-import { RandomString, TitleCase } from "../utilities/functions";
+import { ColumnType, ColumnValue, IColumn, IForeingKey, TableRow } from "@/utilities/types";
+import { RandomString, TitleCase } from "@/utilities/functions";
 import React, { useEffect, useState } from "react";
-import { auth, database } from "../utilities/DBclient";
+import { auth, database } from "@/utilities/DBclient";
 import { get, ref } from "firebase/database";
 import { useParams } from "react-router-dom";
 

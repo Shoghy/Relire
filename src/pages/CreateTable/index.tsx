@@ -1,13 +1,13 @@
-import NavBar from "../../components/NavBar";
+import NavBar from "@/components/NavBar";
 import { useNavigate, useParams } from "react-router-dom";
-import { GetTables, auth, GetDataInTable } from "../../utilities/DBclient";
-import * as DBclient from "../../utilities/DBclient";
+import { GetTables, auth, GetDataInTable } from "@/utilities/DBclient";
+import * as DBclient from "@/utilities/DBclient";
 import { useEffect, useState } from "react";
-import { ColumnType, IForeingKey, IColumn, Dictionary, ColumnValue, IColumForRequest } from "../../utilities/types";
-import DBGetDefaultCath from "../../utilities/DBGetDefaultCatch";
-import { AsyncAttempter, GetEnumValues, TitleCase } from "../../utilities/functions";
-import { LogIn } from "../../utilities/PageLocations";
-import ColumnInput from "../../components/ColumnInput";
+import { ColumnType, IForeingKey, IColumn, Dictionary, ColumnValue, IColumForRequest } from "@/utilities/types";
+import DBGetDefaultCath from "@/utilities/DBGetDefaultCatch";
+import { AsyncAttempter, GetEnumValues, TitleCase } from "@/utilities/functions";
+import { LogIn } from "@/utilities/PageLocations";
+import ColumnInput from "@/components/ColumnInput";
 import styles from "./styles.module.css";
 
 interface IColumn2 {

@@ -1,12 +1,12 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
-import NavBar from "../../components/NavBar";
-import { DeleteTable, GetTables, auth } from "../../utilities/DBclient";
-import { DBTableCreate, DataInTable, LogIn } from "../../utilities/PageLocations";
+import NavBar from "@/components/NavBar";
+import { DeleteTable, GetTables, auth } from "@/utilities/DBclient";
+import { DBTableCreate, DataInTable, LogIn } from "@/utilities/PageLocations";
 import { useState, useEffect } from "react";
-import { Dictionary, IApiRequest, IApiResponse, IColumn } from "../../utilities/types";
-import DBGetDefaultCath from "../../utilities/DBGetDefaultCatch";
-import { AsyncAttempter } from "../../utilities/functions";
-import CustomAlert from "../../components/custom-alert";
+import { Dictionary, IApiRequest, IApiResponse, IColumn } from "@/utilities/types";
+import DBGetDefaultCath from "@/utilities/DBGetDefaultCatch";
+import { AsyncAttempter } from "@/utilities/functions";
+import CustomAlert from "@/components/custom-alert";
 
 export default function DescribeDB() {
   const navigate = useNavigate();

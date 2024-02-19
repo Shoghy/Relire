@@ -1,11 +1,11 @@
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { DeleteRow, GetDataInTable, GetTables, auth } from "../../utilities/DBclient";
-import { LogIn } from "../../utilities/PageLocations";
-import DBGetDefaultCath from "../../utilities/DBGetDefaultCatch";
+import { DeleteRow, GetDataInTable, GetTables, auth } from "@/utilities/DBclient";
+import { LogIn } from "@/utilities/PageLocations";
+import DBGetDefaultCath from "@/utilities/DBGetDefaultCatch";
 import { useEffect, useState } from "react";
-import { ColumnType, ColumnValue, Dictionary, IColumn, TableRow } from "../../utilities/types";
-import { AsyncAttempter, RandomString, RemoveIndexOfArray } from "../../utilities/functions";
-import NavBar from "../../components/NavBar";
+import { ColumnType, ColumnValue, Dictionary, IColumn, TableRow } from "@/utilities/types";
+import { AsyncAttempter, RandomString, RemoveIndexOfArray } from "@/utilities/functions";
+import NavBar from "@/components/NavBar";
 import styles from "./styles.module.css";
 
 export default function DataInTable(){

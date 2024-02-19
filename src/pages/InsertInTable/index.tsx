@@ -1,11 +1,11 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { GetDataInTable, GetTables, auth, InsertRow } from "../../utilities/DBclient";
-import { LogIn } from "../../utilities/PageLocations";
-import { ColumnType, ColumnValue, Dictionary, IColumn } from "../../utilities/types";
+import { GetDataInTable, GetTables, auth, InsertRow } from "@/utilities/DBclient";
+import { LogIn } from "@/utilities/PageLocations";
+import { ColumnType, ColumnValue, Dictionary, IColumn } from "@/utilities/types";
 import React, { useEffect, useState } from "react";
-import DBGetDefaultCath from "../../utilities/DBGetDefaultCatch";
-import { AsyncAttempter, IsValidDate, RandomString } from "../../utilities/functions";
-import ColumnInput from "../../components/ColumnInput";
+import DBGetDefaultCath from "@/utilities/DBGetDefaultCatch";
+import { AsyncAttempter, IsValidDate, RandomString } from "@/utilities/functions";
+import ColumnInput from "@/components/ColumnInput";
 
 export default function InsertInTable(){
   const navigate = useNavigate();
