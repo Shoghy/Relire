@@ -23,6 +23,7 @@
   cursor: pointer;
   max-width: 300px;
   padding-bottom: 30px;
+  box-shadow: rgba(0, 0, 0, 0.27) 0 9px 7px 5px;
 }
 
 .dbb-container{
