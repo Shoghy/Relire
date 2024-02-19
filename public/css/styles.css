@@ -60,6 +60,7 @@ input, select, select > option{
   display: flex;
   align-items: center;
   max-height: 100%;
+  cursor: pointer;
   span{
     font-size: 5rem;
     font-weight: 900;
@@ -117,4 +118,5 @@ input, select, select > option{
   font-family: Inter;
   font-weight: 100;
   font-size: 1.5em;
+  cursor: default;
 }
