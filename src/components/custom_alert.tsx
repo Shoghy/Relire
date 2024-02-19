@@ -1,26 +1,29 @@
-import { useState } from "react";
+import { CSSProperties, useState } from "react";
 import styles from "./custom_alert.module.css";
 
 interface CustomAlertProperties{
   children?: React.ReactNode
   open?: boolean
+  className?: string
+  style?: CSSProperties
 }
 
-export default function CustomAlert({children, open = false}: CustomAlertProperties){
+export default function CustomAlert({children, open = false, className, style}: CustomAlertProperties){
   if(!open) return <></>;
 
   return (
     <div className={styles.background}>
-      <div className={styles.container}>
+      <div
+        style={style}
+        className={`${styles.container} ${className ?? ""}`}>
         {children}
       </div>
     </div>
   );
 }
 
-export interface SelfCustomAlertElementProps{
+export interface SelfCustomAlertElementProps extends Omit<CustomAlertProperties, "open">{
   dontShowCloseButton?: boolean
-  children?: React.ReactNode
   onXClick?: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => any 
 }
 
@@ -43,7 +46,7 @@ export function selfCustomAlert(open: boolean = false): SelfCustomAlert{
     close: () => {return;},
   };
 
-  function Element({dontShowCloseButton = false, children, onXClick}: SelfCustomAlertElementProps){
+  function Element({dontShowCloseButton = false, children, onXClick, ...props}: SelfCustomAlertElementProps){
     const [open, setOpen] = useState(o.isOpen);
 
     o.setOpen = setOpen;
@@ -68,7 +71,7 @@ export function selfCustomAlert(open: boolean = false): SelfCustomAlert{
     }
 
     return (
-      <CustomAlert open={open}>
+      <CustomAlert open={open} {...props}>
         {children}
         <CloseButton/>
       </CustomAlert>

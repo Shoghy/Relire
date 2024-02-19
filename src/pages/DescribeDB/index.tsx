@@ -1,33 +1,34 @@
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import { DeleteTable, GetTables, auth } from "@/utilities/DBclient";
-import { DBTableCreate, DataInTable, LogIn } from "@/utilities/PageLocations";
+import { DataInTable, LogIn, DBTableCreate } from "@/utilities/PageLocations";
 import { useState, useEffect } from "react";
-import { Dictionary, IApiRequest, IApiResponse, IColumn } from "@/utilities/types";
-import DBGetDefaultCath from "@/utilities/DBGetDefaultCatch";
-import { AsyncAttempter } from "@/utilities/functions";
-import CustomAlert from "@/components/custom-alert";
+import { ChangeBodyColor, RemoveIndexOfArray } from "@/utilities/functions";
+import styles from "./describedb.module.css";
+import TableButton from "./table_button";
+import { selfCustomAlert } from "@/components/custom_alert";
+import { IApiRequest, IApiResponse } from "@/utilities/types";
 
+const selfAlert = selfCustomAlert();
 export default function DescribeDB() {
+  ChangeBodyColor("var(--fern-green)");
   const navigate = useNavigate();
   const params = useParams();
   const dbUID = params.idDB as string;
-
-  const [errorElement, setErrorElement] = useState<React.JSX.Element>();
-  const [dbDataElement, setDBDataElement] = useState<React.ReactNode>(<h1>Cargando base de datos</h1>);
   const [APIKey, setAPIkey] = useState("");
+  const [tables, setTables] = useState<string[]>();
 
   useEffect(() => {
-    auth.onAuthStateChanged((user) => {
-      if (user === undefined || user === null) {
-        navigate(LogIn);
-        return;
-      }
-      Start();
-    });
+    LoadTables();
   }, []);
 
   async function RemoveTable(tableName: string){
+    const confirmTableName = prompt(`Insert the name of the table: ${tableName}`);
+    if(tableName !== confirmTableName){
+      alert("Names don't match");
+      return;
+    }
+  
     const response = await DeleteTable(dbUID, tableName);
 
     if(!response.ok){
@@ -35,61 +36,47 @@ export default function DescribeDB() {
       return;
     }
 
-    await Start();
+    setTables((current) => {
+      return RemoveIndexOfArray(current!, current!.indexOf(tableName));
+    });
   }
 
-  async function Start() {
-    const [getDBResult, getDBError] = await AsyncAttempter(
-      () => GetTables(
-        auth.currentUser?.uid as string,
-        dbUID
-      )
-    );
-
-    if (getDBError) {
-      DBGetDefaultCath(
-        getDBError,
-        errorElement,
-        setErrorElement,
-        navigate
-      );
+  async function LoadTables(){
+    await auth.authStateReady();
+    if(auth.currentUser === null){
+      navigate(LogIn);
       return;
     }
-
-    const dbTables: Dictionary<Dictionary<IColumn>> = getDBResult?.val();
-    if (dbTables === undefined) {
-      setDBDataElement(<h1>Aún no hay tablas, crea una</h1>);
+    
+    const tableList = await GetTables(auth.currentUser!.uid, dbUID);
+    if("error" in tableList){
+      alert("An error ocurred, try again later");
       return;
     }
+    const tablesNames: string[] = [];
+    tableList.forEach((table) => {
+      tablesNames.push(table.key);
+    });
+    setTables(tablesNames);
+  }
 
-    const tables: React.JSX.Element[] = [];
-
-    for (const dbTableName in dbTables) {
-      tables.push(
-        <tr key={`${dbTableName}`}>
-          <td><Link to={DataInTable(dbUID, dbTableName)}>{dbTableName}</Link></td>
-          <td style={{cursor: "pointer"}} onClick={() => RemoveTable(dbTableName)}>
-            <center>
-              <i className="fa fa-trash" style={{ color: "#f00" }} aria-hidden="true" />
-            </center>
-          </td>
-        </tr>
-      );
+  function EnumarateTables(){
+    if(tables === undefined){
+      return (<Message>Loading...</Message>);
     }
 
-    setDBDataElement((
-      <table>
-        <thead>
-          <tr>
-            <th>Table Name</th>
-            <th>Delete</th>
-          </tr>
-        </thead>
-        <tbody>
-          {tables}
-        </tbody>
-      </table>
-    ));
+    const elements: React.JSX.Element[] = [];
+    for(let i = 0; i < tables.length; ++i){
+      elements.push(
+        <TableButton
+          key={i}
+          tableName={tables[i]}
+          onClick={() => navigate(DataInTable(dbUID, tables[i]))}
+          onXClick={() => RemoveTable(tables[i])}
+        />
+      );
+    }
+    return elements;
   }
 
   async function CreateAPIKey() {
@@ -110,7 +97,7 @@ export default function DescribeDB() {
         }
       });
 
-    let apiResponse: IApiResponse;
+    let apiResponse: IApiResponse<{APIKey: string}>;
 
     try {
       apiResponse = await response.json();
@@ -125,48 +112,57 @@ export default function DescribeDB() {
     }
 
     setAPIkey(apiResponse.APIKey);
-  }
-
-  if (errorElement) {
-    return errorElement;
+    selfAlert.open();
   }
 
   return (
     <>
       <NavBar />
+      <div className={styles.background}>
+        <div className={styles.container}>
+          <button
+            className={styles["add-table-btn"]}
+            onClick={() => navigate(DBTableCreate(dbUID))}
+          >
+            <i className="fa fa-plus" aria-hidden="true"></i>
+          </button>
+          <EnumarateTables/>
+        </div>
+      </div>
       <button
-        className="btn"
         onClick={() => CreateAPIKey()}
+        className={styles["create-api-key-btn"]}
       >
-        Create API key
+        Create API Key
       </button>
-      <center>
-        {dbDataElement}
-      </center>
-      <br />
-      <br />
-      <center>
-        <Link to={DBTableCreate(dbUID)} className="btn">Crear Tabla</Link>
-      </center>
-      {
-        APIKey &&
-        <CustomAlert title="API KEY" onClose={() => {
-          setAPIkey("");
-        }}>
-          <h4 style={{ color: "black" }}>
+      <selfAlert.Element onXClick={() => {
+        setAPIkey("");
+      }}>
+        <h4 style={{ color: "black" }}>
             Warning once you close this, the API key will not be shown again, and if you re-create it, this one will be deleted.
-          </h4>
-          <p style={{
-            backgroundColor: "rgba(0, 0, 0, 0.3)",
-            color: "black",
-            wordWrap: "break-word",
-            padding: "8px",
-            borderRadius: "10px"
-          }}>
-            {APIKey}
-          </p>
-        </CustomAlert>
-      }
+        </h4>
+        <p style={{
+          backgroundColor: "rgba(0, 0, 0, 0.3)",
+          color: "black",
+          wordWrap: "break-word",
+          padding: "8px",
+          borderRadius: "10px"
+        }}>
+          {APIKey}
+        </p>
+      </selfAlert.Element>
     </>
+  );
+}
+
+function Message({children}:{children?: string}){
+  return (
+    <h1 style={{
+      color: "var(--nyanza)",
+      width: "100%",
+      textAlign: "center"
+    }}>
+      {children}
+    </h1>
   );
 }

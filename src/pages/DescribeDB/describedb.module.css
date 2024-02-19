@@ -1,0 +1,104 @@
+.background{
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+.container{
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  padding: 5em 6em;
+  gap: 2.5em;
+}
+
+.tbb-container{
+  background-color: var(--nyanza);
+  border: var(--dark-green) solid 2px;
+  border-radius: 10px;
+  position: relative;
+  aspect-ratio: 3/2;
+  min-height: 150px;
+  min-width: 225px;
+  width: calc((100% - (2.5em * 4))/4);
+  cursor: pointer;
+  max-width: 300px;
+  display: flex;
+  flex-direction: column;
+  color: var(--dark-green);
+  box-shadow: rgba(0, 0, 0, 0.27) 0 9px 7px 5px;
+  align-items: stretch;
+  h3{
+    padding: 10px;
+    font-size: 1.5em;
+    border-bottom: var(--dark-green) solid 2px;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: left;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+}
+
+.table-looking-div{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 100%;
+  div{
+    border: var(--dark-green) solid 1px;
+  }
+  div:nth-child(even){
+    border-right: unset;
+  }
+  div:nth-child(odd){
+    border-left: unset;
+  }
+  div:nth-child(1), div:nth-child(2){
+    border-top: unset;
+  }
+  div:nth-last-child(1), div:nth-last-child(2){
+    border-bottom: unset;
+  }
+}
+
+.add-table-btn{
+  aspect-ratio: 3/2;
+  min-height: 150px;
+  min-width: 225px;
+  width: calc((100% - (2.5em * 4))/4);
+  background-color: var(--fern-green);
+  border: var(--nyanza) solid 2px;
+  max-width: 300px;
+  border-radius: 10px;
+  color: white;
+  font-size: 3em;
+  cursor: pointer;
+  box-shadow: rgba(0, 0, 0, 0.27) 0 9px 7px 5px;
+}
+
+.db-x-btn{
+  position: absolute;
+  height: 50px;
+  top: calc(-50px / 2);
+  right: calc(-50px / 2);
+  color: white;
+  font-size: 2.6em;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.create-api-key-btn{
+  background-color: var(--dark-green);
+  border: var(--nyanza) solid 2px;
+  border-radius: 10px;
+  color: var(--nyanza);
+  padding: 8px 30px;
+  font-size: 1em;
+  font-weight: 200;
+  position: fixed;
+  cursor: pointer;
+  bottom: 10px;
+  left: 15px;
+}

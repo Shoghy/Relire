@@ -42,7 +42,11 @@ export function GetTables(userUID: string, db: string, tb?:string){
   if(tb){
     reference += `/${tb}`;
   }
-  return get(ref(database, reference));
+  try{
+    return get(ref(database, reference));
+  }catch(e){
+    return {error: e};
+  }
 }
 
 export function GetDataInTable(userUID: string, db:string, tb: string){
