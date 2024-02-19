@@ -1,6 +1,8 @@
-type CRequest = express.Request<object, any, any, QueryString.ParsedQs, Record<string, any>>;
+import express from "express";
 
-type CResponse = express.Response<any, Record<string, any>, number>
+type CRequest = express.Request;
+
+type CResponse = express.Response;
 
 type AdminHandler = (req: CRequest, res: CResponse) => void
 
