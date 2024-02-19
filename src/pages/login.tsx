@@ -1,13 +1,13 @@
 import { Formik, Form, ErrorMessage, FormikHelpers } from "formik";
 import { useEffect, useState } from "react";
-import { auth } from "../../utilities/DBclient";
+import { auth } from "@/utilities/DBclient";
 import { AuthErrorCodes, AuthError } from "firebase/auth";
 import { Link, useNavigate } from "react-router-dom";
-import { MainPage, Registro } from "../../utilities/PageLocations";
+import { MainPage, Registro } from "@/utilities/PageLocations";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { AsyncAttempter } from "../../utilities/functions";
-import NavBar from "../../components/NavBar";
-import style from "./login.module.css";
+import { AsyncAttempter } from "@/utilities/functions";
+import NavBar from "@/components/NavBar";
+import style from "./account.module.css";
 import TextInput from "@/components/TextInput";
 
 interface ILogIn {

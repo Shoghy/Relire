@@ -1,5 +1,5 @@
 import { Route, Routes } from "react-router-dom";
-import LogInForm from "./pages/LogIn";
+import LogInForm from "./pages/login";
 import Main from "./pages/Main";
 import DescribeDB from "./pages/DescribeDB";
 import CreateTable from "./pages/CreateTable";
