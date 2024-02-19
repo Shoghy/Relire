@@ -2,6 +2,11 @@ export interface Dictionary<T> {
   [Key: string]: T;
 }
 
+export interface BasicDBInfo {
+  dbName: string,
+  dbUID: string
+}
+
 export interface IDataBase {
   author: string,
   dbName: string,
@@ -37,9 +42,10 @@ export interface DefaultReturnedError extends Error {
   code: string
 }
 
-export interface IApiResponse extends Dictionary<any> {
+export type IApiResponse<T = object> = T & {
   ok: boolean,
   error?: DefaultReturnedError
+  [key: string]: boolean | object | string | number | undefined
 }
 
 export interface DatabaseListResponse extends IApiResponse {

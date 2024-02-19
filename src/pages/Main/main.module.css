@@ -1,0 +1,74 @@
+.background{
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+.container{
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  padding: 5em 6em;
+  gap: 2.5em;
+}
+
+.dbb-background{
+  background-color: var(--nyanza);
+  border: var(--nyanza) solid 2px;
+  border-radius: 10px;
+  position: relative;
+  aspect-ratio: 3/2;
+  min-height: 150px;
+  min-width: 225px;
+  width: calc((100% - (2.5em * 4))/4);
+  cursor: pointer;
+  max-width: 300px;
+  padding-bottom: 30px;
+}
+
+.dbb-container{
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  background-color: var(--fern-green);
+}
+
+.add-db-btn{
+  display: flex;
+  color: var(--nyanza);
+  justify-content: center;
+  align-items: center;
+  font-size:7em;
+}
+
+.db-btn{
+  display: flex;
+  color: var(--nyanza);
+  flex-direction: column;
+  align-items: start;
+  padding: 10px;
+  box-sizing: border-box;
+  justify-content: space-between;
+  text-align: left;
+  h3{
+    font-size: 1.7em;
+    overflow: hidden;
+    max-height: calc(100% - 24px);
+  }
+  span{
+    font-size: 1.2em;
+    font-weight: 100;
+  }
+}
+
+.db-x-btn{
+  position: absolute;
+  height: 35%;
+  top: calc(-35% / 2);
+  right: calc(-35% / 3);
+  color: white;
+  font-size: 2.6em;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

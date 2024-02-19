@@ -1,7 +1,7 @@
 import { initializeApp, getApps, FirebaseApp, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { get, getDatabase, push, ref } from "firebase/database";
-import { IApiRequest, IApiResponse, IColumForRequest } from "./types";
+import { BasicDBInfo, IApiRequest, IApiResponse, IColumForRequest } from "./types";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -50,7 +50,7 @@ export function GetDataInTable(userUID: string, db:string, tb: string){
   return get(reference);
 }
 
-export async function GetDatabases(): Promise<IApiResponse>{
+export async function GetDatabases(): Promise<IApiResponse<{dbInfos?: BasicDBInfo[]}>>{
   await auth.authStateReady();
   const userIDToken = await auth.currentUser?.getIdToken();
 
@@ -68,7 +68,7 @@ export async function GetDatabases(): Promise<IApiResponse>{
   );
 
   try{
-    const apiResponse: IApiResponse = await response.json();
+    const apiResponse: IApiResponse<{dbInfos: BasicDBInfo[]}> = await response.json();
     return apiResponse;
   }catch(e){}
 

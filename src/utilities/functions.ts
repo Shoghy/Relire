@@ -67,3 +67,8 @@ export function RemoveIndexOfArray<T>(arr: Array<T>, index: number){
   copyOfArray.splice(index, 1);
   return copyOfArray;
 }
+
+export function ChangeBodyColor(color: string){
+  if(import.meta.env.SSR) return;
+  document.body.style.backgroundColor = color;
+}
