@@ -1,0 +1,36 @@
+.background{
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  top:0;
+  left:0;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.container{
+  background-color: var(--fern-green);
+  border: var(--nyanza) solid 2px;
+  max-width: 500px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  box-sizing: border-box;
+  padding: 20px 25px;
+  max-height: 70%;
+  border-radius: 25px;
+  position: relative;
+}
+
+.close-btn{
+  position: absolute;
+  width: 60px;
+  top: -30px;
+  right: -30px;
+  color: white;
+  font-size: 2.3em;
+}
