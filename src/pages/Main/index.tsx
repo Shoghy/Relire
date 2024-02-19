@@ -100,7 +100,7 @@ export default function Main() {
     }
 
     setUserDBs((current) => {
-      if(current === undefined || typeof current === "string"){
+      if(!Array.isArray(current)){
         current = [];
       }
       current.push({ dbName, dbUID: newDB.dbUID as string });
