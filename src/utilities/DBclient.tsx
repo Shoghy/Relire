@@ -23,7 +23,7 @@ if (getApps().length === 0) {
 
 const auth = getAuth(app);
 const database = getDatabase(app);
-const serverURL = import.meta.env.VITE_SERVER_URL;
+
 const headers = {
   "Content-Type": "application/json; charset=utf-8",
   "Accept": "application/json"
@@ -60,7 +60,7 @@ export async function GetDatabases(): Promise<IApiResponse>{
   };
 
   const response = await fetch(
-    `${serverURL}/api/get-databases`, {
+    "/api/get-databases", {
       body: JSON.stringify(requestBody),
       method: "POST",
       headers: headers
@@ -85,7 +85,7 @@ export async function CreateDatabase(db: string): Promise<IApiResponse>{
   };
 
   const response = await fetch(
-    `${serverURL}/api/create-db`, {
+    "/api/create-db", {
       body: JSON.stringify(requestBody),
       method: "POST",
       headers: headers
@@ -114,7 +114,7 @@ export async function CreateTable(db: string, tableName: string, columns: IColum
   };
 
   const response = await fetch(
-    `${serverURL}/api/create-table`, {
+    "/api/create-table", {
       body: JSON.stringify(requestBody),
       method: "POST",
       headers: headers
@@ -150,7 +150,7 @@ export async function DeleteRow(db: string, tableName: string, rowUID: string){
     dbUID: db
   };
 
-  const response = await fetch(`${serverURL}/api/delete-row`, {
+  const response = await fetch("/api/delete-row", {
     body: JSON.stringify(requestBody),
     method: "POST",
     headers: headers
@@ -174,7 +174,7 @@ export async function DeleteTable(db: string, tableName: string){
     dbUID: db
   };
 
-  const response = await fetch(`${serverURL}/api/delete-table`, {
+  const response = await fetch("/api/delete-table", {
     body: JSON.stringify(requestBody),
     method: "POST",
     headers: headers
@@ -198,7 +198,7 @@ export async function DeleteDatabase(dbUID: string, dbName: string){
     dbName
   };
 
-  const response = await fetch(`${serverURL}/api/delete-database`, {
+  const response = await fetch("/api/delete-database", {
     body: JSON.stringify(requestBody),
     method: "POST",
     headers: headers

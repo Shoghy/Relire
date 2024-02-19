@@ -100,9 +100,8 @@ export default function DescribeDB() {
       dbUID: dbUID
     };
 
-    const serverURL = import.meta.env.VITE_SERVER_URL;
     const response = await fetch(
-      `${serverURL}/api/create-api`, {
+      "/api/create-api", {
         body: JSON.stringify(requestBody),
         method: "POST",
         headers: {
