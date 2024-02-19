@@ -1,4 +1,4 @@
-import { Formik, Form, ErrorMessage, FormikHelpers } from "formik";
+import { Formik, Form, ErrorMessage, FormikHelpers, Field } from "formik";
 import { useEffect, useState } from "react";
 import { auth } from "@/utilities/DBclient";
 import { AuthErrorCodes, AuthError } from "firebase/auth";
@@ -8,7 +8,6 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { AsyncAttempter } from "@/utilities/functions";
 import NavBar from "@/components/NavBar";
 import style from "./account.module.css";
-import TextInput from "@/components/TextInput";
 
 interface ILogIn {
   email?: string,
@@ -97,12 +96,12 @@ export default function LogInForm() {
                 {authError && <p>{authError}</p>}
                 <div className={style.field}>
                   <label htmlFor="email">e-mail</label>
-                  <TextInput type="email" name="email" disabled={sendedForm}/><br />
+                  <Field className="input" type="email" name="email" disabled={sendedForm}/><br />
                   <ErrorMessage name="email" component={() => <p>{errors.email}</p>} />
                 </div>
                 <div className={style.field}>
                   <label htmlFor="email">password</label>
-                  <TextInput type="password" name="password" disabled={sendedForm} /><br />
+                  <Field className="input" type="password" name="password" disabled={sendedForm} /><br />
                   <ErrorMessage name="password" component={() => <p>{errors.password}</p>} />
                 </div>
                 <button type="submit" className={"btn "+style["submit-btn"]}>Submit</button>

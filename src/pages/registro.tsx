@@ -2,12 +2,11 @@ import { useEffect, useState } from "react";
 import { auth } from "../utilities/DBclient";
 import { Link, useNavigate } from "react-router-dom";
 import { LogIn, MainPage } from "../utilities/PageLocations";
-import { Formik, Form, ErrorMessage, FormikHelpers } from "formik";
+import { Formik, Form, ErrorMessage, FormikHelpers, Field } from "formik";
 import { AuthError, AuthErrorCodes, createUserWithEmailAndPassword } from "firebase/auth";
 import { AsyncAttempter } from "../utilities/functions";
 import NavBar from "@/components/NavBar";
 import styles from "./account.module.css";
-import TextInput from "@/components/TextInput";
 
 interface IRegistro {
   email?: string
@@ -88,17 +87,17 @@ export default function RegistroPage() {
               <Form className={styles.form}>
                 <div className={styles.field}>
                   <label htmlFor="email">e-mail</label>
-                  <TextInput type="email" name="email" disabled={sendedForm} /><br />
+                  <Field className="input" type="email" name="email" disabled={sendedForm} /><br />
                   <ErrorMessage name="email" component={() => <p>{errors.email}</p>} />
                 </div>
                 <div className={styles.field}>
                   <label htmlFor="password">password</label>
-                  <TextInput type="password" name="password" disabled={sendedForm} /><br />
+                  <Field className="input" type="password" name="password" disabled={sendedForm} /><br />
                   <ErrorMessage name="password" component={() => <p>{errors.password}</p>} />
                 </div>
                 <div className={styles.field}>
                   <label htmlFor="confirmPassword">confirm password</label>
-                  <TextInput type="password" name="confirmPassword" disabled={sendedForm} /><br />
+                  <Field className="input" type="password" name="confirmPassword" disabled={sendedForm} /><br />
                   <ErrorMessage name="confirmPassword" component={() => <p>{errors.confirmPassword}</p>} />
                 </div>
 

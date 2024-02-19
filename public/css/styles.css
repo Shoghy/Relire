@@ -2,7 +2,6 @@
   font-family: Inter, sans-serif;
   margin: 0;
   padding: 0;
-  color: #fff;
 }
 
 :root{
@@ -119,4 +118,17 @@ input, select, select > option{
   font-weight: 100;
   font-size: 1.5em;
   cursor: default;
+}
+
+.input{
+  background-color: var(--nyanza);
+  border: var(--sage) solid 2px;
+  border-radius: 9px;
+  height: 2.7em;
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 1em;
+  font-family: Inter;
+  padding: 15px;
+  color:black !important;
 }
