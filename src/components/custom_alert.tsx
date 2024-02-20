@@ -50,7 +50,7 @@ export function selfCustomAlert(open: boolean = false): SelfCustomAlert{
     const [open, setOpen] = useState(o.isOpen);
 
     o.setOpen = setOpen;
-    o.isOpen;
+    o.isOpen = open;
     o.toggle = () => setOpen((current) => !current);
     o.open = () => setOpen(true);
     o.close = () => setOpen(false);

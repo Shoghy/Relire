@@ -15,6 +15,7 @@ function ColumnComponent({
   index, self
 }: ColumnComponentProps){
   const [column, setColumn] = useState(self.columns[index]);
+  self.columns[index] = column;
 
   function SetColumnInfo<K extends keyof CreateColumnInfo>(key: K, value: CreateColumnInfo[K]){
     setColumn((current) => {
@@ -122,7 +123,7 @@ function CheckButton({value, className = "", ...props}: CheckButtonProps){
     <button
       className={`${styles["check-btn"]} ${className}`}
       style={{
-        color: value ? "#DABA12" : "#222925"
+        color: value ? "var(--yellow)" : "var(--dark-green)"
       }}
       {...props}
     >
