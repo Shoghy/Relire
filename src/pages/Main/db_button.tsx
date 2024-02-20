@@ -1,21 +1,20 @@
 import { CSSProperties } from "react";
 import styles from "./main.module.css";
+import XButton from "@/components/x_btn";
 
 export type DBButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   containerClassName?: string
   cotainerStyles?: CSSProperties
   showXButton?: boolean
-  onXBtnClick?: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => any
+  onXBtnClick?: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => any
 };
 
 export default function DBButton({children, className, containerClassName, cotainerStyles, showXButton = true, onXBtnClick, ...props}:DBButtonProps){
-  function XButton(){
+  function ShowXButton(){
     if(!showXButton) return <div></div>;
 
     return (
-      <div onClick={onXBtnClick} className={`peach-circle ${styles["db-x-btn"]}`}>
-        <i className="fa fa-times" aria-hidden="true"></i>
-      </div>
+      <XButton onClick={onXBtnClick}/>
     );
   }
 
@@ -27,7 +26,7 @@ export default function DBButton({children, className, containerClassName, cotai
       >
         {children}
       </div>
-      <XButton />
+      <ShowXButton />
     </button>
   );
 }

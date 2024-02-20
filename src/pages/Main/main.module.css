@@ -60,16 +60,3 @@
     font-weight: 100;
   }
 }
-
-.db-x-btn{
-  position: absolute;
-  height: 50px;
-  top: calc(-50px / 2);
-  right: calc(-50px / 2);
-  color: white;
-  font-size: 2.6em;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
