@@ -7,6 +7,8 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { GetTables, auth } from "@/utilities/DBclient";
 import { LogIn } from "@/utilities/PageLocations";
+import { selfTextInput } from "@/components/TextInput";
+import { selfDAlert } from "@/components/custom_alert";
 
 export interface CreateColumnInfo{
   name: string
@@ -28,6 +30,8 @@ export interface CreateForeignKey{
 }
 
 const SelfColumn = selfColumnComponent();
+const SelfTableName = selfTextInput();
+const DAlert = selfDAlert({});
 SelfColumn.AddNewColumn();
 export default function CreateTable() {
   ChangeBodyColor("var(--nyanza)");
@@ -36,6 +40,7 @@ export default function CreateTable() {
   const params = useParams();
   const dbUID = params.idDB as string;
   const [foreignUniqueColumns, setForeignUniqueColumns] = useState<Dictionary<CreateForeignKey[]>>({});
+  SelfColumn.foreignUniqueColumns = foreignUniqueColumns;
 
   useEffect(() => {
     addEventListener("resize", () => CalculateSize());
@@ -87,16 +92,22 @@ export default function CreateTable() {
   return (
     <>
       <NavBar />
+      <div className={styles["top-panel"]}>
+        <span>Table name:</span>
+        <SelfTableName.Element/>
+        <button className={styles["btn-create-table"]}>
+          Create
+        </button>
+      </div>
       <div className={styles.background} >
         <div id="container" className={styles.container}>
           <button onClick={() => SelfColumn.AddNewColumn()} className={styles["add-column-btn"]}>
             <i className="fa fa-plus" aria-hidden="true"></i>
           </button>
-          <SelfColumn.ShowColumns
-            foreignUniqueColumns={foreignUniqueColumns}
-          />
+          <SelfColumn.ShowColumns/>
         </div>
       </div>
+      <DAlert.Element/>
     </>
   );
 }

@@ -1,11 +1,11 @@
 .background{
-  max-height: calc(100vh - 120px);
+  max-height: calc(100vh - 120px - 103.188px);
   overflow-y: auto;
 }
 
 .container{
   display: grid;
-  padding: 5em 3em;
+  padding: 1.6em 3em;
   grid-template-columns: repeat(auto-fill, calc(330px + 2.5em));
   grid-auto-rows: 45px;
   min-width: 370px;
@@ -78,4 +78,29 @@
   max-height: 186.666px;
   grid-row-end: span 5;
   margin: 0 20px;
+}
+
+.top-panel{
+  display: flex;
+  width: 50%;
+  max-width: 640px;
+  margin: 30px auto;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 30px;
+  min-width: 540px;
+  span{
+    font-weight: 700;
+    vertical-align: middle;
+  }
+}
+
+.btn-create-table{
+  background-color: var(--fern-green);
+  color: var(--nyanza);
+  border: var(--nyanza) solid 2px;
+  padding: 0 2em;
+  border-radius: 9px;
+  box-shadow: rgba(0, 0, 0, 0.27) 0 0 4px 3px;
+  cursor: pointer;
 }

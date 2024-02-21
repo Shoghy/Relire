@@ -226,13 +226,9 @@ function ColumnComponent({
   );
 }
 
-interface ShowColumnsProps {
-  foreignUniqueColumns: Dictionary<CreateForeignKey[]>
-}
-
 interface SelfColumnComponentObject {
   columns: CreateColumnInfo[]
-  ShowColumns(props: ShowColumnsProps): React.JSX.Element[]
+  ShowColumns(): React.JSX.Element[]
   Update: () => void
   AddNewColumn(): void
   foreignUniqueColumns: Dictionary<CreateForeignKey[]>
@@ -264,10 +260,9 @@ export function selfColumnComponent() {
     o.Update();
   }
 
-  function ShowColumns({ foreignUniqueColumns }: ShowColumnsProps) {
+  function ShowColumns() {
     const [, update] = useState(false);
     o.Update = () => update((c) => !c);
-    o.foreignUniqueColumns = foreignUniqueColumns;
 
     const columnsElements: React.JSX.Element[] = [];
 
