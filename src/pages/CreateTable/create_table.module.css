@@ -21,7 +21,7 @@
   width: var(--column-width);
   box-shadow: rgba(0, 0, 0, 0.27) 0 9px 7px 5px;
   height: fit-content;
-  margin-right: 2.5em;
+  margin: 0 1.25em;
   margin-bottom: 45px;
 }
 
@@ -77,4 +77,5 @@
   box-shadow: rgba(0, 0, 0, 0.27) 0 9px 7px 5px;
   max-height: 186.666px;
   grid-row-end: span 5;
+  margin: 0 20px;
 }

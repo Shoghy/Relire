@@ -1,13 +1,13 @@
 import XButton from "@/components/x_btn";
 import styles from "./create_table.module.css";
-import { CreateColumnInfo } from ".";
-import { useState } from "react";
-import { ColumnType } from "@/utilities/types";
+import { CreateColumnInfo, CreateForeignKey } from ".";
+import { useEffect, useState } from "react";
+import { ColumnType, Dictionary } from "@/utilities/types";
 import { GetEnumValues, RandomString, RemoveIndexOfArray, TitleCase } from "../../utilities/functions";
 import ColumnInput from "@/components/ColumnInput";
 import CheckButton from "@/components/check_button";
 
-export interface ColumnComponentProps{
+export interface ColumnComponentProps {
   index: number
   readonly self: SelfColumnComponentObject
 }
@@ -15,38 +15,45 @@ export interface ColumnComponentProps{
 const ColumTypeArray = Object.values(ColumnType);
 function ColumnComponent({
   index, self
-}: ColumnComponentProps){
+}: ColumnComponentProps) {
   const [column, setColumn] = useState(self.columns[index]);
+  const [foreignValues, setForeignValues] = useState<string[]>([]);
+  const [posibleForeignKey, setPosibleForeignKey] = useState<Dictionary<string[]>>();
   self.columns[index] = column;
 
-  function SetColumnInfo<K extends keyof CreateColumnInfo>(key: K, value: CreateColumnInfo[K]){
+  useEffect(() => {
+    CanUseForeignKey(column.type);
+  }, [self.foreignUniqueColumns]);
+
+  function SetColumnInfo<K extends keyof CreateColumnInfo>(key: K, value: CreateColumnInfo[K]) {
     setColumn((current) => {
       current[key] = value;
-      return {...current};
+      return { ...current };
     });
   }
 
-  function DeleteColumn(){
+  function DeleteColumn() {
     self.columns = RemoveIndexOfArray(self.columns, index);
     self.Update();
   }
 
-  function OnTypeChange(value: ColumnType){
+  function OnTypeChange(value: ColumnType) {
+    CanUseForeignKey(value);
     SetColumnInfo("useForeingKey", false);
     SetColumnInfo("type", value as ColumnType);
     SetColumnInfo("default", "");
-    if(value === ColumnType.ENUM || value === ColumnType.BOOL){
+    if (value === ColumnType.ENUM || value === ColumnType.BOOL) {
       SetColumnInfo("unique", false);
     }
   }
 
-  function Unique(){
+  function Unique() {
     if (column.type === ColumnType.ENUM || column.type === ColumnType.BOOL) return <></>;
     return (
       <>
         <div>Unique</div>
         <CheckButton
-          style={{backgroundColor: "var(--nyanza)"}}
+          style={{ backgroundColor: "var(--nyanza)" }}
           value={column.unique}
           onClick={() => SetColumnInfo("unique", !column.unique)}
         />
@@ -54,13 +61,13 @@ function ColumnComponent({
     );
   }
 
-  function AutoIncrement(){
-    if(column.type !== ColumnType.INT) return<></>;
+  function AutoIncrement() {
+    if (column.type !== ColumnType.INT) return <></>;
     return (
       <>
         <div>Auto Increment</div>
         <CheckButton
-          style={{backgroundColor: "var(--nyanza)"}}
+          style={{ backgroundColor: "var(--nyanza)" }}
           value={column.autoIncrement}
           onClick={() => SetColumnInfo("autoIncrement", !column.autoIncrement)}
         />
@@ -68,19 +75,59 @@ function ColumnComponent({
     );
   }
 
-  function CountFields(){
+  function CountFields() {
     let num = 6;
-    if(column.type !== ColumnType.BOOL){
+    if (column.type !== ColumnType.BOOL) {
       num += 1;
     }
-    if(column.type === ColumnType.INT){
+    if (column.type === ColumnType.INT) {
       num += 1;
     }
-    if(column.useDefault){
+    if (column.useDefault) {
       num += 1;
     }
 
     return num;
+  }
+
+  function ShowDefaultInput() {
+    if (!column.useDefault) return false;
+    if (column.useForeingKey) {
+      return column.foreingKey.column !== "" && column.foreingKey.tableName !== "";
+    }
+    return true;
+  }
+
+  function CanUseForeignKey(type: ColumnType) {
+    if (type === ColumnType.BOOL || type === ColumnType.ENUM) {
+      setPosibleForeignKey(undefined);
+      return;
+    }
+
+    const posibleForeignKey: Dictionary<string[]> = {};
+    let hasSomething = false;
+    for (const tableName in self.foreignUniqueColumns) {
+      const columns = self.foreignUniqueColumns[tableName];
+      const posibleColumns: string[] = [];
+
+      for (let i = 0; i < columns.length; ++i) {
+        const column = columns[i];
+        if (column.columnType !== type) return;
+        posibleColumns.push(column.columnName);
+      }
+
+      if (posibleColumns.length > 0) {
+        posibleForeignKey[tableName] = posibleColumns;
+        hasSomething = true;
+      }
+    }
+
+    if (!hasSomething) {
+      setPosibleForeignKey(undefined);
+      return;
+    }
+
+    setPosibleForeignKey(posibleForeignKey);
   }
 
   return (
@@ -108,7 +155,7 @@ function ColumnComponent({
         >
           {ColumTypeArray.map((k, i) => <option key={i} value={k}>{TitleCase(k)}</option>)}
         </select>
-        <AutoIncrement/>
+        <AutoIncrement />
         {
           column.type === ColumnType.ENUM
           &&
@@ -121,56 +168,86 @@ function ColumnComponent({
             />
           </>
         }
-        <Unique/>
+        <Unique />
         <div>Not Null</div>
         <CheckButton
-          style={{backgroundColor: "var(--nyanza)"}}
+          style={{ backgroundColor: "var(--nyanza)" }}
           value={column.notNull}
           onClick={() => SetColumnInfo("notNull", !column.notNull)}
         />
         <div>Use Default</div>
         <CheckButton
-          style={{backgroundColor: "var(--nyanza)"}}
+          style={{ backgroundColor: "var(--nyanza)" }}
           value={column.useDefault}
           onClick={() => SetColumnInfo("useDefault", !column.useDefault)}
         />
         {
-          column.useDefault 
+          ShowDefaultInput()
           &&
           <>
             <div>Default</div>
             <ColumnInput
-              type={column.type}
-              Enum={GetEnumValues(column.enum)}
+              type={column.useForeingKey ? ColumnType.ENUM : column.type}
+              Enum={column.useForeingKey ? foreignValues : GetEnumValues(column.enum)}
               notNull={column.notNull}
               value={column.default}
               setValue={(value) => SetColumnInfo("default", value)}
-              style={column.type === ColumnType.BOOL ? {backgroundColor: "var(--nyanza)"} : undefined}
+              style={column.type === ColumnType.BOOL ? { backgroundColor: "var(--nyanza)" } : undefined}
             />
           </>
         }
+        {
+          !!posibleForeignKey
+          &&
+          <>
+            <div>Use ForeignKey</div>
+            <CheckButton
+              style={{ backgroundColor: "var(--nyanza)" }}
+              value={column.useDefault}
+              onClick={() => SetColumnInfo("useDefault", !column.useDefault)}
+            />
+          </>
+        }
+        {
+          column.useForeingKey
+          &&
+          <>
+            <div>Table Name</div>
+            <select
+              value={column.foreingKey.column}
+            >
+              <option value={""}></option>
+            </select>
+          </>
+        }
       </div>
-      <XButton onClick={() => DeleteColumn()}/>
+      <XButton onClick={() => DeleteColumn()} />
     </div>
   );
 }
 
-interface SelfColumnComponentObject{
-  columns: CreateColumnInfo[]
-  ShowColumns(): React.JSX.Element[]
-  Update: () => void
-  AddNewColumn(): void
+interface ShowColumnsProps {
+  foreignUniqueColumns: Dictionary<CreateForeignKey[]>
 }
 
-export function selfColumnComponent(){
+interface SelfColumnComponentObject {
+  columns: CreateColumnInfo[]
+  ShowColumns(props: ShowColumnsProps): React.JSX.Element[]
+  Update: () => void
+  AddNewColumn(): void
+  foreignUniqueColumns: Dictionary<CreateForeignKey[]>
+}
+
+export function selfColumnComponent() {
   const o: SelfColumnComponentObject = {
     columns: [],
     ShowColumns,
-    Update: () => {return;},
-    AddNewColumn
+    Update: () => { return; },
+    AddNewColumn,
+    foreignUniqueColumns: {}
   };
 
-  function AddNewColumn(){
+  function AddNewColumn() {
     o.columns.push({
       name: "",
       type: ColumnType.STRING,
@@ -187,13 +264,14 @@ export function selfColumnComponent(){
     o.Update();
   }
 
-  function ShowColumns(){
+  function ShowColumns({ foreignUniqueColumns }: ShowColumnsProps) {
     const [, update] = useState(false);
-    o.Update = () => update((c)=>!c);
+    o.Update = () => update((c) => !c);
+    o.foreignUniqueColumns = foreignUniqueColumns;
 
     const columnsElements: React.JSX.Element[] = [];
 
-    for(let i = 0; i < o.columns.length; ++i){
+    for (let i = 0; i < o.columns.length; ++i) {
       columnsElements.push(
         <ColumnComponent
           key={o.columns[i].key}
