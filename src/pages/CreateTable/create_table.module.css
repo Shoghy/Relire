@@ -4,11 +4,12 @@
 }
 
 .container{
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  padding: 5em 6em;
-  gap: 2.5em;
+  display: grid;
+  padding: 5em 3em;
+  grid-template-columns: repeat(auto-fill, calc(330px + 2.5em));
+  grid-auto-rows: 45px;
+  min-width: 370px;
+  margin: 0 auto;
 }
 
 .column-background{
@@ -20,6 +21,8 @@
   width: var(--column-width);
   box-shadow: rgba(0, 0, 0, 0.27) 0 9px 7px 5px;
   height: fit-content;
+  margin-right: 2.5em;
+  margin-bottom: 45px;
 }
 
 .column-info-container{
@@ -73,15 +76,5 @@
   cursor: pointer;
   box-shadow: rgba(0, 0, 0, 0.27) 0 9px 7px 5px;
   max-height: 186.666px;
-}
-
-.check-btn{
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: var(--nyanza);
-  cursor: pointer;
-  i{
-    border: unset;
-  }
+  grid-row-end: span 5;
 }

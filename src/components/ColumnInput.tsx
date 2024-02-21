@@ -1,56 +1,54 @@
-import { ColumnType, ColumnValue, IColumn, IForeingKey, TableRow } from "@/utilities/types";
+import { ColumnType, ColumnValue } from "@/utilities/types";
 import { RandomString, TitleCase } from "@/utilities/functions";
-import React, { useEffect, useState } from "react";
-import { auth, database } from "@/utilities/DBclient";
-import { get, ref } from "firebase/database";
-import { useParams } from "react-router-dom";
+import { CSSProperties } from "react";
+import CheckButton from "./check_button";
 
 export interface IColumnToInput {
-  column: IColumn,
-  value: ColumnValue,
-  setValue: (value: ColumnValue) => any,
-  props?: React.InputHTMLAttributes<HTMLInputElement> & React.SelectHTMLAttributes<HTMLSelectElement>
+  type: ColumnType
+  value: ColumnValue
+  setValue: (val: ColumnValue) => any
+  notNull?: boolean
+  Enum?: string[]
+  className?: string
+  style?: CSSProperties
 }
 
-export default function ColumnInput({ column, value, setValue, props }: IColumnToInput) {
-  if (props === undefined) {
-    props = {};
-  }
+export default function ColumnInput({ type, setValue, value, Enum = [], notNull = false, ...props}: IColumnToInput) {
+  let inputType: React.HTMLInputTypeAttribute = "text";
+  let onChange = (e: React.ChangeEvent<HTMLInputElement & HTMLSelectElement>) => setValue((e).currentTarget.value);
 
-  props.value = value as string;
-  props.onChange = (e) => setValue((e as React.ChangeEvent<HTMLInputElement>).target.value);
-
-  if (column.foreingKey) {
-    return ForeingKeyColumn({ column, value, setValue, props });
-  }
-
-  switch (column.type) {
+  switch (type) {
     case ColumnType.BOOL: {
-      props.type = "checkbox";
-      props.checked = value as boolean;
-      props.value = undefined;
-      props.onChange = (e) => setValue((e as React.ChangeEvent<HTMLInputElement>).target.checked);
-      break;
+      return (
+        <CheckButton
+          value={value as boolean}
+          onClick={() => setValue(!value)}
+          {...props}
+        />
+      );
     }
     case ColumnType.DATE: {
-      props.type = "date";
+      inputType = "date";
       break;
     }
     case ColumnType.DATETIME: {
-      props.type = "datetime-local";
+      inputType = "datetime-local";
       break;
     }
     case ColumnType.ENUM: {
-      props.type = undefined;
       const key = RandomString(6);
       return (
-        <select {...props} key={key}>
-          {!column.notNull && <option value="" key={`$Nada-${key}`}></option>}
+        <select
+          key={key}
+          value={value as string}
+          onChange={onChange}
+          {...props}
+        >
+          {!notNull && <option value="" key={`$Nada-${key}`}></option>}
           {(() => {
-            if (column.enum === undefined) return <></>;
             const options: React.JSX.Element[] = [];
 
-            column.enum.forEach((value, index) => {
+            Enum.forEach((value, index) => {
               options.push(<option value={value} key={`${index}-${key}`}>{TitleCase(value)}</option>);
             });
 
@@ -60,86 +58,39 @@ export default function ColumnInput({ column, value, setValue, props }: IColumnT
       );
     }
     case ColumnType.FLOAT: {
-      props.type = "number";
-      props.onChange = (e) => {
-        e = e as React.ChangeEvent<HTMLInputElement>;
-        if (e.target.value === "") setValue(e.target.value);
+      inputType = "number";
+      onChange = (e) => {
+        if (e.currentTarget.value === "") setValue(e.currentTarget.value);
 
-        if (isNaN(parseFloat(e.target.value))) {
-          const character = e.target.value[e.target.value.length - 1];
+        if (isNaN(parseFloat(e.currentTarget.value))) {
+          const character = e.currentTarget.value[e.currentTarget.value.length - 1];
           if (character !== ".") return;
         }
-        setValue(e.target.valueAsNumber);
+        setValue(e.currentTarget.valueAsNumber);
       };
       break;
     }
     case ColumnType.INT: {
-      props.type = "number";
-      props.onChange = (e) => {
-        e = e as React.ChangeEvent<HTMLInputElement>;
-        if (e.target.value === "") setValue(e.target.value);
-        const value = parseInt(e.target.value);
+      inputType = "number";
+      onChange = (e) => {
+        if (e.currentTarget.value === "") setValue(e.currentTarget.value);
+        const value = parseInt(e.currentTarget.value);
         if (isNaN(value)) return;
         setValue(value);
       };
       break;
     }
     case ColumnType.STRING: {
-      props.type = "text";
+      inputType = "text";
       break;
     }
   }
-  return <input {...props} />;
-}
-
-function ForeingKeyColumn({ column, props, setValue }: IColumnToInput) {
-  const [options, setOptions] = useState<React.ReactNode[]>([]);
-  const params = useParams();
-
-  useEffect(() => {
-    if (!column.notNull) {
-      setOptions((current) => {
-        current.push(<option value={""} key={"nullValue"}></option>);
-        return [...current];
-      });
-    }
-    Start();
-  }, []);
-
-  async function Start() {
-    await auth.authStateReady();
-    const foreignKey = column.foreingKey as IForeingKey;
-    const tableData: TableRow = (await get(
-      ref(database, `${auth.currentUser?.uid}/${params.idDB}/tablesData/${foreignKey.tableName}`)
-    )).val();
-
-    const options: React.ReactNode[] = [];
-
-    const rowUIDs = Object.keys(tableData);
-
-    if(column.notNull){
-      setValue(
-        tableData[rowUIDs[0]][foreignKey.column]
-      );
-    }
-
-    for(const rowUID of rowUIDs){
-      const row = tableData[rowUID];
-      options.push(
-        <option value={`${row[foreignKey.column]}`} key={rowUID}>
-          {row[foreignKey.column]}
-        </option>
-      );
-    }
-
-    setOptions((current) => {
-      return [... current.concat(options)];
-    });
-  }
-
   return (
-    <select {...props} >
-      {options}
-    </select>
+    <input
+      type={inputType}
+      onChange={onChange}
+      value={value as string}
+      {...props}
+    />
   );
 }

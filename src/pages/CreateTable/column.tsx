@@ -3,7 +3,9 @@ import styles from "./create_table.module.css";
 import { CreateColumnInfo } from ".";
 import { useState } from "react";
 import { ColumnType } from "@/utilities/types";
-import { RandomString, RemoveIndexOfArray, TitleCase } from "../../utilities/functions";
+import { GetEnumValues, RandomString, RemoveIndexOfArray, TitleCase } from "../../utilities/functions";
+import ColumnInput from "@/components/ColumnInput";
+import CheckButton from "@/components/check_button";
 
 export interface ColumnComponentProps{
   index: number
@@ -44,6 +46,7 @@ function ColumnComponent({
       <>
         <div>Unique</div>
         <CheckButton
+          style={{backgroundColor: "var(--nyanza)"}}
           value={column.unique}
           onClick={() => SetColumnInfo("unique", !column.unique)}
         />
@@ -57,15 +60,36 @@ function ColumnComponent({
       <>
         <div>Auto Increment</div>
         <CheckButton
+          style={{backgroundColor: "var(--nyanza)"}}
           value={column.autoIncrement}
-          onClick={() => SetColumnInfo("unique", !column.autoIncrement)}
+          onClick={() => SetColumnInfo("autoIncrement", !column.autoIncrement)}
         />
       </>
     );
   }
 
+  function CountFields(){
+    let num = 6;
+    if(column.type !== ColumnType.BOOL){
+      num += 1;
+    }
+    if(column.type === ColumnType.INT){
+      num += 1;
+    }
+    if(column.useDefault){
+      num += 1;
+    }
+
+    return num;
+  }
+
   return (
-    <div className={styles["column-background"]}>
+    <div
+      className={styles["column-background"]}
+      style={{
+        gridRowEnd: `span ${CountFields()}`
+      }}
+    >
       <div className={styles["column-info-container"]}>
         <div>#</div>
         <div>{index}</div>
@@ -100,35 +124,34 @@ function ColumnComponent({
         <Unique/>
         <div>Not Null</div>
         <CheckButton
+          style={{backgroundColor: "var(--nyanza)"}}
           value={column.notNull}
           onClick={() => SetColumnInfo("notNull", !column.notNull)}
         />
         <div>Use Default</div>
         <CheckButton
+          style={{backgroundColor: "var(--nyanza)"}}
           value={column.useDefault}
           onClick={() => SetColumnInfo("useDefault", !column.useDefault)}
         />
+        {
+          column.useDefault 
+          &&
+          <>
+            <div>Default</div>
+            <ColumnInput
+              type={column.type}
+              Enum={GetEnumValues(column.enum)}
+              notNull={column.notNull}
+              value={column.default}
+              setValue={(value) => SetColumnInfo("default", value)}
+              style={column.type === ColumnType.BOOL ? {backgroundColor: "var(--nyanza)"} : undefined}
+            />
+          </>
+        }
       </div>
       <XButton onClick={() => DeleteColumn()}/>
     </div>
-  );
-}
-
-interface CheckButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "value" | "style">{
-  value: boolean
-}
-
-function CheckButton({value, className = "", ...props}: CheckButtonProps){
-  return (
-    <button
-      className={`${styles["check-btn"]} ${className}`}
-      style={{
-        color: value ? "var(--yellow)" : "var(--dark-green)"
-      }}
-      {...props}
-    >
-      <i className={`fa ${value ? "fa-check" : "fa-times"}`} aria-hidden="true"></i>
-    </button>
   );
 }
 
