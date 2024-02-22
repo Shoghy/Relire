@@ -107,6 +107,17 @@ function ColumnComponent({
     return true;
   }
 
+  function ShowUseDefault() {
+    if(!column.useForeingKey) return true;
+    if(column.unique){
+      if(column.useDefault){
+        SetColumnInfo("useDefault", false);
+      }
+      return false;
+    }
+    return true;
+  }
+
   function CanUseForeignKey(type: ColumnType) {
     if (type === ColumnType.BOOL || type === ColumnType.ENUM) {
       setPosibleForeignKey(undefined);
@@ -193,12 +204,18 @@ function ColumnComponent({
           value={column.notNull}
           onClick={() => SetColumnInfo("notNull", !column.notNull)}
         />
-        <div>Use Default</div>
-        <CheckButton
-          style={{ backgroundColor: "var(--nyanza)" }}
-          value={column.useDefault}
-          onClick={() => SetColumnInfo("useDefault", !column.useDefault)}
-        />
+        {
+          ShowUseDefault()
+        &&
+        <>
+          <div>Use Default</div>
+          <CheckButton
+            style={{ backgroundColor: "var(--nyanza)" }}
+            value={column.useDefault}
+            onClick={() => SetColumnInfo("useDefault", !column.useDefault)}
+          />
+        </>
+        }
         {
           ShowDefaultInput()
           &&
