@@ -60,3 +60,25 @@
     font-weight: 100;
   }
 }
+
+.alerts{
+  color: var(--nyanza);
+  gap: 20px;
+}
+
+.submit-btn{
+  background-color: unset;
+  color: var(--nyanza);
+  border: var(--nyanza) solid 2px;
+  font-size: 1.2em;
+  width: 60%;
+  margin: 0 auto;
+  cursor: pointer;
+  border-radius: 50px;
+  transition: background-color 100ms, color 100ms;
+}
+
+.submit-btn:hover{
+  background-color: var(--nyanza);
+  color: var(--fern-green);
+}
