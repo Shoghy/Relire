@@ -118,7 +118,7 @@ export interface SelfDAlertElementProps{
   showCloseButton?: boolean
 }
 
-export function selfDAlert({open = false, title="", ...props}: SelfDAlertProps){
+export function selfDAlert({open = false, title="", ...props}: SelfDAlertProps = {}){
   const o: SelfDAlert = {
     Element,
     isOpen: open,
@@ -155,9 +155,10 @@ export function selfDAlert({open = false, title="", ...props}: SelfDAlertProps){
     o.close = () => setOpen(false);
     o.toggle = () => setOpen((c) => !c);
     o.openWith = ({buttons, message, title = ""}) => {
-      o.setButtons(buttons);
-      o.setMessage(message);
-      o.setTitle(title);
+      setButtons(buttons);
+      setMessage(message);
+      setTitle(title);
+      setOpen(true);
     };
     o.openMerge = ({buttons, message, title}) => {
       if(buttons !== undefined){
@@ -169,6 +170,7 @@ export function selfDAlert({open = false, title="", ...props}: SelfDAlertProps){
       if(title !== undefined){
         setTitle(title);
       }
+      setOpen(true);
     };
 
     function CloseButton(){
@@ -195,11 +197,15 @@ export function selfDAlert({open = false, title="", ...props}: SelfDAlertProps){
           {
             !!message
             &&
-            <span
+            <div
               className={styles["dalert-body"]}
             >
-              {message}
-            </span>
+              <div>
+                <span>
+                  {message}
+                </span>
+              </div>
+            </div>
           }
           <div className={styles["dalert-button-container"]}>
             {
