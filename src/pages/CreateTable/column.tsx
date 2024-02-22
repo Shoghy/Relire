@@ -130,6 +130,14 @@ function ColumnComponent({
     setPosibleForeignKey(posibleForeignKey);
   }
 
+  function OnEnumChange(value: string){
+    SetColumnInfo("enum", value);
+    const values = GetEnumValues(value);
+    if(values.indexOf(column.default as string) === -1){
+      SetColumnInfo("default", values[0]);
+    }
+  }
+
   return (
     <div
       className={styles["column-background"]}
@@ -164,7 +172,7 @@ function ColumnComponent({
             <input
               type="text"
               value={column.enum}
-              onChange={(e) => SetColumnInfo("enum", e.currentTarget.value)}
+              onChange={(e) => OnEnumChange(e.currentTarget.value)}
             />
           </>
         }

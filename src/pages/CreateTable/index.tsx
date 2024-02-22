@@ -1,14 +1,16 @@
 import NavBar from "@/components/NavBar";
-import { ChangeBodyColor } from "@/utilities/functions";
+import { ChangeBodyColor, GetEnumValues } from "@/utilities/functions";
 import styles from "./create_table.module.css";
 import { selfColumnComponent } from "./column";
-import { ColumnType, IForeingKey, ColumnValue, Dictionary, IColumn } from "@/utilities/types";
+import { ColumnType, IForeingKey, ColumnValue, Dictionary, IColumn, IColumForRequest } from "@/utilities/types";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { GetTables, auth } from "@/utilities/DBclient";
 import { LogIn } from "@/utilities/PageLocations";
 import { selfTextInput } from "@/components/TextInput";
 import { selfDAlert } from "@/components/custom_alert";
+import { selfLoadingCurtain } from "@/components/loading_curtain";
+import * as DBClient from "@/utilities/DBclient";
 
 export interface CreateColumnInfo{
   name: string
@@ -30,8 +32,10 @@ export interface CreateForeignKey{
 }
 
 const SelfColumn = selfColumnComponent();
-const SelfTableName = selfTextInput();
-const DAlert = selfDAlert({});
+const tableName = selfTextInput();
+const DAlert = selfDAlert();
+const load = selfLoadingCurtain();
+let otherTableNames: string[] = [];
 SelfColumn.AddNewColumn();
 export default function CreateTable() {
   ChangeBodyColor("var(--nyanza)");
@@ -66,6 +70,7 @@ export default function CreateTable() {
     
     //               TableName  ColumnName ColumnValue
     const tableData: Dictionary<Dictionary<IColumn>> = tableResponse.val();
+    otherTableNames = Object.keys(tableData);
     const foreignUniqueColumns: Dictionary<CreateForeignKey[]> = {};
     
     for(const tableName in tableData){
@@ -89,13 +94,121 @@ export default function CreateTable() {
     setForeignUniqueColumns(foreignUniqueColumns);
   }
 
+  function ValidateTable(){
+    load.open();
+    const errors: string[] = [];
+
+    if(!tableName.value){
+      errors.push("Table has no name.");
+    }
+
+    for(let i = 0; i < otherTableNames.length; ++i){
+      if(otherTableNames[i] !== tableName.value) continue;
+      errors.push("That table name is already in use.");
+      break;
+    }
+
+    const tableColums: Dictionary<IColumForRequest> = {};
+    const columns = SelfColumn.columns;
+    for(let i = 0; i < columns.length; ++i){
+      const column = columns[i];
+      if(column.name in tableColums){
+        errors.push(`${i}: Repeated column name.`);
+      }else if(!column.name){
+        errors.push(`${i}: Column has no name.`);
+        continue;
+      }else{
+        tableColums[column.name] = {
+          type: column.type,
+          notNull: column.notNull,
+          unique: column.unique,
+          name: column.name
+        };
+      }
+
+      if(column.useDefault){
+        if(!column.default){
+          errors.push(`${i}: Disable default or add a value to it.`);
+        }else{
+          tableColums[column.name].default = column.default;
+        }
+      }
+
+      switch(column.type){
+        case ColumnType.INT:{
+          tableColums[column.name].autoIncrement = column.autoIncrement;
+          break;
+        }
+        case ColumnType.ENUM:{
+          if (!column.enum) {
+            errors.push(`${i}: You need to add at least one value on enum`);
+          }else{
+            tableColums[column.name].enum = GetEnumValues(column.enum);
+          }
+          break;
+        }
+      }
+
+      if(column.useForeingKey){
+        if(!column.foreingKey.tableName || !column.foreingKey.column){
+          errors.push(`${i}: Select a table and a column in the foreign key or disable it.`);
+        }else{
+          tableColums[column.name].foreingKey = column.foreingKey;
+        }
+      }
+    }
+
+    if(errors.length > 0){
+      DAlert.openWith({
+        title: "Error",
+        message: errors.join("\n")
+      });
+      load.close();
+      return;
+    }
+
+    SendTableInfo(tableColums);
+  }
+
+  async function SendTableInfo(tableInfo: Dictionary<IColumForRequest>){
+    const response = await DBClient.CreateTable(
+      dbUID,
+      tableName.value,
+      Object.values(tableInfo)
+    );
+
+    load.close();
+
+    if(!response.ok){    
+      DAlert.openWith({
+        title: "Error",
+        message: response.error?.message
+      });
+      return;
+    }
+
+    SelfColumn.columns = [];
+    SelfColumn.AddNewColumn();
+    tableName.setValue("");
+  
+    DAlert.openWith({
+      title: "Success",
+      message: "The table was created successfully."
+    });
+
+  }
+
   return (
     <>
       <NavBar />
+      <load.Element/>
       <div className={styles["top-panel"]}>
         <span>Table name:</span>
-        <SelfTableName.Element/>
-        <button className={styles["btn-create-table"]}>
+        <tableName.Element/>
+        <button
+          className={styles["btn-create-table"]}
+          onClick={() => ValidateTable()}
+        >
           Create
         </button>
       </div>
