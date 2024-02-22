@@ -1,56 +1,81 @@
 import { useNavigate, useParams } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import { DeleteTable, GetTables, auth } from "@/utilities/DBclient";
-import { DataInTable, LogIn, DBTableCreate } from "@/utilities/PageLocations";
+import { DataInTable, DBTableCreate } from "@/utilities/PageLocations";
 import { useState, useEffect } from "react";
 import { ChangeBodyColor, RemoveIndexOfArray } from "@/utilities/functions";
 import styles from "./describedb.module.css";
 import TableButton from "./table_button";
-import { selfCustomAlert } from "@/components/custom_alert";
+import { selfCustomAlert, selfDAlert } from "@/components/custom_alert";
 import { IApiRequest, IApiResponse } from "@/utilities/types";
+import { selfLoadingCurtain } from "@/components/loading_curtain";
+import TextInput from "@/components/TextInput";
 
-const selfAlert = selfCustomAlert();
+const DAlert = selfDAlert();
+const loadingScreen = selfLoadingCurtain(true);
+const customAlert = selfCustomAlert();
 export default function DescribeDB() {
   ChangeBodyColor("var(--fern-green)");
   const navigate = useNavigate();
   const params = useParams();
   const dbUID = params.idDB as string;
-  const [APIKey, setAPIkey] = useState("");
-  const [tables, setTables] = useState<string[]>();
+  const [tables, setTables] = useState<string[]>([]);
+  const [tableNameToDelete, setTableNameToDelete] = useState("");
+  const [alertInput, setAlertInput] = useState("");
 
   useEffect(() => {
+    loadingScreen.open();
     LoadTables();
   }, []);
 
-  async function RemoveTable(tableName: string){
-    const confirmTableName = prompt(`Insert the name of the table: ${tableName}`);
-    if(tableName !== confirmTableName){
-      alert("Names don't match");
+  function OnTableXClick(tableName: string){
+    setTableNameToDelete(tableName);
+    setAlertInput("");
+    customAlert.open();
+  }
+
+  async function RemoveTable(){
+    loadingScreen.open();
+    customAlert.close();
+    if(tableNameToDelete !== alertInput){
+      DAlert.openWith({
+        title: "Error",
+        message: "Names don't match."
+      });
+      loadingScreen.close();
       return;
     }
   
-    const response = await DeleteTable(dbUID, tableName);
+    const response = await DeleteTable(dbUID, tableNameToDelete);
 
     if(!response.ok){
-      alert(response.error?.message);
+      DAlert.openWith({
+        title: "Error",
+        message: response.error?.message
+      });
+      loadingScreen.close();
       return;
     }
 
     setTables((current) => {
-      return RemoveIndexOfArray(current!, current!.indexOf(tableName));
+      return RemoveIndexOfArray(current!, current!.indexOf(tableNameToDelete));
     });
+
+    loadingScreen.close();
   }
 
   async function LoadTables(){
     await auth.authStateReady();
     if(auth.currentUser === null){
-      navigate(LogIn);
       return;
     }
     
     const tableList = await GetTables(auth.currentUser!.uid, dbUID);
     if("error" in tableList){
-      alert("An error ocurred, try again later");
+      DAlert.openWith({
+        title: "Error",
+        message: "An error ocurred, try again later"
+      });
       return;
     }
     const tablesNames: string[] = [];
@@ -58,13 +83,10 @@ export default function DescribeDB() {
       tablesNames.push(table.key);
     });
     setTables(tablesNames);
+    loadingScreen.close();
   }
 
   function EnumarateTables(){
-    if(tables === undefined){
-      return (<Message>Loading...</Message>);
-    }
-
     const elements: React.JSX.Element[] = [];
     for(let i = 0; i < tables.length; ++i){
       elements.push(
@@ -72,7 +94,7 @@ export default function DescribeDB() {
           key={i}
           tableName={tables[i]}
           onClick={() => navigate(DataInTable(dbUID, tables[i]))}
-          onXClick={() => RemoveTable(tables[i])}
+          onXClick={() => OnTableXClick(tables[i])}
         />
       );
     }
@@ -80,6 +102,7 @@ export default function DescribeDB() {
   }
 
   async function CreateAPIKey() {
+    loadingScreen.open();
     const userIDToken = await auth.currentUser?.getIdToken();
     const requestBody: IApiRequest = {
       auth: userIDToken as string,
@@ -102,17 +125,28 @@ export default function DescribeDB() {
     try {
       apiResponse = await response.json();
     } catch (e) {
-      alert("An error ocurred");
+      DAlert.openWith({
+        title: "Error",
+        message: "An error ocurred,\ntry again later"
+      });
+      loadingScreen.close();
       return;
     }
+
+    loadingScreen.close();
 
     if (!apiResponse.ok) {
-      alert("An error ocurred");
+      DAlert.openWith({
+        title: "Error",
+        message: apiResponse.error?.message
+      });
       return;
     }
 
-    setAPIkey(apiResponse.APIKey);
-    selfAlert.open();
+    DAlert.openWith({
+      title: "Warning once you close this, the API key will not be shown again, and if you re-create it, this one will be deleted.",
+      message: apiResponse.APIKey
+    });
   }
 
   return (
@@ -135,34 +169,21 @@ export default function DescribeDB() {
       >
         Create API Key
       </button>
-      <selfAlert.Element onXClick={() => {
-        setAPIkey("");
-      }}>
-        <h4 style={{ color: "black" }}>
-            Warning once you close this, the API key will not be shown again, and if you re-create it, this one will be deleted.
-        </h4>
-        <p style={{
-          backgroundColor: "rgba(0, 0, 0, 0.3)",
-          color: "black",
-          wordWrap: "break-word",
-          padding: "8px",
-          borderRadius: "10px"
-        }}>
-          {APIKey}
-        </p>
-      </selfAlert.Element>
+      <loadingScreen.Element/>
+      <DAlert.Element/>
+      <customAlert.Element className={styles["custom-column"]}>
+        <h1>Delete table</h1>
+        <span>Insert the name of the table: {tableNameToDelete}</span>
+        <TextInput
+          type="text"
+          value={alertInput}
+          onChange={(e) => setAlertInput(e.currentTarget.value)}
+        />
+        <button
+          className={styles["submit-btn"]}
+          onClick={()=>RemoveTable()}
+        >Confirm</button>
+      </customAlert.Element>
     </>
-  );
-}
-
-function Message({children}:{children?: string}){
-  return (
-    <h1 style={{
-      color: "var(--nyanza)",
-      width: "100%",
-      textAlign: "center"
-    }}>
-      {children}
-    </h1>
   );
 }

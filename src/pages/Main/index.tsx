@@ -128,7 +128,8 @@ export default function Main() {
 
     if (confirmDBName !== dbName) {
       DAlert.openWith({
-        title: "The names don't match"
+        title: "Error",
+        message: "The names don't match"
       });
       loadingScreen.close();
       return;
@@ -196,7 +197,7 @@ export default function Main() {
         </div>
       </div>
       <loadingScreen.Element />
-      <DAlert.Element />
+      <DAlert.Element onClose={() => {DAlert.setMessage("");}}/>
       <customAlert.Element className={styles.alerts}>
         <h1>{alertInfo.title}</h1>
         <span>{alertInfo.message}</span>

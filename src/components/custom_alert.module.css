@@ -49,6 +49,7 @@
   border-radius: 10px;
   white-space: pre-line;
   max-height: 350px;
+  word-wrap: break-word;
   div{
     overflow-y: auto;
     max-height: 350px;
