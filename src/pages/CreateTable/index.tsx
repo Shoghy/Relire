@@ -141,7 +141,7 @@ export default function CreateTable() {
         }
         case ColumnType.ENUM:{
           if (!column.enum) {
-            errors.push(`${i}: You need to add at least one value on enum`);
+            errors.push(`${i}: You need to add at least one value on the enum.`);
           }else{
             tableColums[column.name].enum = GetEnumValues(column.enum);
           }

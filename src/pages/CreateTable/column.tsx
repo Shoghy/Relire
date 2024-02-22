@@ -86,6 +86,15 @@ function ColumnComponent({
     if (column.useDefault) {
       num += 1;
     }
+    if(posibleForeignKey){
+      num += 1;
+    }
+    if(column.useForeingKey){
+      num += 1;
+    }
+    if(column.foreingKey.tableName){
+      num += 1;
+    }
 
     return num;
   }
@@ -106,13 +115,14 @@ function ColumnComponent({
 
     const posibleForeignKey: Dictionary<string[]> = {};
     let hasSomething = false;
+  
     for (const tableName in self.foreignUniqueColumns) {
       const columns = self.foreignUniqueColumns[tableName];
       const posibleColumns: string[] = [];
 
       for (let i = 0; i < columns.length; ++i) {
         const column = columns[i];
-        if (column.columnType !== type) return;
+        if (column.columnType !== type) continue;
         posibleColumns.push(column.columnName);
       }
 
@@ -211,8 +221,8 @@ function ColumnComponent({
             <div>Use ForeignKey</div>
             <CheckButton
               style={{ backgroundColor: "var(--nyanza)" }}
-              value={column.useDefault}
-              onClick={() => SetColumnInfo("useDefault", !column.useDefault)}
+              value={column.useForeingKey}
+              onClick={() => SetColumnInfo("useForeingKey", !column.useForeingKey)}
             />
           </>
         }

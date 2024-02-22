@@ -18,9 +18,7 @@ export function GetEnumValues(val: string): string[] {
   const vals = val.split(",");
   const uniqueVals: string[] = [];
   vals.forEach((value) => {
-    while (value.startsWith(" ")) {
-      value = value.substring(1);
-    }
+    value = value.trim();
     if(value === "") return;
     if (uniqueVals.indexOf(value) === -1) uniqueVals.push(value);
   });
