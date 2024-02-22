@@ -110,6 +110,10 @@ export default function CreateTable() {
 
     const tableColums: Dictionary<IColumForRequest> = {};
     const columns = SelfColumn.columns;
+    if(columns.length === 0){
+      errors.push("Your table has no columns.");
+    }
+
     for(let i = 0; i < columns.length; ++i){
       const column = columns[i];
       if(column.name in tableColums){
