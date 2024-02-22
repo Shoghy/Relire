@@ -4,6 +4,19 @@
   padding: 0;
 }
 
+*::-webkit-scrollbar {
+  width: 0.5em;
+  background-color: var(--sage);
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--black-olive);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--dark-green);
+}
+
 :root{
   --peach: #F1BF98;
   --nyanza: #E1F4CB;
