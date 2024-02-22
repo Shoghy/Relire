@@ -1,14 +1,25 @@
 import { auth } from "@/utilities/DBclient";
+import { LogIn, MainPage } from "@/utilities/PageLocations";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function NavBar() {
+  const navigate = useNavigate();
   const [showLogOut, setShowLogOut] = useState(false);
+
   function LogOut(){
     auth.signOut();
+    navigate(LogIn);
   }
+
   async function CheckUserStatus(){
     await auth.authStateReady();
-    if(auth.currentUser == null) return;
+    if(auth.currentUser == null){
+      if(location.pathname !== "/login" && location.pathname !== "/registro"){
+        navigate(LogIn);
+      }
+      return;
+    }
     setShowLogOut(true);
   }
 
@@ -40,7 +51,10 @@ export default function NavBar() {
     <nav
       className="nav-bar"
     >
-      <div className="logo-container">
+      <div
+        className="logo-container"
+        onClick={() => navigate(MainPage)}
+      >
         <span>RELIRE</span>
         <img src="/svgs/Flechas.svg" height={70} />
       </div>
