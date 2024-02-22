@@ -3,7 +3,7 @@ import styles from "./create_table.module.css";
 import { CreateColumnInfo, CreateForeignKey } from ".";
 import { useEffect, useState } from "react";
 import { ColumnType, Dictionary } from "@/utilities/types";
-import { GetEnumValues, RandomString, RemoveIndexOfArray, TitleCase } from "../../utilities/functions";
+import { GetEnumValues, RandomString, RemoveIndexOfArray, TitleCase } from "@/utilities/functions";
 import ColumnInput from "@/components/ColumnInput";
 import CheckButton from "@/components/check_button";
 

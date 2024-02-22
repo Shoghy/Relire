@@ -36,7 +36,6 @@ const tableName = selfTextInput();
 const DAlert = selfDAlert();
 const load = selfLoadingCurtain();
 let otherTableNames: string[] = [];
-SelfColumn.AddNewColumn();
 export default function CreateTable() {
   ChangeBodyColor("var(--nyanza)");
   
@@ -47,6 +46,8 @@ export default function CreateTable() {
   SelfColumn.foreignUniqueColumns = foreignUniqueColumns;
 
   useEffect(() => {
+    SelfColumn.columns = [];
+    SelfColumn.AddNewColumn();
     addEventListener("resize", () => CalculateSize());
     CalculateSize();
     GetUniqueColumns();
