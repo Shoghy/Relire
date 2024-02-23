@@ -1,179 +1,93 @@
-import { useNavigate, useParams, Link } from "react-router-dom";
-import { DeleteRow, GetDataInTable, GetTables, auth } from "@/utilities/DBclient";
-import { LogIn } from "@/utilities/PageLocations";
-import DBGetDefaultCath from "@/utilities/DBGetDefaultCatch";
-import { useEffect, useState } from "react";
-import { ColumnType, ColumnValue, Dictionary, IColumn, TableRow } from "@/utilities/types";
-import { AsyncAttempter, RandomString, RemoveIndexOfArray } from "@/utilities/functions";
+import { ChangeBodyColor } from "@/utilities/functions";
 import NavBar from "@/components/NavBar";
-import styles from "./styles.module.css";
+import { useNavigate, useParams } from "react-router-dom";
+import styles from "./data_in_table.module.css";
+import { useEffect, useState } from "react";
+import { GetDataInTable, GetTables, auth } from "@/utilities/DBclient";
+import { selfDAlert } from "@/components/custom_alert";
+import { DB } from "@/utilities/PageLocations";
+import { selfLoadingCurtain } from "@/components/loading_curtain";
+import { ColumnValue, Dictionary, IColumn } from "@/utilities/types";
+import EnumarateColumns from "./tb_head";
+import EnumarateRows from "./tb_body";
 
+const DAlert = selfDAlert();
+const loadingScreen = selfLoadingCurtain();
 export default function DataInTable(){
+  ChangeBodyColor("var(--nyanza)");
   const navigate = useNavigate();
   const params = useParams();
-
-  const [errorElement, setErrorElement] = useState<React.JSX.Element>();
-  const [columns, setColumns] = useState<React.JSX.Element[]>([<th key="Loading Columns">Loading columns...</th>]);
-  const [rows, setRows] = useState<React.JSX.Element[]>([
-    <tr key="Loading Rows" className={styles.row}>
-      <td>Loading Rows...</td>
-    </tr>
-  ]);
+  const dbUID = params.idDB as string;
+  const tableName = params.tbName as string;
+  const [columns, setColumns] = useState<[string, IColumn][]>([]);
+  const [rows, setRows] = useState<[string, Dictionary<ColumnValue>][]>([]);
 
   useEffect(() => {
-    auth.onAuthStateChanged((user) => {
-      if (user === undefined || user === null) {
-        navigate(LogIn);
-        return;
-      }
-      Start();
-    });
+    loadingScreen.open();
+    GetTableInfo();
   }, []);
 
-  async function Start(){
-    const [tableStructure, tableStrunctureError] = await AsyncAttempter(
-      () => GetTables(
-        auth.currentUser?.uid as string,
-        params.idDB as string,
-        params.tbName
-      )
+  async function GetTableInfo(){
+    await auth.authStateReady();
+    if(auth.currentUser === null) return;
+
+    const tableColumns = await GetTables(
+      auth.currentUser.uid,
+      dbUID,
+      tableName
+    );
+    const tableRows = await GetDataInTable(
+      auth.currentUser.uid,
+      dbUID,
+      tableName
     );
 
-    if(tableStrunctureError){
-      DBGetDefaultCath(tableStrunctureError, errorElement, setErrorElement, navigate);
-      return;
-    }
+    loadingScreen.close();
 
-    if(!tableStructure){
-      setErrorElement(<h1>Something went wrong </h1>);
-      return;
-    }
-
-    const [tableData, tableDataError] = await AsyncAttempter(
-      () => GetDataInTable(
-        auth.currentUser?.uid as string,
-        params.idDB as string,
-        params.tbName as string
-      )
-    );
-
-    if(tableDataError){
-      DBGetDefaultCath(
-        tableDataError,
-        errorElement,
-        setErrorElement,
-        navigate
-      );
-      return;
-    }
-
-    DBColumnsToJSXColumns(tableStructure.val());
-    DBRowsToJSXRows(tableData?.val());
-  }
-
-  async function DBColumnsToJSXColumns(dbColumns: Dictionary<IColumn>){
-    const JSXColumns: React.JSX.Element[] = [];
-
-    for(const columnName in dbColumns){
-      const dbColumn = dbColumns[columnName];
-      const toolTip:string[] = [];
-      toolTip.push(`Type: ${dbColumn.type}`);
-      toolTip.push(`Unique: ${dbColumn.unique}`);
-      toolTip.push(`Not-Null: ${dbColumn.notNull}`);
-
-      switch(dbColumn.type){
-        case ColumnType.INT:{
-          toolTip.push(`Auto-Increment: ${dbColumn.autoIncrement}`);
-          break;
-        }
-        case ColumnType.ENUM:{
-          toolTip.push(`Enum: [${dbColumn.enum?.join(", ")}]`);
-          break;
-        }
-      }
-
-      if(dbColumn.default !== undefined){
-        toolTip.push(`Default: ${dbColumn.default}`);
-      }
-      const key = RandomString(8);
-      JSXColumns.push(<th title={toolTip.join("\n")} key={key}>{columnName}</th>);
-    }
-
-    JSXColumns.push(<th title="Delete" key={"deleteTable"}>Delete</th>);
-    setColumns(JSXColumns);
-  }
-
-  async function RemoveRow(rowUID: string){
-    const response = await DeleteRow(
-      params.idDB as string,
-      params.tbName as string,
-      rowUID
-    );
-
-    if(response.ok){
-      setRows((current) => {
-        for(let i = 0; i < current.length; ++i){
-          const row = current[i];
-
-          if(row.key !== rowUID) continue;
-
-          current = RemoveIndexOfArray(current, i);
-          break;
-        }
-        return [... current];
+    if("error" in tableColumns || "error" in tableRows){
+      DAlert.openWith({
+        title: "Error",
+        message: "We were not able to get the data of this table",
+        buttons: [{
+          text: "Go Back",
+          onClick: () => {
+            navigate(DB(dbUID));
+          }
+        }]
       });
-    } else {
-      alert(response.error?.message);
+      return;
     }
-  }
 
-  async function DBRowsToJSXRows(dbRows: TableRow){
-    const JSXRows: React.JSX.Element[] = [];
-
-    for(const rowUID in dbRows){
-      const dbRow = dbRows[rowUID];
-
-      const JSXRowValues: React.JSX.Element[] = [];
-      for(const columnName in dbRow){
-        let columnValue: ColumnValue = "Null";
-        if(columnName in dbRow){
-          columnValue = `${dbRow[columnName]}`;
-        }
-        JSXRowValues.push(<td key={`${rowUID}-${columnName}`}>{columnValue}</td>);
-      }
-
-      JSXRowValues.push(
-        <td key={`Delete-${rowUID}`} onClick={() => RemoveRow(rowUID)}>
-          <center>
-            <i className="fa fa-trash" style={{color: "#f00"}} aria-hidden="true"/>
-          </center>
-        </td>
-      );
-      JSXRows.push(<tr key={`${rowUID}`} className={styles.row}>{JSXRowValues}</tr>);
+    setColumns(Object.entries(tableColumns.val()));
+    const rows = tableRows.val();
+    if(rows !== null){
+      setRows(Object.entries(rows));
     }
-    setRows(JSXRows);
-  }
-
-  if(errorElement){
-    return errorElement;
   }
 
   return (
     <>
       <NavBar />
-      <Link to="insert">Insert Data</Link>
-      <table className={`${styles.table} mask`} cellSpacing="0">
-        <thead className={styles["table-header"]}>
-          <tr>
-            {columns}
-          </tr>
-        </thead>
-        <tbody className={styles["table-data"]}>
-          {rows}
-        </tbody>
-      </table>
-      <br />
-      <br />
+      <div className={styles["title-container"]}>
+        <h1 className={styles.title}>{tableName}</h1>
+        <button className={styles["change-tablename-btn"]}>
+          <i className="fa fa-pencil" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div className={styles["table-container"]}>
+        <table className={`mask ${styles.table}`} cellSpacing={0}>
+          <thead>
+            <tr>
+              <EnumarateColumns columns={columns}/>
+            </tr>
+          </thead>
+          <tbody>
+            <EnumarateRows rows={rows} columns={columns}/>
+          </tbody>
+        </table>
+      </div>
+      <DAlert.Element showCloseButton={false}/>
+      <loadingScreen.Element/>
     </>
   );
 }

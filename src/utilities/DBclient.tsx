@@ -51,7 +51,11 @@ export function GetTables(userUID: string, db: string, tb?:string){
 
 export function GetDataInTable(userUID: string, db:string, tb: string){
   const reference = ref(database, `${userUID}/${db}/tablesData/${tb}`);
-  return get(reference);
+  try{
+    return get(reference);
+  }catch(e){
+    return {error: e};
+  }
 }
 
 export async function GetDatabases(): Promise<IApiResponse<{dbInfos?: BasicDBInfo[]}>>{
