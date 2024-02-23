@@ -17,11 +17,9 @@
   border-radius: 10px;
   position: relative;
   aspect-ratio: 3/2;
-  min-height: 150px;
-  min-width: 225px;
-  width: calc((100% - (2.5em * 4))/4);
+  height: 150px;
+  width: 225px;
   cursor: pointer;
-  max-width: 300px;
   display: flex;
   flex-direction: column;
   color: var(--dark-green);
@@ -63,12 +61,9 @@
 
 .add-table-btn{
   aspect-ratio: 3/2;
-  min-height: 150px;
-  min-width: 225px;
-  width: calc((100% - (2.5em * 4))/4);
+  width: 225px;
   background-color: var(--fern-green);
   border: var(--nyanza) solid 2px;
-  max-width: 300px;
   border-radius: 10px;
   color: white;
   font-size: 3em;

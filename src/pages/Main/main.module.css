@@ -17,11 +17,8 @@
   border-radius: 10px;
   position: relative;
   aspect-ratio: 3/2;
-  min-height: 150px;
-  min-width: 225px;
-  width: calc((100% - (2.5em * 4))/4);
+  width: 225px;
   cursor: pointer;
-  max-width: 300px;
   padding-bottom: 30px;
   box-shadow: rgba(0, 0, 0, 0.27) 0 9px 7px 5px;
 }
