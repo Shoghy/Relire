@@ -4,11 +4,14 @@ import styles from "./data_in_table.module.css";
 export interface EnumarateRowsProps{
   rows: [string, Dictionary<ColumnValue>][]
   columns: [string, IColumn][]
+  RemoveRow: (rowUID: string) => any
 }
 
-export default function EnumarateRows({rows, columns}: EnumarateRowsProps){
+export default function EnumarateRows({rows, columns, RemoveRow}: EnumarateRowsProps){
+
   const rowElements: React.JSX.Element[] = [];
   for(let i = 0; i < rows.length; ++i){
+    const rowUID = rows[i][0];
     const rowInfo = rows[i][1];
     const rowInfoElements: React.JSX.Element[] = [];
     
@@ -26,12 +29,18 @@ export default function EnumarateRows({rows, columns}: EnumarateRowsProps){
         );
       }
     }
+
     rowInfoElements.push(
-      <td key="delete" className={`${styles.tcell} ${styles["tcell-delete"]}`}>
+      <td
+        key="delete"
+        className={`${styles.tcell} ${styles["tcell-delete"]}`}
+        onClick={() => RemoveRow(rowUID)}
+      >
         <i className="fa fa-trash" aria-hidden="true"></i>
       </td>
     );
-    rowElements.push(<tr key={i} className={styles.trow}>{rowInfoElements}</tr>);
+
+    rowElements.push(<tr key={rowUID} className={styles.trow}>{rowInfoElements}</tr>);
   }
   return rowElements;
 }

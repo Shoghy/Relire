@@ -1,9 +1,9 @@
-import { ChangeBodyColor } from "@/utilities/functions";
+import { ChangeBodyColor, RemoveIndexOfArray } from "@/utilities/functions";
 import NavBar from "@/components/NavBar";
 import { useNavigate, useParams } from "react-router-dom";
 import styles from "./data_in_table.module.css";
 import { useEffect, useState } from "react";
-import { GetDataInTable, GetTables, auth } from "@/utilities/DBclient";
+import { DeleteRow, GetDataInTable, GetTables, auth } from "@/utilities/DBclient";
 import { selfDAlert } from "@/components/custom_alert";
 import { DB } from "@/utilities/PageLocations";
 import { selfLoadingCurtain } from "@/components/loading_curtain";
@@ -13,7 +13,7 @@ import EnumarateRows from "./tb_body";
 
 const DAlert = selfDAlert();
 const loadingScreen = selfLoadingCurtain();
-export default function DataInTable(){
+export default function DataInTable() {
   ChangeBodyColor("var(--nyanza)");
   const navigate = useNavigate();
   const params = useParams();
@@ -27,9 +27,47 @@ export default function DataInTable(){
     GetTableInfo();
   }, []);
 
-  async function GetTableInfo(){
+  async function RemoveRow(rowUID: string) {
+    loadingScreen.open();
+    const response = await DeleteRow(
+      params.idDB as string,
+      params.tbName as string,
+      rowUID
+    );
+
+    loadingScreen.close();
+
+    if (!response.ok) {
+      DAlert.openWith({
+        title: "Error",
+        message: response.error?.message,
+        buttons: [{
+          text: "Ok",
+          onClick: (self) => {
+            self.close();
+          }
+        }]
+      });
+      return;
+    }
+
+    setRows((current) => {
+      for (let i = 0; i < current.length; ++i) {
+        const row = current[i];
+
+        if (row[0] !== rowUID) continue;
+
+        current = RemoveIndexOfArray(current, i);
+        break;
+      }
+      return [...current];
+    });
+
+  }
+
+  async function GetTableInfo() {
     await auth.authStateReady();
-    if(auth.currentUser === null) return;
+    if (auth.currentUser === null) return;
 
     const tableColumns = await GetTables(
       auth.currentUser.uid,
@@ -44,7 +82,7 @@ export default function DataInTable(){
 
     loadingScreen.close();
 
-    if("error" in tableColumns || "error" in tableRows){
+    if ("error" in tableColumns || "error" in tableRows) {
       DAlert.openWith({
         title: "Error",
         message: "We were not able to get the data of this table",
@@ -60,7 +98,7 @@ export default function DataInTable(){
 
     setColumns(Object.entries(tableColumns.val()));
     const rows = tableRows.val();
-    if(rows !== null){
+    if (rows !== null) {
       setRows(Object.entries(rows));
     }
   }
@@ -78,16 +116,20 @@ export default function DataInTable(){
         <table className={`mask ${styles.table}`} cellSpacing={0}>
           <thead>
             <tr>
-              <EnumarateColumns columns={columns}/>
+              <EnumarateColumns columns={columns} />
             </tr>
           </thead>
           <tbody>
-            <EnumarateRows rows={rows} columns={columns}/>
+            <EnumarateRows
+              rows={rows}
+              columns={columns}
+              RemoveRow={RemoveRow}
+            />
           </tbody>
         </table>
       </div>
-      <DAlert.Element showCloseButton={false}/>
-      <loadingScreen.Element/>
+      <DAlert.Element showCloseButton={false} />
+      <loadingScreen.Element />
     </>
   );
 }
