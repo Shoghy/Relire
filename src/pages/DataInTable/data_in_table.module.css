@@ -95,3 +95,20 @@
   height: 100%;
   cursor: pointer;
 }
+
+.add-rows-btn{
+  position: fixed;
+  z-index: 100;
+  bottom: 10px;
+  left: 15px;
+  padding: 8px 30px;
+  cursor: pointer;
+  border-radius: 10px;
+  background-color: var(--fern-green);
+  border: var(--nyanza) solid 2px;
+  color: var(--nyanza);
+  font-weight: 200;
+  font-size: 1em;
+  box-shadow: rgba(0, 0, 0, 0.3) 0px 0px 6px 4px;
+  text-decoration: none;
+}

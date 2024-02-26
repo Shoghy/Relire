@@ -1,11 +1,11 @@
 import { ChangeBodyColor, RemoveIndexOfArray } from "@/utilities/functions";
 import NavBar from "@/components/NavBar";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import styles from "./data_in_table.module.css";
 import { useEffect, useState } from "react";
 import { DeleteRow, GetDataInTable, GetTables, auth } from "@/utilities/DBclient";
 import { selfDAlert } from "@/components/custom_alert";
-import { DB } from "@/utilities/PageLocations";
+import { DB, InsertInTable } from "@/utilities/PageLocations";
 import { selfLoadingCurtain } from "@/components/loading_curtain";
 import { ColumnValue, Dictionary, IColumn } from "@/utilities/types";
 import EnumarateColumns from "./tb_head";
@@ -108,9 +108,6 @@ export default function DataInTable() {
       <NavBar />
       <div className={styles["title-container"]}>
         <h1 className={styles.title}>{tableName}</h1>
-        <button className={styles["change-tablename-btn"]}>
-          <i className="fa fa-pencil" aria-hidden="true"></i>
-        </button>
       </div>
       <div className={styles["table-container"]}>
         <table className={`mask ${styles.table}`} cellSpacing={0}>
@@ -128,6 +125,9 @@ export default function DataInTable() {
           </tbody>
         </table>
       </div>
+      <Link to={InsertInTable(dbUID, tableName)} className={styles["add-rows-btn"]}>
+        Add Rows
+      </Link>
       <DAlert.Element showCloseButton={false} />
       <loadingScreen.Element />
     </>
