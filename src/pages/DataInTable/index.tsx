@@ -1,6 +1,6 @@
 import { ChangeBodyColor, RemoveIndexOfArray } from "@/utilities/functions";
 import NavBar from "@/components/NavBar";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, NavigateFunction, useNavigate, useParams } from "react-router-dom";
 import styles from "./data_in_table.module.css";
 import { useEffect, useState } from "react";
 import { DeleteRow, GetDataInTable, GetTables, auth } from "@/utilities/DBclient";
@@ -24,6 +24,7 @@ export default function DataInTable() {
 
   useEffect(() => {
     loadingScreen.open();
+    DAlert.close();
     GetTableInfo();
   }, []);
 
@@ -83,20 +84,18 @@ export default function DataInTable() {
     loadingScreen.close();
 
     if ("error" in tableColumns || "error" in tableRows) {
-      DAlert.openWith({
-        title: "Error",
-        message: "We were not able to get the data of this table",
-        buttons: [{
-          text: "Go Back",
-          onClick: () => {
-            navigate(DB(dbUID));
-          }
-        }]
-      });
+      UnableToGetTheTableData(navigate, dbUID);
+      return;
+    }
+  
+    const columns = tableColumns.val();
+    if (columns === null) {
+      UnableToGetTheTableData(navigate, dbUID);
       return;
     }
 
-    setColumns(Object.entries(tableColumns.val()));
+    setColumns(Object.entries(columns));
+
     const rows = tableRows.val();
     if (rows !== null) {
       setRows(Object.entries(rows));
@@ -132,4 +131,17 @@ export default function DataInTable() {
       <loadingScreen.Element />
     </>
   );
+}
+
+function UnableToGetTheTableData(navigate: NavigateFunction, dbUID: string) {
+  DAlert.openWith({
+    title: "Error",
+    message: "We were not able to get the data of this table",
+    buttons: [{
+      text: "Go Back",
+      onClick: () => {
+        navigate(DB(dbUID));
+      }
+    }]
+  });
 }
