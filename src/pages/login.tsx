@@ -8,12 +8,13 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { AsyncAttempter } from "@/utilities/functions";
 import NavBar from "@/components/NavBar";
 import style from "./account.module.css";
+import { selfLoadingCurtain } from "@/components/loading_curtain";
 
 interface ILogIn {
   email?: string,
   password?: string
 }
-
+const loadingScreen = selfLoadingCurtain();
 export default function LogInForm() {
   const validEmailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
   const navigate = useNavigate();
@@ -21,7 +22,9 @@ export default function LogInForm() {
   const [authError, changeAuthError] = useState<string>();
 
   useEffect(() => {
+    loadingScreen.open();
     auth.onAuthStateChanged((user) => {
+      loadingScreen.close();
       if (user !== undefined && user !== null) {
         navigate(MainPage);
       }
@@ -47,16 +50,19 @@ export default function LogInForm() {
   }
 
   async function onSubmit(values: ILogIn, helpers: FormikHelpers<ILogIn>) {
+    loadingScreen.open();
     changeSendedForm(true);
     changeAuthError(undefined);
 
     if (values.email === undefined || values.password === undefined) {
+      loadingScreen.close();
       changeSendedForm(false);
       return;
     }
 
     const logIn = signInWithEmailAndPassword(auth, values.email, values.password);
     const [, logInError] = await AsyncAttempter<AuthError>(() => logIn);
+    loadingScreen.close();
 
     if (!logInError) {
       return;
@@ -111,6 +117,7 @@ export default function LogInForm() {
           <span className={style.footer}>Don't have an account? <Link to={Registro}>Sign in</Link></span>
         </div>
       </div>
+      <loadingScreen.Element/>
     </>
   );
 }
