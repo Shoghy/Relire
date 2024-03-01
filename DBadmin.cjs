@@ -38,9 +38,9 @@ async function AsyncAttempter(func) {
 }
 
 /**
- * @param {CResponse} res 
- * @param {STATUS_CODES} status 
- * @param {Answer} jsonValue 
+ * @param {CResponse} res
+ * @param {STATUS_CODES} status
+ * @param {Answer} jsonValue
  */
 function SendAnswer(res, status, jsonValue) {
   res.status(status).json(jsonValue);
@@ -48,7 +48,7 @@ function SendAnswer(res, status, jsonValue) {
 
 /**
  * @param {CResponse} res
- * @param {any} value 
+ * @param {any} value
  * @param {string} field
  * @returns {false | string}
  */
@@ -533,8 +533,8 @@ async function GetDatabases(req, res) {
 }
 
 /**
- * @param {number} minInclusive 
- * @param {number} maxInclusive 
+ * @param {number} minInclusive
+ * @param {number} maxInclusive
  * @returns {number}
  */
 function RandomInt(minInclusive, maxInclusive) {
@@ -544,7 +544,7 @@ function RandomInt(minInclusive, maxInclusive) {
 }
 
 /**
- * @param {number} length 
+ * @param {number} length
  * @returns {string}
  */
 function RandomString(length) {

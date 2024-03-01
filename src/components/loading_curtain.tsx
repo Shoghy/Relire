@@ -32,7 +32,7 @@ export function selfLoadingCurtain(open: boolean = false){
 
   function Element(){
     const [open, setOpen] = useState(o.isOpen);
-    
+
     o.isOpen = open;
     o.setOpen = setOpen;
     o.open = () => setOpen(true);

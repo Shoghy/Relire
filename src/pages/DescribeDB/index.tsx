@@ -47,7 +47,7 @@ export default function DescribeDB() {
       loadingScreen.close();
       return;
     }
-  
+
     const response = await DeleteTable(dbUID, tableNameToDelete);
 
     if(!response.ok){
@@ -71,7 +71,7 @@ export default function DescribeDB() {
     if(auth.currentUser === null){
       return;
     }
-    
+
     const tableList = await GetTables(auth.currentUser!.uid, dbUID);
     if("error" in tableList){
       DAlert.openWith({

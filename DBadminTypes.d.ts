@@ -31,7 +31,7 @@ interface Column{
   name: string
   notNull: boolean
   unique: boolean
-  foreingKey?: ForeingKey 
+  foreingKey?: ForeingKey
 }
 
 interface ApiKey{

@@ -14,7 +14,7 @@ export default function EnumarateRows({rows, columns, RemoveRow}: EnumarateRowsP
     const rowUID = rows[i][0];
     const rowInfo = rows[i][1];
     const rowInfoElements: React.JSX.Element[] = [];
-    
+
     for(let j = 0; j < columns.length; ++j){
       const columnName = columns[j][0];
       if(columnName in rowInfo){

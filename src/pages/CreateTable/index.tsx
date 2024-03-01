@@ -38,7 +38,7 @@ const load = selfLoadingCurtain();
 let otherTableNames: string[] = [];
 export default function CreateTable() {
   ChangeBodyColor("var(--nyanza)");
-  
+
   const navigate = useNavigate();
   const params = useParams();
   const dbUID = params.idDB as string;
@@ -70,16 +70,16 @@ export default function CreateTable() {
       alert("An error occurred on trying to get other's table foreing key. You will be able to create this table, but will not be able to use ForeignKeys.");
       return;
     }
-    
+
     //               TableName  ColumnName ColumnValue
     const tableData: Dictionary<Dictionary<IColumn>> = tableResponse.val();
     otherTableNames = Object.keys(tableData);
     const foreignUniqueColumns: Dictionary<CreateForeignKey[]> = {};
-    
+
     for(const tableName in tableData){
       const columns = tableData[tableName];
       const uniqueColumns: CreateForeignKey[] = [];
-      
+
       for(const columnName in columns){
         const column = columns[columnName];
         if(!column.unique) continue;
@@ -186,7 +186,7 @@ export default function CreateTable() {
 
     load.close();
 
-    if(!response.ok){    
+    if(!response.ok){
       DAlert.openWith({
         title: "Error",
         message: response.error?.message
@@ -197,7 +197,7 @@ export default function CreateTable() {
     SelfColumn.columns = [];
     SelfColumn.AddNewColumn();
     tableName.setValue("");
-  
+
     DAlert.openWith({
       title: "Success",
       message: "The table was created successfully."

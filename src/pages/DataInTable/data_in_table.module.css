@@ -46,7 +46,7 @@
 .trow:nth-child(1){
   .tcell{
     border-top: var(--border-2);
-  }  
+  }
 }
 
 .trow:last-child{

@@ -87,7 +87,7 @@ export default function DataInTable() {
       UnableToGetTheTableData(navigate, dbUID);
       return;
     }
-  
+
     const columns = tableColumns.val();
     if (columns === null) {
       UnableToGetTheTableData(navigate, dbUID);

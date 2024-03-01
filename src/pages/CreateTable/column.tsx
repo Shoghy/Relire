@@ -126,7 +126,7 @@ function ColumnComponent({
 
     const posibleForeignKey: Dictionary<string[]> = {};
     let hasSomething = false;
-  
+
     for (const tableName in self.foreignUniqueColumns) {
       const columns = self.foreignUniqueColumns[tableName];
       const posibleColumns: string[] = [];

@@ -25,7 +25,7 @@ export default function CustomAlert({children, open = false, className, style}: 
 
 export interface SelfCustomAlertElementProps extends Omit<CustomAlertProperties, "open">{
   dontShowCloseButton?: boolean
-  onXClick?: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => any 
+  onXClick?: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => any
 }
 
 export interface SelfCustomAlert{
@@ -140,7 +140,7 @@ export function selfDAlert({open = false, title="", ...props}: SelfDAlertProps =
     const [title, setTitle] = useState(o.title);
     const [message, setMessage] = useState(o.message);
     const [buttons, setButtons] = useState(o.buttons);
-    
+
     o.isOpen = open;
     o.title = title;
     o.message = message;

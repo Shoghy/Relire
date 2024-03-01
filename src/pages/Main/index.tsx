@@ -47,12 +47,12 @@ export default function Main() {
 
   async function LoadDatabases() {
     await auth.authStateReady();
-  
+
     if (auth.currentUser === null) {
       navigate(LogIn);
       return;
     }
-    
+
     const dbList = await GetDatabases();
     loadingScreen.close();
 
@@ -123,7 +123,7 @@ export default function Main() {
   async function DeleteDB() {
     customAlert.close();
     loadingScreen.open();
-    
+
     const dbUID = alertInfoRef.current.dbUID;
     const dbName = alertInfoRef.current.dbName;
     const confirmDBName = alertInfoRef.current.inputValue;
