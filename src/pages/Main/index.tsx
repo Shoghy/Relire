@@ -40,6 +40,8 @@ export default function Main() {
 
   useEffect(() => {
     loadingScreen.open();
+    DAlert.close();
+    customAlert.close();
     LoadDatabases();
   }, []);
 

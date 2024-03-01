@@ -25,6 +25,8 @@ export default function DescribeDB() {
 
   useEffect(() => {
     loadingScreen.open();
+    DAlert.close();
+    customAlert.close();
     LoadTables();
   }, []);
 

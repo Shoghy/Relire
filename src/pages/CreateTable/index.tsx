@@ -48,6 +48,8 @@ export default function CreateTable() {
   useEffect(() => {
     SelfColumn.columns = [];
     SelfColumn.AddNewColumn();
+    DAlert.close();
+    load.close();
     addEventListener("resize", () => CalculateSize());
     CalculateSize();
     GetUniqueColumns();
