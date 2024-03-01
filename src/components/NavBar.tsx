@@ -7,8 +7,8 @@ export default function NavBar() {
   const navigate = useNavigate();
   const [showLogOut, setShowLogOut] = useState(false);
 
-  function LogOut(){
-    auth.signOut();
+  async function LogOut(){
+    await auth.signOut();
     navigate(LogIn);
   }
 
