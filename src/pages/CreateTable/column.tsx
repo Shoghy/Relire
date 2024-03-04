@@ -6,6 +6,8 @@ import { ColumnType, Dictionary } from "@/utilities/types";
 import { GetEnumValues, RandomString, RemoveIndexOfArray, TitleCase } from "@/utilities/functions";
 import ColumnInput from "@/components/ColumnInput";
 import CheckButton from "@/components/check_button";
+import { GetDataInTable, auth } from "@/utilities/DBclient";
+import { useParams } from "react-router-dom";
 
 export interface ColumnComponentProps {
   index: number
@@ -16,6 +18,9 @@ const ColumTypeArray = Object.values(ColumnType);
 function ColumnComponent({
   index, self
 }: ColumnComponentProps) {
+  const params = useParams();
+
+  const dbUID = params.idDB as string;
   const [column, setColumn] = useState(self.columns[index]);
   const [foreignValues, setForeignValues] = useState<string[]>([]);
   const [posibleForeignKey, setPosibleForeignKey] = useState<Dictionary<string[]>>();
@@ -102,6 +107,7 @@ function ColumnComponent({
   function ShowDefaultInput() {
     if (!column.useDefault) return false;
     if (column.useForeingKey) {
+      if(foreignValues.length === 0) return false;
       return column.foreingKey.column !== "" && column.foreingKey.tableName !== "";
     }
     return true;
@@ -157,6 +163,67 @@ function ColumnComponent({
     if(values.indexOf(column.default as string) === -1){
       SetColumnInfo("default", values[0]);
     }
+  }
+
+  async function GetForeignValues(columnName: string){
+    const data = await GetDataInTable(
+      auth.currentUser?.uid as string,
+      dbUID,
+      column.foreingKey.tableName
+    );
+    
+    if("error" in data){
+      return;
+    }
+    data.forEach((x) => {
+      setForeignValues((c) => [...c, x.val()[columnName]]);
+    });
+  }
+
+  function EnumTablesNames(){
+    const tables: React.JSX.Element[] = [
+      <option key={""} value=""></option>
+    ];
+    for(const tableName in self.foreignUniqueColumns){
+      tables.push(<option key={tableName} value={tableName}>{tableName}</option>);
+    }
+    return tables;
+  }
+
+  function EnumarateTablesColumns(){
+    if(!column.useForeingKey) return <></>;
+    if(column.foreingKey.tableName === "") return <></>;
+    const tableName = column.foreingKey.tableName;
+    const columns = self.foreignUniqueColumns[tableName];
+
+    const columnsElement: React.JSX.Element[] = [
+      <option key={""} value={""}></option>
+    ];
+    for(const fColumn of columns){
+      if(fColumn.columnType !== column.type) continue;
+      columnsElement.push(
+        <option key={fColumn.columnName} value={fColumn.columnName}>{fColumn.columnName}</option>
+      );
+    }
+    return (
+      <>
+        <div>Column Name</div>
+        <select
+          value={column.foreingKey.column}
+          onChange={
+            (e) => {
+              SetColumnInfo("foreingKey", {
+                tableName: column.foreingKey.tableName,
+                column: e.currentTarget.value
+              });
+              GetForeignValues(e.currentTarget.value);
+            }
+          }
+        >
+          {columnsElement}
+        </select>
+      </>
+    );
   }
 
   return (
@@ -249,12 +316,14 @@ function ColumnComponent({
           <>
             <div>Table Name</div>
             <select
-              value={column.foreingKey.column}
+              value={column.foreingKey.tableName}
+              onChange={(e) => SetColumnInfo("foreingKey", {tableName: e.currentTarget.value, column: ""})}
             >
-              <option value={""}></option>
+              <EnumTablesNames/>
             </select>
           </>
         }
+        <EnumarateTablesColumns/>
       </div>
       <XButton onClick={() => DeleteColumn()} />
     </div>
