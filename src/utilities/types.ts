@@ -84,3 +84,15 @@ export interface IErrorElement {
 
 export type Func<A extends Array<unknown>, R> = (...args: A) => R;
 export type AsyncFunc<A extends Array<unknown>, R> = Func<A, Promise<R>>;
+
+export class CustomArray<T> extends Array<T>{
+  removeIndex(index: number){
+    return this.splice(index, 1)[0];
+  }
+  removeItem(item: T){
+    const index = this.indexOf(item);
+    if(index === -1) return false;
+    this.removeIndex(index);
+    return true;
+  }
+}

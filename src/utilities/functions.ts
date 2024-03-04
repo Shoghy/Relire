@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { AsyncFunc, DefaultReturnedError } from "./types";
 
 export function TitleCase(val: string): string {
@@ -68,5 +69,7 @@ export function RemoveIndexOfArray<T>(arr: Array<T>, index: number){
 
 export function ChangeBodyColor(color: string){
   if(import.meta.env.SSR) return;
-  document.body.style.backgroundColor = color;
+  useMemo(() => {
+    document.body.style.backgroundColor = color;
+  }, []);
 }
