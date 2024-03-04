@@ -185,7 +185,12 @@ function ColumnComponent({
       <option key={""} value=""></option>
     ];
     for(const tableName in self.foreignUniqueColumns){
-      tables.push(<option key={tableName} value={tableName}>{tableName}</option>);
+      const table = self.foreignUniqueColumns[tableName];
+      for(const tColumn of table){
+        if(tColumn.columnType !== column.type) continue;
+        tables.push(<option key={tableName} value={tableName}>{tableName}</option>);
+        break;
+      }
     }
     return tables;
   }

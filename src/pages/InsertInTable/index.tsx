@@ -67,7 +67,7 @@ export default function InsertInTable(){
       columnsWithForeignKeys.push(column);
     }
 
-    if(columnsWithForeignKeys.length > 0) return;
+    if(columnsWithForeignKeys.length === 0) return;
     GetForeignKeys(columnsWithForeignKeys);
   }
 
