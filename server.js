@@ -41,7 +41,7 @@ app.use("/api/*", express.json(), async (req, res) => {
   RoutesHandler(req, res);
 });
 
-app.use("/api", async (req, res) => {
+app.use("/api", async (_, res) => {
   res.status(404)
     .set({ "Content-Type": "text/pain; charset=utf-8" })
     .end("No hay nada aquí");

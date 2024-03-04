@@ -82,4 +82,5 @@ export interface IErrorElement {
   todoBien: boolean
 }
 
-export type AsyncFunc<T> = (...args: any) => Promise<T>;
+export type Func<A extends Array<unknown>, R> = (...args: A) => R;
+export type AsyncFunc<A extends Array<unknown>, R> = Func<A, Promise<R>>;
