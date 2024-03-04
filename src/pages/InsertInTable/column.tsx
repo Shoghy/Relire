@@ -57,7 +57,7 @@ export function RowComponent({ columns, self, k, foreignValues }: ColumnProps) {
             value={values[columnName]}
             setValue={(v) => SetCellValue(columnName, v)}
             Enum={GetForeignKeyEnum(column[1].foreingKey)}
-            notNull={columnInfo.notNull}
+            notNull={false}
           />
         );
       }else{
